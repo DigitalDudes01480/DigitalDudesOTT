@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "server.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "MONGODB_URI": "mongodb+srv://digitaldudes18_db_user:4jeyXrAXrqXTMizs@cluster0.zgql3hs.mongodb.net/digital-dudes?retryWrites=true&w=majority&appName=Cluster0",
+    "JWT_SECRET": "DigitalDudes2026SecretKey!@#$%",
+    "JWT_EXPIRE": "7d",
+    "PORT": "5001"
+  }
+}

@@ -1,0 +1,122 @@
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export const authAPI = {
+  register: (data) => api.post('/auth/register', data),
+  login: (data) => api.post('/auth/login', data),
+  getProfile: () => api.get('/auth/profile'),
+  updateProfile: (data) => api.put('/auth/profile', data),
+  changePassword: (data) => api.put('/auth/change-password', data),
+};
+
+export const productAPI = {
+  getAll: (params) => api.get('/products', { params }),
+  getById: (id) => api.get(`/products/${id}`),
+  create: (data) => {
+    const config = data instanceof FormData ? {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    } : {};
+    return api.post('/products', data, config);
+  },
+  update: (id, data) => {
+    const config = data instanceof FormData ? {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    } : {};
+    return api.put(`/products/${id}`, data, config);
+  },
+  delete: (id) => api.delete(`/products/${id}`),
+  getOTTTypes: () => api.get('/products/ott-types'),
+};
+
+export const orderAPI = {
+  create: (data) => {
+    const config = data instanceof FormData ? {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    } : {};
+    return api.post('/orders', data, config);
+  },
+  getMyOrders: () => api.get('/orders/my-orders'),
+  getAll: (params) => api.get('/orders/all', { params }),
+  getById: (id) => api.get(`/orders/${id}`),
+  updateStatus: (id, data) => api.put(`/orders/${id}/status`, data),
+  deliver: (id, data) => api.put(`/orders/${id}/deliver`, data),
+  updatePayment: (id, data) => api.put(`/orders/${id}/payment`, data),
+};
+
+export const subscriptionAPI = {
+  getMySubscriptions: (params) => api.get('/subscriptions/my-subscriptions', { params }),
+  getAll: (params) => api.get('/subscriptions/all', { params }),
+  getById: (id) => api.get(`/subscriptions/${id}`),
+  update: (id, data) => api.put(`/subscriptions/${id}`, data),
+  cancel: (id) => api.put(`/subscriptions/${id}/cancel`),
+};
+
+export const transactionAPI = {
+  create: (data) => api.post('/transactions', data),
+  getMyTransactions: (params) => api.get('/transactions/my-transactions', { params }),
+  getAll: (params) => api.get('/transactions/all', { params }),
+  getById: (id) => api.get(`/transactions/${id}`),
+  updateStatus: (id, data) => api.put(`/transactions/${id}/status`, data),
+  refund: (id, data) => api.put(`/transactions/${id}/refund`, data),
+};
+
+export const ticketAPI = {
+  create: (data) => api.post('/tickets', data),
+  getMyTickets: (params) => api.get('/tickets/my-tickets', { params }),
+  getAll: (params) => api.get('/tickets/all', { params }),
+  getById: (id) => api.get(`/tickets/${id}`),
+  addMessage: (id, data) => api.post(`/tickets/${id}/message`, data),
+  updateStatus: (id, data) => api.put(`/tickets/${id}/status`, data),
+  delete: (id) => api.delete(`/tickets/${id}`),
+};
+
+export const adminAPI = {
+  getDashboard: () => api.get('/admin/dashboard'),
+  getCustomers: (params) => api.get('/admin/customers', { params }),
+  getCustomerDetails: (id) => api.get(`/admin/customers/${id}`),
+  toggleCustomerStatus: (id) => api.put(`/admin/customers/${id}/toggle-status`),
+};
+
+export const paymentAPI = {
+  getStripeConfig: () => api.get('/payment/stripe/config'),
+  getPayPalConfig: () => api.get('/payment/paypal/config'),
+  createStripeIntent: (data) => api.post('/payment/stripe/create-intent', data),
+  confirmStripePayment: (data) => api.post('/payment/stripe/confirm', data),
+  createPayPalOrder: (data) => api.post('/payment/paypal/create-order', data),
+  capturePayPalOrder: (data) => api.post('/payment/paypal/capture-order', data),
+};
+
+export default api;

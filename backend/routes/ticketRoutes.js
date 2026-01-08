@@ -1,0 +1,23 @@
+import express from 'express';
+import {
+  createTicket,
+  getMyTickets,
+  getAllTickets,
+  getTicketById,
+  addMessage,
+  updateTicketStatus,
+  deleteTicket
+} from '../controllers/ticketController.js';
+import { protect, authorize } from '../middleware/auth.js';
+
+const router = express.Router();
+
+router.post('/', protect, createTicket);
+router.get('/my-tickets', protect, getMyTickets);
+router.get('/all', protect, authorize('admin'), getAllTickets);
+router.get('/:id', protect, getTicketById);
+router.post('/:id/message', protect, addMessage);
+router.put('/:id/status', protect, authorize('admin'), updateTicketStatus);
+router.delete('/:id', protect, authorize('admin'), deleteTicket);
+
+export default router;

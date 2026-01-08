@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: digital-dudes-backend
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5001
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: MONGODB_URI
+        fromDatabase:
+          name: digital-dudes-db
+          property: connectionString
+
+databases:
+  - name: digital-dudes-db
+    databaseName: digital-dudes
+    user: admin
