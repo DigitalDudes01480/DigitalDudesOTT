@@ -74,7 +74,12 @@ const orderSchema = new mongoose.Schema({
   },
   customerNotes: String,
   adminNotes: String,
-  receiptImage: String
+  receiptImage: String,
+  receiptData: {
+    data: String,
+    contentType: String,
+    filename: String
+  }
 }, {
   timestamps: true
 });

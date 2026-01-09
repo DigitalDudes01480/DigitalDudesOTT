@@ -54,7 +54,23 @@ export const createOrder = async (req, res) => {
       processedItems.push(orderItem);
     }
 
-    const receiptImage = req.file ? `/uploads/receipts/${req.file.filename}` : null;
+    // Handle receipt - store as base64 in production, file path in development
+    let receiptImage = null;
+    let receiptData = null;
+    
+    if (req.file) {
+      if (process.env.NODE_ENV === 'production') {
+        // Store as base64 in production
+        receiptData = {
+          data: req.file.buffer.toString('base64'),
+          contentType: req.file.mimetype,
+          filename: req.file.originalname
+        };
+      } else {
+        // Store file path in development
+        receiptImage = `/uploads/receipts/${req.file.filename}`;
+      }
+    }
 
     const order = await Order.create({
       user: req.user._id,
@@ -62,6 +78,7 @@ export const createOrder = async (req, res) => {
       totalAmount: totalAmount || calculatedTotal,
       paymentMethod: paymentMethod || 'khalti',
       receiptImage,
+      receiptData,
       orderStatus: 'pending',
       paymentStatus: 'pending'
     });

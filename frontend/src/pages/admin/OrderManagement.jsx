@@ -363,11 +363,21 @@ const OrderManagement = () => {
               </div>
 
               <div className="flex justify-center">
-                <img 
-                  src={`http://localhost:5001${selectedOrder.receiptImage}`}
-                  alt="Payment Receipt" 
-                  className="max-w-full h-auto rounded-lg shadow-lg"
-                />
+                {selectedOrder.receiptData?.data ? (
+                  <img 
+                    src={`data:${selectedOrder.receiptData.contentType};base64,${selectedOrder.receiptData.data}`}
+                    alt="Payment Receipt" 
+                    className="max-w-full h-auto rounded-lg shadow-lg"
+                  />
+                ) : selectedOrder.receiptImage ? (
+                  <img 
+                    src={selectedOrder.receiptImage.startsWith('http') ? selectedOrder.receiptImage : `http://localhost:5001${selectedOrder.receiptImage}`}
+                    alt="Payment Receipt" 
+                    className="max-w-full h-auto rounded-lg shadow-lg"
+                  />
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400">No receipt available</p>
+                )}
               </div>
 
               <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">

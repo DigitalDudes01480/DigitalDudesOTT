@@ -5,22 +5,24 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = process.env.NODE_ENV === 'production' ? '/tmp' : path.join(__dirname, '../uploads');
-    if (file.fieldname === 'receipt') {
-      cb(null, process.env.NODE_ENV === 'production' ? '/tmp' : path.join(__dirname, '../uploads/receipts'));
-    } else if (file.fieldname === 'image') {
-      cb(null, process.env.NODE_ENV === 'production' ? '/tmp' : path.join(__dirname, '../uploads/products'));
-    } else {
-      cb(null, uploadDir);
-    }
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Use memory storage in production for base64 conversion, disk storage in development
+const storage = process.env.NODE_ENV === 'production' 
+  ? multer.memoryStorage()
+  : multer.diskStorage({
+      destination: function (req, file, cb) {
+        if (file.fieldname === 'receipt') {
+          cb(null, path.join(__dirname, '../uploads/receipts'));
+        } else if (file.fieldname === 'image') {
+          cb(null, path.join(__dirname, '../uploads/products'));
+        } else {
+          cb(null, path.join(__dirname, '../uploads'));
+        }
+      },
+      filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+      }
+    });
 
 const fileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|pdf/;
