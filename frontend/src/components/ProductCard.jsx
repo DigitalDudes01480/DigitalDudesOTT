@@ -17,8 +17,8 @@ const ProductCard = ({ product }) => {
   const minPrice = getMinPrice();
 
   return (
-    <Link to={`/product/${product._id}`} className="group">
-      <div className="card hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+    <Link to={`/product/${product._id}`} className="group h-full">
+      <div className="card hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col">
         <div className="relative overflow-hidden rounded-lg mb-4">
           <img
             src={
@@ -29,7 +29,7 @@ const ProductCard = ({ product }) => {
                   : (product.image || 'https://via.placeholder.com/400x250')
             }
             alt={product.name}
-            className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
+            className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-300"
           />
           <div className="absolute top-2 left-2 bg-primary-600 text-white px-3 py-1 rounded-lg text-xs font-semibold">
             {product.ottType}
@@ -40,7 +40,7 @@ const ProductCard = ({ product }) => {
           {product.name}
         </h3>
 
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 flex-grow">
           {product.description}
         </p>
 
@@ -52,7 +52,7 @@ const ProductCard = ({ product }) => {
           ))}
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mt-auto">
           <div>
             <div className="flex items-baseline space-x-2">
               <span className="text-2xl font-bold text-primary-600">
