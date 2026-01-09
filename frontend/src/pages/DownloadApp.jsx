@@ -3,8 +3,13 @@ import { Link } from 'react-router-dom';
 
 const DownloadApp = () => {
   const handleDownload = () => {
-    // This will be updated with actual APK URL once built
-    window.open('/downloads/digital-dudes.apk', '_blank');
+    // Download the APK file
+    const link = document.createElement('a');
+    link.href = '/downloads/digital-dudes.apk';
+    link.download = 'digital-dudes.apk';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
