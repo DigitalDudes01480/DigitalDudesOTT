@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Zap, CreditCard, Headphones, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Zap, CreditCard, Headphones, ArrowRight, Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { productAPI } from '../utils/api';
 import ProductCard from '../components/ProductCard';
@@ -71,6 +71,10 @@ const Home = () => {
               <Link to="/shop" className="bg-white text-primary-600 hover:bg-gray-50 font-bold py-4 px-10 rounded-xl transition-all transform hover:scale-105 hover:shadow-2xl inline-flex items-center justify-center group">
                 Browse Subscriptions
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link to="/download" className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-10 rounded-xl transition-all transform hover:scale-105 hover:shadow-2xl inline-flex items-center justify-center group">
+                <Download className="mr-2 w-5 h-5" />
+                Download App
               </Link>
               <Link to="/support" className="bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white hover:bg-white/20 font-bold py-4 px-10 rounded-xl transition-all transform hover:scale-105 inline-flex items-center justify-center">
                 Contact Support
