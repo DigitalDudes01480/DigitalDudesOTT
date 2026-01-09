@@ -13,6 +13,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Support from './pages/Support';
+import DownloadApp from './pages/DownloadApp';
 
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -67,6 +68,7 @@ function App() {
                   <Support />
                 </ProtectedRoute>
               } />
+              <Route path="/download" element={<DownloadApp />} />
             </Routes>
             <Footer />
           </>
