@@ -63,9 +63,26 @@ const ticketSchema = new mongoose.Schema({
 
 // Generate ticket number before saving
 ticketSchema.pre('save', async function(next) {
-  if (this.isNew) {
-    const count = await mongoose.model('Ticket').countDocuments();
-    this.ticketNumber = `TKT-${String(count + 1).padStart(6, '0')}`;
+  if (this.isNew && !this.ticketNumber) {
+    try {
+      const count = await mongoose.model('Ticket').countDocuments();
+      this.ticketNumber = `TKT-${String(count + 1).padStart(6, '0')}`;
+    } catch (error) {
+      return next(error);
+    }
+  }
+  next();
+});
+
+// Also handle validation before save
+ticketSchema.pre('validate', async function(next) {
+  if (!this.ticketNumber) {
+    try {
+      const count = await mongoose.model('Ticket').countDocuments();
+      this.ticketNumber = `TKT-${String(count + 1).padStart(6, '0')}`;
+    } catch (error) {
+      return next(error);
+    }
   }
   next();
 });
