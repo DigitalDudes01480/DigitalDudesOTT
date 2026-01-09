@@ -60,6 +60,10 @@ const ticketSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
+  lastReadByUser: {
+    type: Date,
+    default: Date.now
+  },
   resolvedAt: Date,
   closedAt: Date
 }, {

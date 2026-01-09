@@ -96,6 +96,7 @@ export const transactionAPI = {
 export const ticketAPI = {
   create: (data) => api.post('/tickets', data),
   getMyTickets: (params) => api.get('/tickets/my-tickets', { params }),
+  getUnreadCount: () => api.get('/tickets/unread-count'),
   getAll: (params) => api.get('/tickets/all', { params }),
   getById: (id) => api.get(`/tickets/${id}`),
   addMessage: (id, data) => api.post(`/tickets/${id}/message`, data),

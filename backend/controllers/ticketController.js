@@ -132,6 +132,12 @@ export const getTicketById = async (req, res) => {
       });
     }
 
+    // Mark as read by user when customer views the ticket
+    if (req.user.role === 'customer') {
+      ticket.lastReadByUser = new Date();
+      await ticket.save();
+    }
+
     res.status(200).json({
       success: true,
       ticket
@@ -270,6 +276,37 @@ export const deleteTicket = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Ticket deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Get unread message count for customer
+export const getUnreadCount = async (req, res) => {
+  try {
+    const tickets = await Ticket.find({ 
+      user: req.user._id,
+      status: { $ne: 'closed' }
+    });
+
+    let unreadCount = 0;
+    tickets.forEach(ticket => {
+      const lastReadTime = ticket.lastReadByUser || ticket.createdAt;
+      const hasUnreadMessages = ticket.messages.some(msg => 
+        msg.senderRole === 'admin' && new Date(msg.timestamp) > new Date(lastReadTime)
+      );
+      if (hasUnreadMessages) {
+        unreadCount++;
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      unreadCount
     });
   } catch (error) {
     res.status(500).json({

@@ -3,7 +3,7 @@ import { ShoppingCart, User, LogOut, LayoutDashboard, Menu, X, Bell } from 'luci
 import { useState, useEffect } from 'react';
 import useAuthStore from '../store/useAuthStore';
 import useCartStore from '../store/useCartStore';
-import { subscriptionAPI, orderAPI } from '../utils/api';
+import { subscriptionAPI, orderAPI, ticketAPI } from '../utils/api';
 import Logo from './Logo';
 
 const Navbar = () => {
@@ -12,6 +12,7 @@ const Navbar = () => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [readNotifications, setReadNotifications] = useState([]);
+  const [unreadTicketCount, setUnreadTicketCount] = useState(0);
   const { user, isAuthenticated, logout } = useAuthStore();
   const { getItemCount } = useCartStore();
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const Navbar = () => {
   useEffect(() => {
     if (isAuthenticated && user?.role === 'customer') {
       fetchNotifications();
+      fetchUnreadTicketCount();
     }
   }, [isAuthenticated, user, readNotifications]);
 
@@ -77,6 +79,15 @@ const Navbar = () => {
     }
   };
 
+  const fetchUnreadTicketCount = async () => {
+    try {
+      const response = await ticketAPI.getUnreadCount();
+      setUnreadTicketCount(response.data.unreadCount);
+    } catch (error) {
+      console.error('Error fetching unread ticket count:', error);
+    }
+  };
+
 
   const handleLogout = () => {
     logout();
@@ -109,8 +120,13 @@ const Navbar = () => {
                 <Link to="/dashboard" className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all font-medium">
                   My Dashboard
                 </Link>
-                <Link to="/support" className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all font-medium">
+                <Link to="/support" className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all font-medium relative">
                   Support
+                  {unreadTicketCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                      {unreadTicketCount}
+                    </span>
+                  )}
                 </Link>
               </>
             )}
@@ -266,8 +282,13 @@ const Navbar = () => {
                     <Link to="/dashboard" className="block py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
                       My Dashboard
                     </Link>
-                    <Link to="/support" className="block py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
-                      Support
+                    <Link to="/support" className="flex items-center justify-between py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
+                      <span>Support</span>
+                      {unreadTicketCount > 0 && (
+                        <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 font-bold">
+                          {unreadTicketCount}
+                        </span>
+                      )}
                     </Link>
                     <Link to="/cart" className="flex items-center justify-between py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
                       <span>Cart</span>
