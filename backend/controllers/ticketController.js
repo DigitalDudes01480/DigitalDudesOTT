@@ -6,6 +6,24 @@ export const createTicket = async (req, res) => {
   try {
     const { subject, category, priority, message } = req.body;
 
+    // Handle image attachments
+    const attachments = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        if (file.size > 5 * 1024 * 1024) {
+          return res.status(400).json({
+            success: false,
+            message: 'Image file size should be less than 5MB'
+          });
+        }
+        attachments.push({
+          data: file.buffer.toString('base64'),
+          contentType: file.mimetype,
+          filename: file.originalname
+        });
+      }
+    }
+
     const ticket = await Ticket.create({
       user: req.user._id,
       subject,
@@ -14,7 +32,8 @@ export const createTicket = async (req, res) => {
       messages: [{
         sender: req.user._id,
         senderRole: 'customer',
-        message
+        message,
+        attachments
       }]
     });
 
@@ -147,10 +166,29 @@ export const addMessage = async (req, res) => {
       });
     }
 
+    // Handle image attachments
+    const attachments = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        if (file.size > 5 * 1024 * 1024) {
+          return res.status(400).json({
+            success: false,
+            message: 'Image file size should be less than 5MB'
+          });
+        }
+        attachments.push({
+          data: file.buffer.toString('base64'),
+          contentType: file.mimetype,
+          filename: file.originalname
+        });
+      }
+    }
+
     ticket.messages.push({
       sender: req.user._id,
       senderRole: req.user.role === 'admin' ? 'admin' : 'customer',
-      message
+      message,
+      attachments
     });
 
     // If admin replies, set status to in-progress if it's open

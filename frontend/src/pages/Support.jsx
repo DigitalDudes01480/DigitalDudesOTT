@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MessageCircle, Plus, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { MessageCircle, Plus, Clock, CheckCircle, AlertCircle, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { ticketAPI } from '../utils/api';
 import { formatDate, getStatusColor } from '../utils/formatters';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -153,14 +153,38 @@ const CreateTicketModal = ({ onClose, onSuccess }) => {
     priority: 'medium',
     message: ''
   });
+  const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (images.length + files.length > 5) {
+      toast.error('Maximum 5 images allowed');
+      return;
+    }
+    setImages([...images, ...files]);
+  };
+
+  const removeImage = (index) => {
+    setImages(images.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await ticketAPI.create(formData);
+      const formDataToSend = new FormData();
+      formDataToSend.append('subject', formData.subject);
+      formDataToSend.append('category', formData.category);
+      formDataToSend.append('priority', formData.priority);
+      formDataToSend.append('message', formData.message);
+      
+      images.forEach((image) => {
+        formDataToSend.append('images', image);
+      });
+
+      await ticketAPI.create(formDataToSend);
       toast.success('Ticket created successfully');
       onSuccess();
     } catch (error) {
@@ -232,6 +256,49 @@ const CreateTicketModal = ({ onClose, onSuccess }) => {
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Attach Images (Optional)</label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageChange}
+                className="hidden"
+                id="ticket-images"
+              />
+              <label
+                htmlFor="ticket-images"
+                className="flex items-center justify-center w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-primary-500 transition"
+              >
+                <div className="text-center">
+                  <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Click to upload images (Max 5, 5MB each)
+                  </p>
+                </div>
+              </label>
+              {images.length > 0 && (
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {images.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={URL.createObjectURL(image)}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-24 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="flex space-x-3">
               <button type="submit" disabled={loading} className="flex-1 btn-primary">
                 {loading ? 'Creating...' : 'Create Ticket'}
@@ -249,7 +316,21 @@ const CreateTicketModal = ({ onClose, onSuccess }) => {
 
 const TicketDetailModal = ({ ticket, onClose, onUpdate }) => {
   const [message, setMessage] = useState('');
+  const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (images.length + files.length > 5) {
+      toast.error('Maximum 5 images allowed');
+      return;
+    }
+    setImages([...images, ...files]);
+  };
+
+  const removeImage = (index) => {
+    setImages(images.filter((_, i) => i !== index));
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -257,9 +338,17 @@ const TicketDetailModal = ({ ticket, onClose, onUpdate }) => {
 
     setLoading(true);
     try {
-      await ticketAPI.addMessage(ticket._id, { message });
+      const formData = new FormData();
+      formData.append('message', message);
+      
+      images.forEach((image) => {
+        formData.append('images', image);
+      });
+
+      await ticketAPI.addMessage(ticket._id, formData);
       toast.success('Message sent');
       setMessage('');
+      setImages([]);
       onUpdate();
       onClose();
     } catch (error) {
@@ -306,6 +395,19 @@ const TicketDetailModal = ({ ticket, onClose, onUpdate }) => {
                   <span className="text-xs text-gray-500">{formatDate(msg.timestamp)}</span>
                 </div>
                 <p className="text-sm dark:text-gray-300">{msg.message}</p>
+                {msg.attachments && msg.attachments.length > 0 && (
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    {msg.attachments.map((attachment, idx) => (
+                      <img
+                        key={idx}
+                        src={`data:${attachment.contentType};base64,${attachment.data}`}
+                        alt={attachment.filename}
+                        className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition"
+                        onClick={() => window.open(`data:${attachment.contentType};base64,${attachment.data}`, '_blank')}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -320,6 +422,43 @@ const TicketDetailModal = ({ ticket, onClose, onUpdate }) => {
                 placeholder="Type your message..."
                 required
               />
+              <div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageChange}
+                  className="hidden"
+                  id="reply-images"
+                />
+                <label
+                  htmlFor="reply-images"
+                  className="flex items-center justify-center w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-primary-500 transition"
+                >
+                  <ImageIcon className="w-5 h-5 mr-2 text-gray-400" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Attach Images</span>
+                </label>
+                {images.length > 0 && (
+                  <div className="mt-2 grid grid-cols-4 gap-2">
+                    {images.map((image, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={URL.createObjectURL(image)}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-16 object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button type="submit" disabled={loading} className="btn-primary w-full">
                 {loading ? 'Sending...' : 'Send Message'}
               </button>

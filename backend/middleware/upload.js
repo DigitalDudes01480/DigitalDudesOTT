@@ -44,4 +44,9 @@ const upload = multer({
   fileFilter: fileFilter
 });
 
+// Export specific upload configurations
+export const uploadReceipt = upload.single('receipt');
+export const uploadProductImage = upload.single('image');
+export const uploadTicketImages = upload.array('images', 5); // Allow up to 5 images per ticket/message
+
 export default upload;
