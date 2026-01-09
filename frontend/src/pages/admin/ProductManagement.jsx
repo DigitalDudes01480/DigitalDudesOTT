@@ -278,8 +278,10 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
       submitData.append('stockQuantity', formData.stockQuantity);
       submitData.append('profileTypes', JSON.stringify(formData.profileTypes));
       
-      // Add image file if exists
-      if (formData.imageFile) {
+      // Add image URL if provided
+      if (formData.imageUrl) {
+        submitData.append('imageUrl', formData.imageUrl);
+      } else if (formData.imageFile) {
         submitData.append('image', formData.imageFile);
       } else if (formData.image && typeof formData.image === 'string' && !formData.image.startsWith('blob:')) {
         // Keep existing image URL for updates
@@ -348,28 +350,26 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Product Image</label>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Product Image URL</label>
               <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files[0];
-                  if (file) {
-                    if (file.size > 5 * 1024 * 1024) {
-                      toast.error('Image size should be less than 5MB');
-                      return;
-                    }
-                    setFormData({ ...formData, imageFile: file, image: URL.createObjectURL(file) });
-                  }
-                }}
+                type="url"
+                value={formData.imageUrl || ''}
+                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value, image: e.target.value })}
                 className="input-field"
+                placeholder="https://example.com/image.jpg"
               />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Paste an external image URL (recommended for production)
+              </p>
               {formData.image && (
                 <div className="mt-2">
                   <img 
-                    src={formData.image?.startsWith('/uploads') ? `http://localhost:5001${formData.image}` : formData.image} 
+                    src={formData.image} 
                     alt="Preview" 
                     className="w-32 h-32 object-cover rounded-lg" 
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/400x250?text=Invalid+Image';
+                    }}
                   />
                 </div>
               )}

@@ -86,14 +86,26 @@ export const createProduct = async (req, res) => {
     
     // Handle image
     if (req.file) {
-      productData.image = `/uploads/products/${req.file.filename}`;
+      // In production, file uploads to /tmp are temporary, so we'll use a placeholder
+      // For production, recommend using external URLs or cloud storage
+      if (process.env.NODE_ENV === 'production') {
+        productData.image = productData.imageUrl || 'https://via.placeholder.com/400x250?text=Product+Image';
+      } else {
+        productData.image = `/uploads/products/${req.file.filename}`;
+      }
+    } else if (productData.imageUrl) {
+      // Use external image URL if provided
+      productData.image = productData.imageUrl;
     } else if (productData.existingImage) {
       productData.image = productData.existingImage;
       delete productData.existingImage;
     } else {
       // Set default placeholder image if no image provided
-      productData.image = 'https://via.placeholder.com/400x250';
+      productData.image = 'https://via.placeholder.com/400x250?text=Product+Image';
     }
+    
+    // Clean up imageUrl field if it exists
+    delete productData.imageUrl;
 
     const product = await Product.create(productData);
 
@@ -121,15 +133,26 @@ export const updateProduct = async (req, res) => {
     
     // Handle image
     if (req.file) {
-      updateData.image = `/uploads/products/${req.file.filename}`;
+      // In production, file uploads to /tmp are temporary, so we'll use external URL if provided
+      if (process.env.NODE_ENV === 'production') {
+        updateData.image = updateData.imageUrl || 'https://via.placeholder.com/400x250?text=Product+Image';
+      } else {
+        updateData.image = `/uploads/products/${req.file.filename}`;
+      }
+    } else if (updateData.imageUrl) {
+      // Use external image URL if provided
+      updateData.image = updateData.imageUrl;
     } else if (updateData.existingImage) {
       updateData.image = updateData.existingImage;
       delete updateData.existingImage;
     }
     // If no new image and no existing image, keep the current image (don't update it)
-    if (!req.file && !updateData.existingImage) {
+    if (!req.file && !updateData.imageUrl && !updateData.existingImage) {
       delete updateData.image;
     }
+    
+    // Clean up imageUrl field if it exists
+    delete updateData.imageUrl;
 
     const product = await Product.findByIdAndUpdate(
       req.params.id,
