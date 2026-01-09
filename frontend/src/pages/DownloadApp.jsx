@@ -40,16 +40,34 @@ const DownloadApp = () => {
             <p className="text-gray-600 dark:text-gray-400">Version 1.0.0 • 5.2 MB</p>
           </div>
 
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-xl p-6 mb-4">
+            <div className="flex items-start">
+              <AlertCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400 mr-3 flex-shrink-0 mt-1" />
+              <div>
+                <h4 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2">APK Coming Soon!</h4>
+                <p className="text-yellow-800 dark:text-yellow-200 text-sm mb-3">
+                  We're currently building the Android app. The APK will be available for download very soon.
+                </p>
+                <p className="text-yellow-800 dark:text-yellow-200 text-sm">
+                  Want to be notified when it's ready? Contact us at{' '}
+                  <a href="mailto:digitaldudes18@gmail.com" className="font-semibold underline">
+                    digitaldudes18@gmail.com
+                  </a>
+                </p>
+              </div>
+            </div>
+          </div>
+
           <button
-            onClick={handleDownload}
-            className="btn-primary inline-flex items-center justify-center text-lg mb-4"
+            disabled
+            className="bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold py-4 px-10 rounded-xl inline-flex items-center justify-center text-lg mb-4 cursor-not-allowed opacity-60"
           >
             <Download className="w-6 h-6 mr-2" />
-            Download APK
+            APK Coming Soon
           </button>
 
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            For Android 7.0 and above
+            For Android 7.0 and above • Version 1.0.0
           </p>
         </div>
 
