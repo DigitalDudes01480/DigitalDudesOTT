@@ -253,39 +253,62 @@ const Navbar = () => {
       {mobileMenuOpen && (
         <div className="md:hidden bg-white dark:bg-gray-900 border-t dark:border-gray-800">
           <div className="px-4 py-4 space-y-3">
-            <Link to="/" className="block py-2 text-gray-700 dark:text-gray-300" onClick={() => setMobileMenuOpen(false)}>
+            <Link to="/" className="block py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
               Home
             </Link>
-            <Link to="/shop" className="block py-2 text-gray-700 dark:text-gray-300" onClick={() => setMobileMenuOpen(false)}>
+            <Link to="/shop" className="block py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
               Shop
             </Link>
             {isAuthenticated ? (
               <>
                 {user?.role === 'customer' && (
                   <>
-                    <Link to="/dashboard" className="block py-2 text-gray-700 dark:text-gray-300" onClick={() => setMobileMenuOpen(false)}>
+                    <Link to="/dashboard" className="block py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
                       My Dashboard
                     </Link>
-                    <Link to="/cart" className="block py-2 text-gray-700 dark:text-gray-300" onClick={() => setMobileMenuOpen(false)}>
-                      Cart ({cartItemCount})
+                    <Link to="/support" className="block py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
+                      Support
                     </Link>
+                    <Link to="/cart" className="flex items-center justify-between py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
+                      <span>Cart</span>
+                      {cartItemCount > 0 && (
+                        <span className="bg-primary-600 text-white text-xs rounded-full px-2 py-1 font-bold">
+                          {cartItemCount}
+                        </span>
+                      )}
+                    </Link>
+                    {notifications.length > 0 && (
+                      <div className="py-3 px-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                        <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                          {notifications.filter(n => !readNotifications.includes(n.id)).length} New Notifications
+                        </p>
+                        <Link to="/dashboard" className="text-sm text-primary-600 dark:text-primary-400 underline" onClick={() => setMobileMenuOpen(false)}>
+                          View All
+                        </Link>
+                      </div>
+                    )}
                   </>
                 )}
                 {user?.role === 'admin' && (
-                  <Link to="/admin" className="block py-2 text-gray-700 dark:text-gray-300" onClick={() => setMobileMenuOpen(false)}>
+                  <Link to="/admin" className="block py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
                     Admin Panel
                   </Link>
                 )}
-                <button onClick={handleLogout} className="block w-full text-left py-2 text-red-600">
-                  Logout
-                </button>
+                <div className="pt-3 border-t dark:border-gray-700">
+                  <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Signed in as <span className="font-medium text-gray-700 dark:text-gray-300">{user?.name}</span>
+                  </div>
+                  <button onClick={handleLogout} className="block w-full text-left py-3 px-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+                    Logout
+                  </button>
+                </div>
               </>
             ) : (
               <>
-                <Link to="/login" className="block py-2 text-gray-700 dark:text-gray-300" onClick={() => setMobileMenuOpen(false)}>
+                <Link to="/login" className="block py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
                   Login
                 </Link>
-                <Link to="/register" className="block py-2 text-primary-600 font-medium" onClick={() => setMobileMenuOpen(false)}>
+                <Link to="/register" className="block py-3 bg-primary-600 text-white text-center rounded-lg font-medium hover:bg-primary-700" onClick={() => setMobileMenuOpen(false)}>
                   Sign Up
                 </Link>
               </>
