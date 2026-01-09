@@ -7,12 +7,13 @@ const __dirname = path.dirname(__filename);
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
+    const uploadDir = process.env.NODE_ENV === 'production' ? '/tmp' : path.join(__dirname, '../uploads');
     if (file.fieldname === 'receipt') {
-      cb(null, path.join(__dirname, '../uploads/receipts'));
+      cb(null, process.env.NODE_ENV === 'production' ? '/tmp' : path.join(__dirname, '../uploads/receipts'));
     } else if (file.fieldname === 'image') {
-      cb(null, path.join(__dirname, '../uploads/products'));
+      cb(null, process.env.NODE_ENV === 'production' ? '/tmp' : path.join(__dirname, '../uploads/products'));
     } else {
-      cb(null, path.join(__dirname, '../uploads'));
+      cb(null, uploadDir);
     }
   },
   filename: function (req, file, cb) {
