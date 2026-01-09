@@ -32,7 +32,11 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',
+    'https://frontend-cbve2o2m3-digitaldudes01480s-projects.vercel.app',
+    'https://frontend-virid-nu-28.vercel.app'
+  ],
   credentials: true
 }));
 app.use(express.json());
