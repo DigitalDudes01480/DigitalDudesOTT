@@ -60,16 +60,31 @@ export const createOrder = async (req, res) => {
     
     if (req.file) {
       if (process.env.NODE_ENV === 'production') {
+        // Check file size (max 5MB for base64 storage)
+        if (req.file.size > 5 * 1024 * 1024) {
+          return res.status(400).json({
+            success: false,
+            message: 'Receipt file size should be less than 5MB'
+          });
+        }
+        
         // Store as base64 in production
         receiptData = {
           data: req.file.buffer.toString('base64'),
           contentType: req.file.mimetype,
           filename: req.file.originalname
         };
+        
+        console.log('Receipt stored as base64, size:', req.file.size, 'bytes');
       } else {
         // Store file path in development
         receiptImage = `/uploads/receipts/${req.file.filename}`;
       }
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment receipt is required'
+      });
     }
 
     const order = await Order.create({

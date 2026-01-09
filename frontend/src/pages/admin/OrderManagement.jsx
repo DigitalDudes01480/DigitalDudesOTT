@@ -52,6 +52,13 @@ const OrderManagement = () => {
   };
 
   const handleViewReceipt = (order) => {
+    console.log('Viewing receipt for order:', order._id);
+    console.log('Receipt Image:', order.receiptImage);
+    console.log('Receipt Data:', order.receiptData ? 'Present' : 'Missing');
+    if (order.receiptData) {
+      console.log('Receipt Data Type:', order.receiptData.contentType);
+      console.log('Receipt Data Size:', order.receiptData.data?.length || 0, 'characters');
+    }
     setSelectedOrder(order);
     setShowReceiptModal(true);
   };
@@ -194,7 +201,7 @@ const OrderManagement = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex space-x-2">
-                      {order.receiptImage && (
+                      {(order.receiptImage || order.receiptData) && (
                         <button
                           onClick={() => handleViewReceipt(order)}
                           className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition"
