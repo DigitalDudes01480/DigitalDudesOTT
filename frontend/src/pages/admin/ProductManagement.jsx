@@ -108,7 +108,13 @@ const ProductManagement = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <img
-                        src={product.image?.startsWith('/uploads') ? `http://localhost:5001${product.image}` : (product.image || 'https://via.placeholder.com/50')}
+                        src={
+                          product.imageData?.data 
+                            ? `data:${product.imageData.contentType};base64,${product.imageData.data}`
+                            : product.image?.startsWith('/uploads') 
+                              ? `http://localhost:5001${product.image}` 
+                              : (product.image || 'https://via.placeholder.com/50')
+                        }
                         alt={product.name}
                         className="w-12 h-12 rounded-lg object-cover mr-3"
                       />
@@ -350,16 +356,28 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Product Image URL</label>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Product Image</label>
               <input
-                type="url"
-                value={formData.imageUrl || ''}
-                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value, image: e.target.value })}
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    if (file.size > 5 * 1024 * 1024) {
+                      toast.error('Image size should be less than 5MB');
+                      return;
+                    }
+                    setFormData({ 
+                      ...formData, 
+                      imageFile: file,
+                      image: URL.createObjectURL(file)
+                    });
+                  }
+                }}
                 className="input-field"
-                placeholder="https://example.com/image.jpg"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Paste an external image URL (recommended for production)
+                Upload an image file (Max 5MB, JPG/PNG)
               </p>
               {formData.image && (
                 <div className="mt-2">

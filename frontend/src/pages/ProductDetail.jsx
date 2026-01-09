@@ -122,7 +122,13 @@ const ProductDetail = () => {
           <div>
             <div className="relative rounded-2xl overflow-hidden shadow-2xl">
               <img
-                src={product.image?.startsWith('/uploads') ? `http://localhost:5001${product.image}` : (product.image || 'https://via.placeholder.com/600x400')}
+                src={
+                  product.imageData?.data 
+                    ? `data:${product.imageData.contentType};base64,${product.imageData.data}`
+                    : product.image?.startsWith('/uploads') 
+                      ? `http://localhost:5001${product.image}` 
+                      : (product.image || 'https://via.placeholder.com/600x400')
+                }
                 alt={product.name}
                 className="w-full h-96 object-cover"
               />

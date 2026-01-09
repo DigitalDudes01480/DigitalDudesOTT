@@ -21,7 +21,13 @@ const ProductCard = ({ product }) => {
       <div className="card hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
         <div className="relative overflow-hidden rounded-lg mb-4">
           <img
-            src={product.image?.startsWith('/uploads') ? `http://localhost:5001${product.image}` : (product.image || 'https://via.placeholder.com/400x250')}
+            src={
+              product.imageData?.data 
+                ? `data:${product.imageData.contentType};base64,${product.imageData.data}`
+                : product.image?.startsWith('/uploads') 
+                  ? `http://localhost:5001${product.image}` 
+                  : (product.image || 'https://via.placeholder.com/400x250')
+            }
             alt={product.name}
             className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
           />

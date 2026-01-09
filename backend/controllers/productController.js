@@ -84,12 +84,22 @@ export const createProduct = async (req, res) => {
       productData.profileTypes = JSON.parse(productData.profileTypes);
     }
     
-    // Handle image
+    // Handle image upload
     if (req.file) {
-      // In production, file uploads to /tmp are temporary, so we'll use a placeholder
-      // For production, recommend using external URLs or cloud storage
+      if (req.file.size > 5 * 1024 * 1024) {
+        return res.status(400).json({
+          success: false,
+          message: 'Image file size should be less than 5MB'
+        });
+      }
+      
       if (process.env.NODE_ENV === 'production') {
-        productData.image = productData.imageUrl || 'https://via.placeholder.com/400x250?text=Product+Image';
+        // Store as base64 in production
+        productData.imageData = {
+          data: req.file.buffer.toString('base64'),
+          contentType: req.file.mimetype,
+          filename: req.file.originalname
+        };
       } else {
         productData.image = `/uploads/products/${req.file.filename}`;
       }
@@ -131,11 +141,22 @@ export const updateProduct = async (req, res) => {
       updateData.profileTypes = JSON.parse(updateData.profileTypes);
     }
     
-    // Handle image
+    // Handle image upload
     if (req.file) {
-      // In production, file uploads to /tmp are temporary, so we'll use external URL if provided
+      if (req.file.size > 5 * 1024 * 1024) {
+        return res.status(400).json({
+          success: false,
+          message: 'Image file size should be less than 5MB'
+        });
+      }
+      
       if (process.env.NODE_ENV === 'production') {
-        updateData.image = updateData.imageUrl || 'https://via.placeholder.com/400x250?text=Product+Image';
+        // Store as base64 in production
+        updateData.imageData = {
+          data: req.file.buffer.toString('base64'),
+          contentType: req.file.mimetype,
+          filename: req.file.originalname
+        };
       } else {
         updateData.image = `/uploads/products/${req.file.filename}`;
       }

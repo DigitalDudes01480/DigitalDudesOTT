@@ -73,6 +73,11 @@ const productSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  imageData: {
+    data: String,
+    contentType: String,
+    filename: String
+  },
   status: {
     type: String,
     enum: ['active', 'disabled'],
