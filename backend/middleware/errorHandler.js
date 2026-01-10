@@ -1,3 +1,5 @@
+import multer from 'multer';
+
 const errorHandler = (err, req, res, next) => {
   let error = { ...err };
   error.message = err.message;
@@ -12,6 +14,14 @@ const errorHandler = (err, req, res, next) => {
   if (err.code === 11000) {
     const message = 'Duplicate field value entered';
     error = { message, statusCode: 400 };
+  }
+
+  if (err instanceof multer.MulterError) {
+    error = { message: err.message, statusCode: 400 };
+  }
+
+  if (typeof err.message === 'string' && err.message.includes('Only image files')) {
+    error = { message: err.message, statusCode: 400 };
   }
 
   if (err.name === 'ValidationError') {

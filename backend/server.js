@@ -71,6 +71,15 @@ app.get('/', (req, res) => {
   });
 });
 
+app.get('/api/version', (req, res) => {
+  res.json({
+    success: true,
+    nodeEnv: process.env.NODE_ENV,
+    vercel: process.env.VERCEL,
+    commit: process.env.VERCEL_GIT_COMMIT_SHA || process.env.VERCEL_GITHUB_COMMIT_SHA || null
+  });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);

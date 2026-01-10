@@ -6,7 +6,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Use memory storage in production for base64 conversion, disk storage in development
-const storage = process.env.NODE_ENV === 'production' 
+const isProductionLike = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+const storage = isProductionLike
   ? multer.memoryStorage()
   : multer.diskStorage({
       destination: function (req, file, cb) {
