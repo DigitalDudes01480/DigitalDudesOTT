@@ -47,7 +47,8 @@ export const createOrder = async (req, res) => {
         price: item.price || item.selectedPricing?.price || product.price,
         quantity: item.quantity || 1,
         selectedProfile: item.selectedProfile,
-        selectedPricing: item.selectedPricing
+        selectedPricing: item.selectedPricing,
+        customerEmail: item.customerEmail
       };
 
       calculatedTotal += orderItem.price * orderItem.quantity;

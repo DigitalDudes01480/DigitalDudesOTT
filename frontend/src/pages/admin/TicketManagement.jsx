@@ -155,6 +155,37 @@ const TicketDetailModal = ({ ticket, onClose, onUpdate }) => {
   const [status, setStatus] = useState(ticket.status);
   const [priority, setPriority] = useState(ticket.priority);
   const [loading, setLoading] = useState(false);
+  const [currentTicket, setCurrentTicket] = useState(ticket);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Auto-refresh ticket messages every 3 seconds
+  useEffect(() => {
+    const refreshTicket = async () => {
+      if (isRefreshing) return;
+      
+      try {
+        setIsRefreshing(true);
+        const response = await ticketAPI.getById(ticket._id);
+        setCurrentTicket(response.data.ticket);
+        // Update status and priority if changed
+        setStatus(response.data.ticket.status);
+        setPriority(response.data.ticket.priority);
+      } catch (error) {
+        console.error('Error refreshing ticket:', error);
+      } finally {
+        setIsRefreshing(false);
+      }
+    };
+
+    // Initial load
+    refreshTicket();
+
+    // Set up polling interval
+    const intervalId = setInterval(refreshTicket, 3000);
+
+    // Cleanup on unmount
+    return () => clearInterval(intervalId);
+  }, [ticket._id, isRefreshing]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -165,6 +196,10 @@ const TicketDetailModal = ({ ticket, onClose, onUpdate }) => {
       await ticketAPI.addMessage(ticket._id, { message });
       toast.success('Message sent');
       setMessage('');
+      
+      // Refresh ticket immediately after sending
+      const response = await ticketAPI.getById(ticket._id);
+      setCurrentTicket(response.data.ticket);
       onUpdate();
     } catch (error) {
       toast.error('Failed to send message');
@@ -190,10 +225,14 @@ const TicketDetailModal = ({ ticket, onClose, onUpdate }) => {
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h2 className="text-2xl font-bold dark:text-white mb-2">{ticket.subject}</h2>
+              <h2 className="text-2xl font-bold dark:text-white mb-2">{currentTicket.subject}</h2>
               <div className="flex items-center space-x-3">
-                <span className="text-sm text-gray-500">Ticket #{ticket.ticketNumber}</span>
-                <span className="text-sm text-gray-500">{ticket.user?.name}</span>
+                <span className="text-sm text-gray-500">Ticket #{currentTicket.ticketNumber}</span>
+                <span className="text-sm text-gray-500">{currentTicket.user?.name}</span>
+                <span className="text-xs text-green-500 flex items-center">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                  Live
+                </span>
               </div>
             </div>
             <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -226,8 +265,8 @@ const TicketDetailModal = ({ ticket, onClose, onUpdate }) => {
             Update Status & Priority
           </button>
 
-          <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
-            {ticket.messages.map((msg, index) => (
+          <div className="space-y-4 mb-6 max-h-96 overflow-y-auto" id="admin-messages-container">
+            {currentTicket.messages.map((msg, index) => (
               <div
                 key={index}
                 className={`p-4 rounded-lg ${
@@ -238,7 +277,7 @@ const TicketDetailModal = ({ ticket, onClose, onUpdate }) => {
               >
                 <div className="flex justify-between items-start mb-2">
                   <span className="font-semibold dark:text-white">
-                    {msg.senderRole === 'admin' ? '🛡️ Support Team' : `👤 ${ticket.user?.name}`}
+                    {msg.senderRole === 'admin' ? '🛡️ Support Team' : `👤 ${currentTicket.user?.name}`}
                   </span>
                   <span className="text-xs text-gray-500">{formatDate(msg.timestamp)}</span>
                 </div>

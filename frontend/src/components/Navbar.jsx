@@ -259,7 +259,8 @@ const Navbar = () => {
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-gray-700 dark:text-gray-300"
+            className="md:hidden p-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all active:scale-95"
+            aria-label="Toggle mobile menu"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -267,22 +268,22 @@ const Navbar = () => {
       </div>
 
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white dark:bg-gray-900 border-t dark:border-gray-800">
-          <div className="px-4 py-4 space-y-3">
-            <Link to="/" className="block py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
+        <div className="md:hidden bg-white dark:bg-gray-900 border-t dark:border-gray-800 animate-slide-down">
+          <div className="px-4 py-4 space-y-2">
+            <Link to="/" className="flex items-center py-3.5 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-gray-800 hover:text-primary-600 dark:hover:text-primary-400 rounded-xl px-4 transition-all active:scale-95" onClick={() => setMobileMenuOpen(false)}>
               Home
             </Link>
-            <Link to="/shop" className="block py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
+            <Link to="/shop" className="flex items-center py-3.5 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-gray-800 hover:text-primary-600 dark:hover:text-primary-400 rounded-xl px-4 transition-all active:scale-95" onClick={() => setMobileMenuOpen(false)}>
               Shop
             </Link>
             {isAuthenticated ? (
               <>
                 {user?.role === 'customer' && (
                   <>
-                    <Link to="/dashboard" className="block py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
+                    <Link to="/dashboard" className="flex items-center py-3.5 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-gray-800 hover:text-primary-600 dark:hover:text-primary-400 rounded-xl px-4 transition-all active:scale-95" onClick={() => setMobileMenuOpen(false)}>
                       My Dashboard
                     </Link>
-                    <Link to="/support" className="flex items-center justify-between py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
+                    <Link to="/support" className="flex items-center justify-between py-3.5 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-gray-800 hover:text-primary-600 dark:hover:text-primary-400 rounded-xl px-4 transition-all active:scale-95" onClick={() => setMobileMenuOpen(false)}>
                       <span>Support</span>
                       {unreadTicketCount > 0 && (
                         <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 font-bold">
@@ -290,7 +291,7 @@ const Navbar = () => {
                         </span>
                       )}
                     </Link>
-                    <Link to="/cart" className="flex items-center justify-between py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
+                    <Link to="/cart" className="flex items-center justify-between py-3.5 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-gray-800 hover:text-primary-600 dark:hover:text-primary-400 rounded-xl px-4 transition-all active:scale-95" onClick={() => setMobileMenuOpen(false)}>
                       <span>Cart</span>
                       {cartItemCount > 0 && (
                         <span className="bg-primary-600 text-white text-xs rounded-full px-2 py-1 font-bold">

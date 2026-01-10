@@ -72,6 +72,34 @@
   }
 }
 
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.8s ease-out;
 }
@@ -86,6 +114,14 @@
 
 .animate-scale-in {
   animation: scale-in 0.5s ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 @layer components {
@@ -177,4 +213,83 @@ body {
   input, select, textarea {
     font-size: 16px !important; /* Prevents zoom on iOS */
   }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better touch feedback */
+@media (hover: none) and (pointer: coarse) {
+  button:active, a:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+  
+  .card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* Improve tap highlight color */
+* {
+  -webkit-tap-highlight-color: rgba(79, 70, 229, 0.1);
+  -webkit-touch-callout: none;
+}
+
+/* Better scrollbar on mobile */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.7);
+}
+
+/* Safe area insets for notched devices */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+}
+
+/* Prevent text selection on buttons */
+button {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Loading skeleton animation */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(229, 231, 235, 0.4) 0%,
+    rgba(229, 231, 235, 0.8) 50%,
+    rgba(229, 231, 235, 0.4) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(55, 65, 81, 0.4) 0%,
+    rgba(55, 65, 81, 0.8) 50%,
+    rgba(55, 65, 81, 0.4) 100%
+  );
+  background-size: 200% 100%;
 }

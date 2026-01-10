@@ -39,6 +39,14 @@ const useCartStore = create(
         }
       },
 
+      updateItemEmail: (productId, email) => {
+        set({
+          items: get().items.map((item) =>
+            item._id === productId ? { ...item, customerEmail: email } : item
+          ),
+        });
+      },
+
       clearCart: () => set({ items: [] }),
 
       getTotal: () => {

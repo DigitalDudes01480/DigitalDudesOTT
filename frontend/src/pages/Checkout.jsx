@@ -14,8 +14,14 @@ const CheckoutForm = () => {
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('khalti');
   const [receiptFile, setReceiptFile] = useState(null);
+  const [itemEmails, setItemEmails] = useState({});
 
   const total = getTotal();
+
+  // Get items that require own account email
+  const ownAccountItems = items.filter(item => 
+    item.selectedProfile?.requiresOwnAccount && !item.customerEmail
+  );
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -36,6 +42,19 @@ const CheckoutForm = () => {
       return;
     }
 
+    // Validate emails for own account items
+    for (const item of ownAccountItems) {
+      const email = itemEmails[item._id];
+      if (!email) {
+        toast.error(`Please provide email for ${item.name} (Own Account)`);
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        toast.error(`Please provide a valid email for ${item.name}`);
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -48,7 +67,8 @@ const CheckoutForm = () => {
         quantity: item.quantity,
         price: item.price,
         selectedProfile: item.selectedProfile,
-        selectedPricing: item.selectedPricing
+        selectedPricing: item.selectedPricing,
+        customerEmail: item.customerEmail || itemEmails[item._id]
       }));
 
       formData.append('orderItems', JSON.stringify(orderItems));
@@ -121,11 +141,33 @@ const CheckoutForm = () => {
         {paymentMethod === 'bank-transfer' && (
           <div className="mb-6 p-6 bg-secondary-50 dark:bg-secondary-900/20 rounded-lg border-2 border-secondary-200 dark:border-secondary-800">
             <h3 className="font-bold text-lg mb-4 text-secondary-700 dark:text-white">Bank Transfer Details</h3>
-            <div className="space-y-2 text-sm dark:text-gray-300">
-              <p><span className="font-semibold">Bank Name:</span> Your Bank Name</p>
-              <p><span className="font-semibold">Account Name:</span> Digital Dudes</p>
-              <p><span className="font-semibold">Account Number:</span> XXXX-XXXX-XXXX</p>
-              <p className="text-gray-600 dark:text-gray-400 mt-4">Transfer the amount and upload the receipt below</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3 text-sm dark:text-gray-300">
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Bank Name</p>
+                  <p className="font-bold text-lg">NIC Asia</p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Account Name</p>
+                  <p className="font-bold text-lg">Digital Dudes</p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Account Number</p>
+                  <p className="font-bold text-lg font-mono">0265753195560001</p>
+                </div>
+                <p className="text-gray-600 dark:text-gray-400 mt-4 text-xs">
+                  📱 Scan QR code or transfer manually and upload receipt below
+                </p>
+              </div>
+              <div className="flex flex-col items-center justify-center">
+                <p className="text-sm font-semibold mb-3 dark:text-white">Scan QR Code</p>
+                <img 
+                  src="/images/nic-asia-qr.png" 
+                  alt="NIC Asia Bank QR Code" 
+                  className="w-full max-w-xs h-auto object-contain bg-white p-4 rounded-lg shadow-lg border-2 border-gray-200"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">NIC Asia MoBank</p>
+              </div>
             </div>
           </div>
         )}
@@ -160,6 +202,52 @@ const CheckoutForm = () => {
           </div>
         </div>
       </div>
+
+      {ownAccountItems.length > 0 && (
+        <div className="card">
+          <h2 className="text-xl font-bold mb-4 dark:text-white">Account Activation Details</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            Please provide your email address for the following items that require own account activation:
+          </p>
+          
+          <div className="space-y-4">
+            {ownAccountItems.map((item) => (
+              <div key={item._id} className="p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="font-bold text-base dark:text-white">{item.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Profile: {item.selectedProfile?.name}
+                    </p>
+                  </div>
+                  <span className="text-xs bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 px-2 py-1 rounded font-medium">
+                    Own Account
+                  </span>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 dark:text-white">
+                    Your Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={itemEmails[item._id] || ''}
+                    onChange={(e) => setItemEmails({
+                      ...itemEmails,
+                      [item._id]: e.target.value
+                    })}
+                    placeholder="Enter email for account activation"
+                    className="input-field w-full"
+                    required
+                  />
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                    We'll activate the service on this email address
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <h2 className="text-xl font-bold mb-6 dark:text-white">Order Summary</h2>

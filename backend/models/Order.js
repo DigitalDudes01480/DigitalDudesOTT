@@ -32,6 +32,17 @@ const orderSchema = new mongoose.Schema({
       type: Number,
       required: true,
       default: 1
+    },
+    selectedProfile: {
+      type: String
+    },
+    selectedPricing: {
+      type: Object
+    },
+    customerEmail: {
+      type: String,
+      trim: true,
+      lowercase: true
     }
   }],
   totalAmount: {

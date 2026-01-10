@@ -16,6 +16,7 @@ const Shop = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [ottTypes, setOttTypes] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchOTTTypes();
@@ -79,20 +80,27 @@ const Shop = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 sm:py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4 dark:text-white">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 dark:text-white">
             Browse OTT Subscriptions
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
             Find the perfect subscription plan for your entertainment needs
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
           <div className="lg:col-span-1">
-            <div className="card sticky top-20">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="lg:hidden w-full btn-primary mb-4 flex items-center justify-center"
+            >
+              <Filter className="w-5 h-5 mr-2" />
+              {showFilters ? 'Hide Filters' : 'Show Filters'}
+            </button>
+            <div className={`card sticky top-20 ${showFilters ? 'block' : 'hidden lg:block'}`}>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold dark:text-white flex items-center">
                   <Filter className="w-5 h-5 mr-2" />
@@ -217,7 +225,7 @@ const Shop = () => {
                     Showing {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
                   </p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                   {filteredProducts.map((product) => (
                     <ProductCard key={product._id} product={product} />
                   ))}

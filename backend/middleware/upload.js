@@ -25,14 +25,14 @@ const storage = process.env.NODE_ENV === 'production'
     });
 
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|pdf/;
+  const allowedTypes = /jpeg|jpg|png|gif|webp|bmp|svg|pdf/;
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
+  const mimetype = /image\/(jpeg|jpg|png|gif|webp|bmp|svg\+xml)|application\/pdf/.test(file.mimetype);
 
   if (mimetype && extname) {
     return cb(null, true);
   } else {
-    cb(new Error('Only images (JPEG, PNG) and PDF files are allowed!'));
+    cb(new Error('Only image files (JPEG, PNG, GIF, WebP, BMP, SVG) and PDF files are allowed!'));
   }
 };
 

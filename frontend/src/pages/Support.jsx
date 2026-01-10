@@ -318,6 +318,34 @@ const TicketDetailModal = ({ ticket, onClose, onUpdate }) => {
   const [message, setMessage] = useState('');
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [currentTicket, setCurrentTicket] = useState(ticket);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Auto-refresh ticket messages every 3 seconds
+  useEffect(() => {
+    const refreshTicket = async () => {
+      if (isRefreshing) return;
+      
+      try {
+        setIsRefreshing(true);
+        const response = await ticketAPI.getById(ticket._id);
+        setCurrentTicket(response.data.ticket);
+      } catch (error) {
+        console.error('Error refreshing ticket:', error);
+      } finally {
+        setIsRefreshing(false);
+      }
+    };
+
+    // Initial load
+    refreshTicket();
+
+    // Set up polling interval
+    const intervalId = setInterval(refreshTicket, 3000);
+
+    // Cleanup on unmount
+    return () => clearInterval(intervalId);
+  }, [ticket._id, isRefreshing]);
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
@@ -349,8 +377,11 @@ const TicketDetailModal = ({ ticket, onClose, onUpdate }) => {
       toast.success('Message sent');
       setMessage('');
       setImages([]);
+      
+      // Refresh ticket immediately after sending
+      const response = await ticketAPI.getById(ticket._id);
+      setCurrentTicket(response.data.ticket);
       onUpdate();
-      onClose();
     } catch (error) {
       toast.error('Failed to send message');
     } finally {
@@ -364,13 +395,17 @@ const TicketDetailModal = ({ ticket, onClose, onUpdate }) => {
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h2 className="text-2xl font-bold dark:text-white mb-2">{ticket.subject}</h2>
+              <h2 className="text-2xl font-bold dark:text-white mb-2">{currentTicket.subject}</h2>
               <div className="flex items-center space-x-3">
-                <span className="text-sm text-gray-500">Ticket #{ticket.ticketNumber}</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(ticket.status)}`}>
-                  {ticket.status}
+                <span className="text-sm text-gray-500">Ticket #{currentTicket.ticketNumber}</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(currentTicket.status)}`}>
+                  {currentTicket.status}
                 </span>
-                <span className="text-sm text-gray-500">{ticket.category}</span>
+                <span className="text-sm text-gray-500">{currentTicket.category}</span>
+                <span className="text-xs text-green-500 flex items-center">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                  Live
+                </span>
               </div>
             </div>
             <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -378,8 +413,8 @@ const TicketDetailModal = ({ ticket, onClose, onUpdate }) => {
             </button>
           </div>
 
-          <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
-            {ticket.messages.map((msg, index) => (
+          <div className="space-y-4 mb-6 max-h-96 overflow-y-auto" id="messages-container">
+            {currentTicket.messages.map((msg, index) => (
               <div
                 key={index}
                 className={`p-4 rounded-lg ${
@@ -412,7 +447,7 @@ const TicketDetailModal = ({ ticket, onClose, onUpdate }) => {
             ))}
           </div>
 
-          {ticket.status !== 'closed' && (
+          {currentTicket.status !== 'closed' && (
             <form onSubmit={handleSendMessage} className="space-y-4">
               <textarea
                 value={message}

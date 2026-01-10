@@ -14,6 +14,7 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [selectedProfileIndex, setSelectedProfileIndex] = useState(0);
   const [selectedPricingIndex, setSelectedPricingIndex] = useState(0);
+  const [customerEmail, setCustomerEmail] = useState('');
   const { addToCart } = useCartStore();
 
   useEffect(() => {
@@ -51,24 +52,39 @@ const ProductDetail = () => {
       return;
     }
 
+    if (profile.requiresOwnAccount && !customerEmail) {
+      toast.error('Please provide your email address for account activation');
+      return;
+    }
+
+    if (profile.requiresOwnAccount && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+      toast.error('Please provide a valid email address');
+      return;
+    }
+
     const cartItem = {
       ...product,
       selectedProfile: {
         profileId: profile._id,
         name: profile.name,
         screenCount: profile.screenCount,
-        quality: profile.quality
+        quality: profile.quality,
+        requiresOwnAccount: profile.requiresOwnAccount
       },
       selectedPricing: {
         duration: pricing.duration,
         price: pricing.price
       },
       price: pricing.price,
-      duration: pricing.duration
+      duration: pricing.duration,
+      customerEmail: profile.requiresOwnAccount ? customerEmail : undefined
     };
 
     addToCart(cartItem);
     toast.success('Added to cart!');
+    if (profile.requiresOwnAccount) {
+      setCustomerEmail('');
+    }
   };
 
   const handleBuyNow = () => {
@@ -80,20 +96,32 @@ const ProductDetail = () => {
       return;
     }
 
+    if (profile.requiresOwnAccount && !customerEmail) {
+      toast.error('Please provide your email address for account activation');
+      return;
+    }
+
+    if (profile.requiresOwnAccount && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+      toast.error('Please provide a valid email address');
+      return;
+    }
+
     const cartItem = {
       ...product,
       selectedProfile: {
         profileId: profile._id,
         name: profile.name,
         screenCount: profile.screenCount,
-        quality: profile.quality
+        quality: profile.quality,
+        requiresOwnAccount: profile.requiresOwnAccount
       },
       selectedPricing: {
         duration: pricing.duration,
         price: pricing.price
       },
       price: pricing.price,
-      duration: pricing.duration
+      duration: pricing.duration,
+      customerEmail: profile.requiresOwnAccount ? customerEmail : undefined
     };
 
     addToCart(cartItem);
@@ -116,9 +144,9 @@ const ProductDetail = () => {
   const selectedPricing = getSelectedPricing();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 sm:py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
           <div>
             <div className="relative rounded-2xl overflow-hidden shadow-2xl">
               <img
@@ -130,7 +158,7 @@ const ProductDetail = () => {
                       : (product.image || 'https://via.placeholder.com/600x400')
                 }
                 alt={product.name}
-                className="w-full h-96 object-cover"
+                className="w-full h-64 sm:h-80 lg:h-96 object-cover"
               />
               <div className="absolute top-4 left-4 bg-primary-600 text-white px-4 py-2 rounded-lg font-semibold">
                 {product.ottType}
@@ -139,13 +167,13 @@ const ProductDetail = () => {
           </div>
 
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4 dark:text-white">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 dark:text-white">
               {product.name}
             </h1>
 
             <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-3 dark:text-white">Select Profile Type</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <h3 className="text-base sm:text-lg font-semibold mb-3 dark:text-white">Select Profile Type</h3>
+              <div className="grid grid-cols-1 gap-3">
                 {product.profileTypes?.map((profile, index) => (
                   <button
                     key={index}
@@ -153,7 +181,7 @@ const ProductDetail = () => {
                       setSelectedProfileIndex(index);
                       setSelectedPricingIndex(0);
                     }}
-                    className={`p-4 rounded-lg border-2 transition-all ${
+                    className={`p-3 sm:p-4 rounded-lg border-2 transition-all active:scale-95 ${
                       selectedProfileIndex === index
                         ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/20'
                         : 'border-gray-200 dark:border-gray-700 hover:border-primary-400'
@@ -170,11 +198,36 @@ const ProductDetail = () => {
                       {profile.description && (
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{profile.description}</p>
                       )}
+                      {profile.requiresOwnAccount && (
+                        <div className="mt-2 flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400">
+                          <Check className="w-3 h-3" />
+                          <span className="font-medium">Own Account - Email Required</span>
+                        </div>
+                      )}
                     </div>
                   </button>
                 ))}
               </div>
             </div>
+
+            {selectedProfile?.requiresOwnAccount && (
+              <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg">
+                <label className="block text-sm font-medium mb-2 dark:text-white">
+                  Your Email Address <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  placeholder="Enter your email for account activation"
+                  className="input-field w-full"
+                  required
+                />
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                  We'll activate the service on this email address
+                </p>
+              </div>
+            )}
 
             {selectedProfile && (
               <div className="mb-6">
