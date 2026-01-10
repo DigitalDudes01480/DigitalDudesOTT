@@ -10,8 +10,9 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleOAuthCallback = async () => {
       const token = searchParams.get('token');
-      const provider = searchParams.get('provider');
       const error = searchParams.get('error');
+      const redirect = searchParams.get('redirect') || '/';
+      const userParam = searchParams.get('user');
 
       if (error) {
         navigate('/login?error=Authentication failed. Please try again.');
@@ -20,17 +21,19 @@ const AuthCallback = () => {
 
       if (token) {
         // Store token
-        localStorage.setItem('token', token);
         setToken(token);
 
-        // Fetch user profile
-        try {
-          await fetchProfile();
-          navigate('/');
-        } catch (error) {
-          console.error('Failed to fetch profile:', error);
-          navigate('/login?error=Failed to complete authentication');
+        if (userParam) {
+          try {
+            const parsedUser = JSON.parse(atob(userParam));
+            setUser(parsedUser);
+          } catch (_) {
+          }
         }
+
+        navigate(redirect, { replace: true });
+        // Fetch user profile
+        fetchProfile().then(() => {}).catch(() => {});
       } else {
         navigate('/login?error=No authentication token received');
       }

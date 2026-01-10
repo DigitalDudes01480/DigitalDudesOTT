@@ -2,14 +2,68 @@ import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Subscription from '../models/Subscription.js';
 import Transaction from '../models/Transaction.js';
-import { sendOrderConfirmation, sendSubscriptionDelivery } from '../utils/emailService.js';
+import { sendAdminNewOrderNotification, sendOrderConfirmation, sendOrderStatusUpdate, sendSubscriptionDelivery } from '../utils/emailService.js';
 
-export const createOrder = async (req, res) => {
+// Helper function to safely parse object from string
+const parseObjectFromString = (value) => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  
+  if (typeof value === 'object' && !Array.isArray(value)) {
+    // Already an object, return as is
+    return value;
+  }
+  
+  if (typeof value !== 'string') {
+    return null;
+  }
+  
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === 'null' || trimmed === 'undefined') {
+    return null;
+  }
+  
+  // Try JSON.parse first (handles proper JSON)
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+    try {
+      return JSON.parse(trimmed);
+    } catch (e) {
+      // If JSON.parse fails, it might be a JavaScript object literal with single quotes
+      // Try to convert single quotes to double quotes for string values
+      try {
+        const normalized = trimmed.replace(/'/g, '"');
+        return JSON.parse(normalized);
+      } catch (e2) {
+        console.error('Failed to parse object string:', trimmed.substring(0, 100));
+        return null;
+      }
+    }
+  }
+  
+  return null;
+};
+
+export const createOrder = async (req, res, next) => {
   try {
     let { orderItems, paymentMethod, totalAmount } = req.body;
     
     if (typeof orderItems === 'string') {
-      orderItems = JSON.parse(orderItems);
+      try {
+        orderItems = JSON.parse(orderItems);
+      } catch (e) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid order items'
+        });
+      }
+    }
+
+    if (!Array.isArray(orderItems)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid order items'
+      });
     }
 
     if (!orderItems || orderItems.length === 0) {
@@ -23,7 +77,8 @@ export const createOrder = async (req, res) => {
     let calculatedTotal = 0;
 
     for (const item of orderItems) {
-      const product = await Product.findById(item.product);
+      const productId = item?.product?._id || item?.product;
+      const product = await Product.findById(productId);
       
       if (!product) {
         return res.status(404).json({
@@ -39,15 +94,48 @@ export const createOrder = async (req, res) => {
         });
       }
 
+      let selectedProfile = null;
+      if (item.selectedProfile !== null && item.selectedProfile !== undefined) {
+        if (typeof item.selectedProfile === 'string') {
+          selectedProfile = item.selectedProfile;
+        } else if (typeof item.selectedProfile === 'object' && !Array.isArray(item.selectedProfile)) {
+          selectedProfile = JSON.stringify(item.selectedProfile);
+        }
+      }
+
+      // Parse selectedPricing - handle both object and string cases
+      let selectedPricing = parseObjectFromString(item.selectedPricing);
+      // Ensure it's a plain object, not an array or other type
+      if (selectedPricing !== null && (typeof selectedPricing !== 'object' || Array.isArray(selectedPricing))) {
+        selectedPricing = null;
+      }
+
+      const quantity = Number(item.quantity || 1);
+      const price = Number(item.price || selectedPricing?.price);
+
+      if (!Number.isFinite(quantity) || quantity <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid quantity'
+        });
+      }
+
+      if (!Number.isFinite(price) || price < 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid price'
+        });
+      }
+
       const orderItem = {
         product: product._id,
         name: item.name || product.name,
         ottType: item.ottType || product.ottType,
-        duration: item.selectedPricing?.duration || product.duration,
-        price: item.price || item.selectedPricing?.price || product.price,
-        quantity: item.quantity || 1,
-        selectedProfile: item.selectedProfile,
-        selectedPricing: item.selectedPricing,
+        duration: selectedPricing?.duration,
+        price,
+        quantity,
+        selectedProfile,
+        selectedPricing,
         customerEmail: item.customerEmail
       };
 
@@ -101,7 +189,8 @@ export const createOrder = async (req, res) => {
 
     await order.populate('user', 'name email');
 
-    await sendOrderConfirmation(order.user, order);
+    sendOrderConfirmation(order.user, order).then(() => {}).catch(() => {});
+    sendAdminNewOrderNotification(process.env.ADMIN_EMAIL, order).then(() => {}).catch(() => {});
 
     res.status(201).json({
       success: true,
@@ -109,10 +198,7 @@ export const createOrder = async (req, res) => {
       order
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    return next(error);
   }
 };
 
@@ -209,7 +295,7 @@ export const updateOrderStatus = async (req, res) => {
   try {
     const { orderStatus, adminNotes } = req.body;
 
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.id).populate('user', 'name email');
 
     if (!order) {
       return res.status(404).json({
@@ -217,6 +303,8 @@ export const updateOrderStatus = async (req, res) => {
         message: 'Order not found'
       });
     }
+
+    const previousStatus = order.orderStatus;
 
     if (orderStatus) {
       order.orderStatus = orderStatus;
@@ -227,6 +315,10 @@ export const updateOrderStatus = async (req, res) => {
     }
 
     await order.save();
+
+    if (orderStatus && previousStatus !== order.orderStatus) {
+      sendOrderStatusUpdate(order.user, order, previousStatus).then(() => {}).catch(() => {});
+    }
 
     res.status(200).json({
       success: true,
@@ -282,10 +374,23 @@ export const deliverOrder = async (req, res) => {
             'credentials.password': credentials?.password || '',
             'credentials.profile': credentials?.profile || '',
             'credentials.profilePin': credentials?.profilePin || '',
-            'credentials.additionalNote': credentials?.additionalNote || ''
+            'credentials.additionalNote': credentials?.additionalNote || '',
+            activationKey: activationKey || ''
           }
         }
       );
+
+      const existingSubs = await Subscription.find({ order: order._id });
+      for (const subscription of existingSubs) {
+        const matchingItem = order.orderItems.find((item) => {
+          const itemProductId = item.product?._id ? item.product._id.toString() : item.product?.toString();
+          return itemProductId && itemProductId === subscription.product.toString() && item.ottType === subscription.ottType;
+        });
+
+        const recipientEmail = matchingItem?.customerEmail || order.user.email;
+        const recipientUser = { name: order.user.name, email: recipientEmail };
+        sendSubscriptionDelivery(recipientUser, subscription, order.deliveryDetails).then(() => {}).catch(() => {});
+      }
     }
 
     // Create subscriptions only if not already delivered
@@ -319,7 +424,9 @@ export const deliverOrder = async (req, res) => {
         activationKey
       });
 
-      await sendSubscriptionDelivery(order.user, subscription, order.deliveryDetails);
+      const recipientEmail = item.customerEmail || order.user.email;
+      const recipientUser = { name: order.user.name, email: recipientEmail };
+      sendSubscriptionDelivery(recipientUser, subscription, order.deliveryDetails).then(() => {}).catch(() => {});
       }
     }
 
@@ -340,7 +447,7 @@ export const updatePaymentStatus = async (req, res) => {
   try {
     const { paymentStatus, paymentResult } = req.body;
 
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.id).populate('user', 'name email');
 
     if (!order) {
       return res.status(404).json({
@@ -348,6 +455,8 @@ export const updatePaymentStatus = async (req, res) => {
         message: 'Order not found'
       });
     }
+
+    const previousStatus = order.orderStatus;
 
     order.paymentStatus = paymentStatus;
     if (paymentResult) {
@@ -359,6 +468,10 @@ export const updatePaymentStatus = async (req, res) => {
     }
 
     await order.save();
+
+    if (previousStatus !== order.orderStatus) {
+      sendOrderStatusUpdate(order.user, order, previousStatus).then(() => {}).catch(() => {});
+    }
 
     res.status(200).json({
       success: true,

@@ -66,8 +66,8 @@ const CheckoutForm = () => {
         ottType: item.ottType,
         quantity: item.quantity,
         price: item.price,
-        selectedProfile: item.selectedProfile,
-        selectedPricing: item.selectedPricing,
+        selectedProfile: item.selectedProfile ? JSON.stringify(item.selectedProfile) : null,
+        selectedPricing: item.selectedPricing ? JSON.stringify(item.selectedPricing) : null,
         customerEmail: item.customerEmail || itemEmails[item._id]
       }));
 

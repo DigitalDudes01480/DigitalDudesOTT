@@ -34,10 +34,12 @@ const orderSchema = new mongoose.Schema({
       default: 1
     },
     selectedProfile: {
-      type: String
+      type: mongoose.Schema.Types.Mixed,
+      default: null
     },
     selectedPricing: {
-      type: Object
+      type: mongoose.Schema.Types.Mixed,
+      default: null
     },
     customerEmail: {
       type: String,

@@ -8,6 +8,47 @@ const useAuthStore = create((set) => ({
   loading: false,
   error: null,
 
+  setToken: (token) => {
+    if (token) {
+      localStorage.setItem('token', token);
+    } else {
+      localStorage.removeItem('token');
+    }
+
+    set({ token: token || null, isAuthenticated: !!token });
+  },
+
+  setUser: (user) => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
+    }
+
+    set({ user: user || null });
+  },
+
+  fetchProfile: async () => {
+    set({ loading: true, error: null });
+    try {
+      const response = await Promise.race([
+        authAPI.getProfile(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Profile request timeout')), 8000)
+        )
+      ]);
+
+      const user = response.data.user;
+      localStorage.setItem('user', JSON.stringify(user));
+      set({ user, isAuthenticated: true, loading: false });
+      return { success: true, user };
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'Failed to fetch profile';
+      set({ error: message, loading: false });
+      return { success: false, message };
+    }
+  },
+
   login: async (credentials) => {
     set({ loading: true, error: null });
     try {

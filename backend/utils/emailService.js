@@ -2,8 +2,8 @@ import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
-  port: process.env.EMAIL_PORT,
-  secure: false,
+  port: Number(process.env.EMAIL_PORT || 587),
+  secure: Number(process.env.EMAIL_PORT) === 465,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD
@@ -46,6 +46,59 @@ export const sendOrderConfirmation = async (user, order) => {
   });
 };
 
+export const sendAdminNewOrderNotification = async (adminEmail, order) => {
+  if (!adminEmail) {
+    return { success: true };
+  }
+
+  const itemsHtml = (order.orderItems || [])
+    .map((item) => {
+      const duration = item?.duration?.value && item?.duration?.unit ? `${item.duration.value} ${item.duration.unit}` : '';
+      const customerEmail = item?.customerEmail ? ` (${item.customerEmail})` : '';
+      return `<li>${item.ottType || item.name}${duration ? ` - ${duration}` : ''}${customerEmail}</li>`;
+    })
+    .join('');
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #4F46E5;">New Order Received - Digital Dudes</h2>
+      <p><strong>Order ID:</strong> ${order._id}</p>
+      <p><strong>Total:</strong> $${order.totalAmount}</p>
+      <p><strong>Customer:</strong> ${order.user?.name || ''} (${order.user?.email || ''})</p>
+      <p><strong>Status:</strong> ${order.orderStatus}</p>
+      <div style="margin: 16px 0;">
+        <strong>Items:</strong>
+        <ul>${itemsHtml}</ul>
+      </div>
+    </div>
+  `;
+
+  return await sendEmail({
+    email: adminEmail,
+    subject: `New Order Received - ${order._id}`,
+    html
+  });
+};
+
+export const sendOrderStatusUpdate = async (user, order, previousStatus) => {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #4F46E5;">Order Update - Digital Dudes</h2>
+      <p>Hi ${user.name},</p>
+      <p>Your order <strong>${order._id}</strong> has been updated.</p>
+      ${previousStatus ? `<p><strong>Previous status:</strong> ${previousStatus}</p>` : ''}
+      <p><strong>Current status:</strong> ${order.orderStatus}</p>
+      <p>Best regards,<br>Digital Dudes Team</p>
+    </div>
+  `;
+
+  return await sendEmail({
+    email: user.email,
+    subject: `Order Update - ${order.orderStatus}`,
+    html
+  });
+};
+
 export const sendSubscriptionDelivery = async (user, subscription, deliveryDetails) => {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -79,6 +132,28 @@ export const sendSubscriptionDelivery = async (user, subscription, deliveryDetai
   return await sendEmail({
     email: user.email,
     subject: `Your ${subscription.ottType} Subscription is Ready!`,
+    html
+  });
+};
+
+export const sendPasswordResetEmail = async (user, resetUrl) => {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #4F46E5;">Reset Your Password - Digital Dudes</h2>
+      <p>Hi ${user.name},</p>
+      <p>We received a request to reset your password. Click the button below to set a new password.</p>
+      <div style="margin: 24px 0;">
+        <a href="${resetUrl}" style="display: inline-block; padding: 12px 18px; background: #4F46E5; color: #ffffff; text-decoration: none; border-radius: 8px;">Reset Password</a>
+      </div>
+      <p>If you did not request this, you can safely ignore this email.</p>
+      <p>This link will expire soon for security reasons.</p>
+      <p>Best regards,<br>Digital Dudes Team</p>
+    </div>
+  `;
+
+  return await sendEmail({
+    email: user.email,
+    subject: 'Reset Your Password - Digital Dudes',
     html
   });
 };
