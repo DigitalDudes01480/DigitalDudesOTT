@@ -141,6 +141,14 @@ export const updateProduct = async (req, res) => {
       updateData.profileTypes = JSON.parse(updateData.profileTypes);
     }
     
+    // Ensure requiresOwnAccount field is preserved in profileTypes
+    if (updateData.profileTypes && Array.isArray(updateData.profileTypes)) {
+      updateData.profileTypes = updateData.profileTypes.map(profile => ({
+        ...profile,
+        requiresOwnAccount: profile.requiresOwnAccount === true || profile.requiresOwnAccount === 'true'
+      }));
+    }
+    
     // Handle image upload
     if (req.file) {
       if (req.file.size > 5 * 1024 * 1024) {
