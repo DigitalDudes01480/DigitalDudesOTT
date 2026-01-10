@@ -8,14 +8,22 @@ echo "=================================="
 echo ""
 
 # Set Java environment
-export JAVA_HOME=/opt/homebrew/opt/openjdk@17
-export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
+# Capacitor Android currently compiles with Java 21, so prefer Android Studio's bundled JDK.
+ANDROID_STUDIO_JAVA="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+
+if [ -x "$ANDROID_STUDIO_JAVA/bin/java" ]; then
+    export JAVA_HOME="$ANDROID_STUDIO_JAVA"
+    export PATH="$JAVA_HOME/bin:$PATH"
+else
+    export JAVA_HOME=/opt/homebrew/opt/openjdk@17
+    export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
+fi
 
 # Check Java
 echo "✓ Checking Java..."
 java -version
 if [ $? -ne 0 ]; then
-    echo "❌ Java not found. Please install Java 17."
+    echo "❌ Java not found. Please install Android Studio (recommended) or Java."
     exit 1
 fi
 echo ""

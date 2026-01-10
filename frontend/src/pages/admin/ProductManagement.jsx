@@ -183,7 +183,7 @@ const ProductManagement = () => {
 };
 
 const ProductModal = ({ product, onClose, onSuccess }) => {
-  const [formData, setFormData] = useState(product || {
+  const [formData, setFormData] = useState({
     name: '',
     ottType: '',
     description: '',
@@ -196,6 +196,7 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
       description: '',
       screenCount: 1,
       quality: 'HD',
+      requiresOwnAccount: false,
       pricingOptions: [{
         duration: { value: 1, unit: 'month' },
         price: ''
@@ -203,6 +204,24 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
     }]
   });
   const [loading, setLoading] = useState(false);
+
+  // Initialize form data when product changes
+  useEffect(() => {
+    if (product) {
+      // Ensure all profile types have requiresOwnAccount field
+      const profileTypesWithDefaults = product.profileTypes?.map(profile => ({
+        ...profile,
+        requiresOwnAccount: profile.requiresOwnAccount ?? false
+      })) || [];
+
+      const newFormData = {
+        ...product,
+        profileTypes: profileTypesWithDefaults
+      };
+      
+      setFormData(newFormData);
+    }
+  }, [product]);
 
   const handleOttPlatformChange = (value) => {
     setFormData({
@@ -222,6 +241,7 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
           description: '',
           screenCount: 1,
           quality: 'HD',
+          requiresOwnAccount: false,
           pricingOptions: [{
             duration: { value: 1, unit: 'month' },
             price: '',
@@ -233,40 +253,53 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
   };
 
   const removeProfileType = (index) => {
-    const newProfileTypes = formData.profileTypes.filter((_, i) => i !== index);
-    setFormData({ ...formData, profileTypes: newProfileTypes });
+    setFormData(prevFormData => {
+      const newProfileTypes = prevFormData.profileTypes.filter((_, i) => i !== index);
+      return { ...prevFormData, profileTypes: newProfileTypes };
+    });
   };
 
   const updateProfileType = (index, field, value) => {
-    const newProfileTypes = [...formData.profileTypes];
-    newProfileTypes[index][field] = value;
-    setFormData({ ...formData, profileTypes: newProfileTypes });
+    setFormData(prevFormData => {
+      const newProfileTypes = [...prevFormData.profileTypes];
+      newProfileTypes[index] = {
+        ...newProfileTypes[index],
+        [field]: value
+      };
+      return { ...prevFormData, profileTypes: newProfileTypes };
+    });
   };
 
   const addPricingOption = (profileIndex) => {
-    const newProfileTypes = [...formData.profileTypes];
-    newProfileTypes[profileIndex].pricingOptions.push({
-      duration: { value: 1, unit: 'month' },
-      price: ''
+    setFormData(prevFormData => {
+      const newProfileTypes = [...prevFormData.profileTypes];
+      newProfileTypes[profileIndex].pricingOptions.push({
+        duration: { value: 1, unit: 'month' },
+        price: ''
+      });
+      return { ...prevFormData, profileTypes: newProfileTypes };
     });
-    setFormData({ ...formData, profileTypes: newProfileTypes });
   };
 
   const removePricingOption = (profileIndex, optionIndex) => {
-    const newProfileTypes = [...formData.profileTypes];
-    newProfileTypes[profileIndex].pricingOptions = newProfileTypes[profileIndex].pricingOptions.filter((_, i) => i !== optionIndex);
-    setFormData({ ...formData, profileTypes: newProfileTypes });
+    setFormData(prevFormData => {
+      const newProfileTypes = [...prevFormData.profileTypes];
+      newProfileTypes[profileIndex].pricingOptions = newProfileTypes[profileIndex].pricingOptions.filter((_, i) => i !== optionIndex);
+      return { ...prevFormData, profileTypes: newProfileTypes };
+    });
   };
 
   const updatePricingOption = (profileIndex, optionIndex, field, value) => {
-    const newProfileTypes = [...formData.profileTypes];
-    if (field.includes('.')) {
-      const [parent, child] = field.split('.');
-      newProfileTypes[profileIndex].pricingOptions[optionIndex][parent][child] = value;
-    } else {
-      newProfileTypes[profileIndex].pricingOptions[optionIndex][field] = value;
-    }
-    setFormData({ ...formData, profileTypes: newProfileTypes });
+    setFormData(prevFormData => {
+      const newProfileTypes = [...prevFormData.profileTypes];
+      if (field.includes('.')) {
+        const [parent, child] = field.split('.');
+        newProfileTypes[profileIndex].pricingOptions[optionIndex][parent][child] = value;
+      } else {
+        newProfileTypes[profileIndex].pricingOptions[optionIndex][field] = value;
+      }
+      return { ...prevFormData, profileTypes: newProfileTypes };
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -282,6 +315,7 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
       submitData.append('description', formData.description);
       submitData.append('status', formData.status);
       submitData.append('stockQuantity', formData.stockQuantity);
+      
       submitData.append('profileTypes', JSON.stringify(formData.profileTypes));
       
       // Add image URL if provided
@@ -469,6 +503,26 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
                         placeholder="Profile description"
                       />
                     </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(profile.requiresOwnAccount)}
+                        onChange={(e) => updateProfileType(profileIndex, 'requiresOwnAccount', e.target.checked)}
+                        className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                      />
+                      <span className="text-sm font-medium dark:text-gray-300">
+                        Own Account
+                        {profile.requiresOwnAccount && (
+                          <span className="ml-2 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">✓ Enabled</span>
+                        )}
+                      </span>
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
+                      Customer will provide their own email address for account activation
+                    </p>
                   </div>
 
                   <div className="border-t dark:border-gray-600 pt-3 mt-3">
