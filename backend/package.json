@@ -9,25 +9,32 @@
     "dev": "nodemon server.js",
     "seed": "node seeders/adminSeeder.js"
   },
-  "keywords": ["ott", "subscription", "ecommerce"],
+  "keywords": [
+    "ott",
+    "subscription",
+    "ecommerce"
+  ],
   "author": "Digital Dudes",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
-    "mongoose": "^8.0.3",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
-    "dotenv": "^16.3.1",
-    "cors": "^2.8.5",
-    "express-validator": "^7.0.1",
-    "nodemailer": "^6.9.7",
-    "stripe": "^14.10.0",
-    "paypal-rest-sdk": "^1.8.1",
     "@paypal/checkout-server-sdk": "^1.0.3",
-    "multer": "^1.4.5-lts.1",
-    "helmet": "^7.1.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",
-    "morgan": "^1.10.0"
+    "express-validator": "^7.0.1",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.3",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.7",
+    "passport": "^0.7.0",
+    "passport-facebook": "^3.0.0",
+    "passport-google-oauth20": "^2.0.0",
+    "paypal-rest-sdk": "^1.8.1",
+    "stripe": "^14.10.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

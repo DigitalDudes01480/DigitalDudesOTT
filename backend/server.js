@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import connectDB from './config/database.js';
 import errorHandler from './middleware/errorHandler.js';
 import { checkExpiredSubscriptions } from './controllers/subscriptionController.js';
+import passport from './config/passport.js';
 
 import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
@@ -44,6 +45,9 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Initialize Passport
+app.use(passport.initialize());
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));

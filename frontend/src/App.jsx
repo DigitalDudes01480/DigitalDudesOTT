@@ -14,6 +14,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Support from './pages/Support';
 import DownloadApp from './pages/DownloadApp';
+import AuthCallback from './pages/AuthCallback';
 
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -58,6 +59,7 @@ function App() {
               } />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />

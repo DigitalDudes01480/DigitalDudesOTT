@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
 import { sendEmail } from '../utils/emailService.js';
+import passport from '../config/passport.js';
 
 export const register = async (req, res) => {
   try {
@@ -186,4 +187,40 @@ export const changePassword = async (req, res) => {
       message: error.message
     });
   }
+};
+
+// Google OAuth
+export const googleAuth = passport.authenticate('google', {
+  scope: ['profile', 'email']
+});
+
+export const googleCallback = (req, res, next) => {
+  passport.authenticate('google', { session: false }, (err, user, info) => {
+    if (err || !user) {
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=authentication_failed`);
+    }
+
+    const token = generateToken(user._id);
+    
+    // Redirect to frontend with token
+    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&provider=google`);
+  })(req, res, next);
+};
+
+// Facebook OAuth
+export const facebookAuth = passport.authenticate('facebook', {
+  scope: ['email']
+});
+
+export const facebookCallback = (req, res, next) => {
+  passport.authenticate('facebook', { session: false }, (err, user, info) => {
+    if (err || !user) {
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=authentication_failed`);
+    }
+
+    const token = generateToken(user._id);
+    
+    // Redirect to frontend with token
+    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&provider=facebook`);
+  })(req, res, next);
 };
