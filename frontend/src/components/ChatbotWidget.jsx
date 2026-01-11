@@ -39,8 +39,9 @@ const ChatbotWidget = () => {
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user) {
       toast.error('Please login to use the chatbot');
+      setIsOpen(false);
       return;
     }
 
@@ -59,23 +60,28 @@ const ChatbotWidget = () => {
       const response = await chatbotAPI.chat({ message: inputMessage });
       
       // Validate response structure
-      if (!response || !response.data || !response.data.response) {
+      if (!response || !response.data) {
         throw new Error('Invalid response structure from server');
+      }
+      
+      const responseData = response.data.response || response.data;
+      if (!responseData) {
+        throw new Error('No response data received');
       }
 
       const botMessage = {
         id: Date.now() + 1,
         type: 'bot',
-        message: response.data.response.message || 'I received your message but had trouble responding. Please try again.',
-        suggestions: response.data.response.suggestions || ['Try again', 'Create ticket'],
-        responseType: response.data.response.type || 'default',
+        message: responseData.message || 'I received your message but had trouble responding. Please try again.',
+        suggestions: responseData.suggestions || ['Try again', 'Create ticket'],
+        responseType: responseData.type || 'default',
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, botMessage]);
 
       // If response suggests creating a ticket, show ticket form
-      if (response.data.response.type === 'ticket_prompt') {
+      if (responseData.type === 'ticket_prompt') {
         setShowTicketForm(true);
       }
     } catch (error) {

@@ -20,16 +20,19 @@ const Dashboard = () => {
     setLoading(true);
     try {
       const [subsRes, ordersRes, transRes] = await Promise.all([
-        subscriptionAPI.getMySubscriptions(),
-        orderAPI.getMyOrders(),
-        transactionAPI.getMyTransactions()
+        subscriptionAPI.getMySubscriptions().catch(() => ({ data: { subscriptions: [] } })),
+        orderAPI.getMyOrders().catch(() => ({ data: { orders: [] } })),
+        transactionAPI.getMyTransactions().catch(() => ({ data: { transactions: [] } }))
       ]);
 
-      setSubscriptions(subsRes.data.subscriptions);
-      setOrders(ordersRes.data.orders);
-      setTransactions(transRes.data.transactions);
+      setSubscriptions(subsRes.data?.subscriptions || []);
+      setOrders(ordersRes.data?.orders || []);
+      setTransactions(transRes.data?.transactions || []);
     } catch (error) {
       console.error('Error fetching data:', error);
+      setSubscriptions([]);
+      setOrders([]);
+      setTransactions([]);
     } finally {
       setLoading(false);
     }
