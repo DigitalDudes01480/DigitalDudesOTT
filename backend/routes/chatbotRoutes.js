@@ -1,6 +1,6 @@
 import express from 'express';
 import { chat, createTicketFromChat, getSuggestions } from '../controllers/chatbotController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
