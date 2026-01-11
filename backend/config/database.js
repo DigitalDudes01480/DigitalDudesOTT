@@ -15,33 +15,57 @@ const connectDB = async () => {
     throw err;
   }
 
-  if (cached.conn) return cached.conn;
+  // Return existing connection if available
+  if (cached.conn) {
+    console.log('Using cached database connection');
+    return cached.conn;
+  }
+
+  // Return existing promise if connection is in progress
+  if (cached.promise) {
+    console.log('Waiting for existing database connection');
+    try {
+      cached.conn = await cached.promise;
+      return cached.conn;
+    } catch (error) {
+      cached.promise = null;
+      throw error;
+    }
+  }
 
   try {
-    if (!cached.promise) {
-      cached.promise = mongoose.connect(process.env.MONGODB_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-    }
+    console.log('Creating new database connection...');
+    
+    const opts = {
+      bufferCommands: false,
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+    };
 
-    const conn = await cached.promise;
-    cached.conn = conn;
+    cached.promise = mongoose.connect(process.env.MONGODB_URI, opts);
+    cached.conn = await cached.promise;
 
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log(`MongoDB Connected: ${cached.conn.connection.host}`);
     
     mongoose.connection.on('error', (err) => {
       console.error(`MongoDB connection error: ${err}`);
+      cached.conn = null;
+      cached.promise = null;
     });
 
     mongoose.connection.on('disconnected', () => {
       console.log('MongoDB disconnected');
+      cached.conn = null;
+      cached.promise = null;
     });
 
+    return cached.conn;
   } catch (error) {
-    console.error(`Error: ${error.message}`);
-    if (!isVercel) process.exit(1);
+    console.error(`MongoDB connection failed: ${error.message}`);
     cached.promise = null;
+    cached.conn = null;
+    if (!isVercel) process.exit(1);
     throw error;
   }
 };

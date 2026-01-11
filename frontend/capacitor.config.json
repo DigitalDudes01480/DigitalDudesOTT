@@ -2,11 +2,15 @@
   "appId": "com.digitaldudes.ott",
   "appName": "Digital Dudes",
   "webDir": "dist",
-  "server": {
-    "url": "https://frontend-virid-nu-28.vercel.app",
-    "cleartext": true
-  },
   "android": {
-    "allowMixedContent": true
+    "allowMixedContent": true,
+    "useLegacyBridge": false
+  },
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true,
+    "allowNavigation": [
+      "https://backend-tau-blush-82-omega.vercel.app"
+    ]
   }
 }

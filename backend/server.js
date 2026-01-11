@@ -20,6 +20,9 @@ import adminRoutes from './routes/adminRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
+import faqRoutes from './routes/faqRoutes.js';
+import tutorialRoutes from './routes/tutorialRoutes.js';
+import chatbotRoutes from './routes/chatbotRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,7 +33,10 @@ const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
 
 const app = express();
 
-connectDB();
+// Connect to database (async, but don't block server startup)
+connectDB().catch(err => {
+  console.error('Failed to connect to database:', err);
+});
 
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
@@ -40,21 +46,22 @@ app.use(cors({
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:3000',
+      'https://www.digitaldudesott.shop',
       'https://frontend-cbve2o2m3-digitaldudes01480s-projects.vercel.app',
       'https://frontend-virid-nu-28.vercel.app',
       'https://frontend-virid-nu-28-psi.vercel.app'
     ];
     
-    // Allow requests from Capacitor app (capacitor://localhost) and other mobile schemes
+    // Allow requests from Capacitor app and mobile schemes
     if (!origin || origin.startsWith('capacitor://') || origin.startsWith('ionic://') || origin.startsWith('http://localhost') || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(null, true); // Allow all origins for now to fix the issue
+      callback(null, true); // Allow all origins
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -130,6 +137,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/faqs', faqRoutes);
+app.use('/api/tutorials', tutorialRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 app.use(errorHandler);
 

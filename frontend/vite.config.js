@@ -12,5 +12,13 @@ export default defineConfig({
         changeOrigin: true
       }
     }
-  }
+  },
+  build: {
+    rollupOptions: {
+      external: [],
+    },
+    copyPublicDir: true,
+    assetsInlineLimit: 0,
+  },
+  publicDir: 'public',
 })

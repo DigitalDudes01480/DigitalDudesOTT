@@ -46,64 +46,65 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold dark:text-white mb-2">My Dashboard</h1>
-          <p className="text-gray-600 dark:text-gray-400">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-950 py-4 md:py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="mb-4 md:mb-8">
+          <h1 className="text-lg md:text-3xl font-bold dark:text-white mb-1 md:mb-2">My Dashboard</h1>
+          <p className="text-xs md:text-base text-gray-600 dark:text-gray-400">
             Manage your subscriptions and account
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="card">
+        <div className="grid grid-cols-3 md:grid-cols-3 gap-2 md:gap-6 mb-4 md:mb-8">
+          <div className="card p-3 md:p-6 bg-gradient-to-br from-green-50 to-white dark:from-green-900/20 dark:to-gray-800 border-l-4 border-green-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">Active Subscriptions</p>
-                <p className="text-3xl font-bold text-green-600 mt-1">{activeSubscriptions.length}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm">Active Subscriptions</p>
+                <p className="text-2xl md:text-3xl font-bold text-green-600 mt-1">{activeSubscriptions.length}</p>
               </div>
-              <CheckCircle className="w-12 h-12 text-green-600 opacity-20" />
+              <CheckCircle className="w-8 h-8 md:w-12 md:h-12 text-green-600 opacity-20" />
             </div>
           </div>
 
-          <div className="card">
+          <div className="card p-3 md:p-6 bg-gradient-to-br from-primary-50 to-white dark:from-primary-900/20 dark:to-gray-800 border-l-4 border-primary-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">Total Orders</p>
-                <p className="text-3xl font-bold text-primary-600 mt-1">{orders.length}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm">Total Orders</p>
+                <p className="text-2xl md:text-3xl font-bold text-primary-600 mt-1">{orders.length}</p>
               </div>
-              <Package className="w-12 h-12 text-primary-600 opacity-20" />
+              <Package className="w-8 h-8 md:w-12 md:h-12 text-primary-600 opacity-20" />
             </div>
           </div>
 
-          <div className="card">
+          <div className="card p-3 md:p-6 bg-gradient-to-br from-red-50 to-white dark:from-red-900/20 dark:to-gray-800 border-l-4 border-red-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">Expired Subscriptions</p>
-                <p className="text-3xl font-bold text-red-600 mt-1">{expiredSubscriptions.length}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm">Expired Subscriptions</p>
+                <p className="text-2xl md:text-3xl font-bold text-red-600 mt-1">{expiredSubscriptions.length}</p>
               </div>
-              <XCircle className="w-12 h-12 text-red-600 opacity-20" />
+              <XCircle className="w-8 h-8 md:w-12 md:h-12 text-red-600 opacity-20" />
             </div>
           </div>
         </div>
 
-        <div className="card">
-          <div className="border-b dark:border-gray-700 mb-6">
-            <div className="flex space-x-8 overflow-x-auto">
+        <div className="card p-3 md:p-6">
+          <div className="border-b dark:border-gray-700 mb-4 md:mb-6">
+            <div className="flex space-x-4 md:space-x-8 overflow-x-auto scrollbar-hide">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center space-x-2 pb-4 px-2 border-b-2 transition-colors whitespace-nowrap ${
+                    className={`flex items-center space-x-1 md:space-x-2 pb-3 md:pb-4 px-1 md:px-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${
                       activeTab === tab.id
-                        ? 'border-primary-600 text-primary-600'
+                        ? 'border-primary-600 text-primary-600 font-semibold'
                         : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span className="font-medium">{tab.label}</span>
+                    <Icon className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="font-medium hidden sm:inline">{tab.label}</span>
+                    <span className="font-medium sm:hidden text-xs">{tab.label.split(' ')[0]}</span>
                   </button>
                 );
               })}
@@ -142,18 +143,18 @@ const SubscriptionsTab = ({ subscriptions }) => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       {subscriptions.map((subscription) => (
-        <div key={subscription._id} className="border dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition">
+        <div key={subscription._id} className="border dark:border-gray-700 rounded-lg p-3 md:p-6 hover:shadow-md transition bg-white dark:bg-gray-800">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-2">
-                <h3 className="text-lg font-bold dark:text-white">{subscription.ottType}</h3>
+              <div className="flex items-center space-x-2 md:space-x-3 mb-2">
+                <h3 className="text-base md:text-lg font-bold dark:text-white">{subscription.ottType}</h3>
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(subscription.status)}`}>
                   {subscription.status}
                 </span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center">
                   <Calendar className="w-4 h-4 mr-2" />
                   Started: {formatDate(subscription.startDate)}
@@ -174,9 +175,9 @@ const SubscriptionsTab = ({ subscriptions }) => {
               )}
             </div>
             {subscription.credentials && (
-              <div className="bg-primary-50 dark:bg-primary-900/20 border-2 border-primary-200 dark:border-primary-800 p-5 rounded-lg min-w-[320px]">
-                <p className="text-sm font-bold text-primary-700 dark:text-primary-300 mb-3 uppercase">🔑 Login Credentials</p>
-                <div className="space-y-2">
+              <div className="bg-primary-50 dark:bg-primary-900/20 border-2 border-primary-200 dark:border-primary-800 p-3 md:p-5 rounded-lg w-full md:min-w-[320px]">
+                <p className="text-xs md:text-sm font-bold text-primary-700 dark:text-primary-300 mb-2 md:mb-3 uppercase">🔑 Login Credentials</p>
+                <div className="space-y-1.5 md:space-y-2">
                   <div className="bg-white dark:bg-gray-800 p-2 rounded">
                     <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
                     <p className="text-sm font-mono font-semibold dark:text-white break-all">
@@ -234,32 +235,32 @@ const OrdersTab = ({ orders }) => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       {orders.map((order) => (
-        <div key={order._id} className="border dark:border-gray-700 rounded-lg p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+        <div key={order._id} className="border dark:border-gray-700 rounded-lg p-3 md:p-6 bg-white dark:bg-gray-800">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-4 mb-3 md:mb-4">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Order ID: {order._id}</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{formatDate(order.createdAt)}</p>
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 truncate">Order ID: {order._id.substring(0, 12)}...</p>
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">{formatDate(order.createdAt)}</p>
             </div>
             <div className="flex items-center space-x-2">
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.orderStatus)}`}>
+              <span className={`px-2 md:px-3 py-0.5 md:py-1 rounded-full text-xs font-semibold ${getStatusColor(order.orderStatus)}`}>
                 {order.orderStatus}
               </span>
-              <span className="text-sm font-medium dark:text-white">{formatCurrency(order.totalAmount)}</span>
+              <span className="text-sm md:text-base font-medium dark:text-white">{formatCurrency(order.totalAmount)}</span>
             </div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5 md:space-y-2">
             {order.orderItems.map((item, index) => (
-              <div key={index} className="flex justify-between text-sm">
+              <div key={index} className="flex justify-between text-xs md:text-sm">
                 <span className="dark:text-gray-300">{item.name} x {item.quantity}</span>
                 <span className="font-medium dark:text-white">{formatCurrency(item.price * item.quantity)}</span>
               </div>
             ))}
           </div>
-          <div className="border-t dark:border-gray-700 mt-4 pt-4 flex justify-between items-center">
-            <span className="font-bold dark:text-white">Total</span>
-            <span className="text-xl font-bold text-primary-600">{formatCurrency(order.totalAmount)}</span>
+          <div className="border-t dark:border-gray-700 mt-3 md:mt-4 pt-3 md:pt-4 flex justify-between items-center">
+            <span className="text-sm md:text-base font-bold dark:text-white">Total</span>
+            <span className="text-lg md:text-xl font-bold text-primary-600">{formatCurrency(order.totalAmount)}</span>
           </div>
         </div>
       ))}
@@ -278,8 +279,8 @@ const TransactionsTab = ({ transactions }) => {
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
+    <div className="overflow-x-auto -mx-3 md:mx-0">
+      <table className="w-full min-w-[600px]">
         <thead className="bg-gray-50 dark:bg-gray-800">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -302,7 +303,7 @@ const TransactionsTab = ({ transactions }) => {
         <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
           {transactions.map((transaction) => (
             <tr key={transaction._id}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-mono dark:text-gray-300">
+              <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm font-mono dark:text-gray-300">
                 {transaction.transactionId.substring(0, 20)}...
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-300">

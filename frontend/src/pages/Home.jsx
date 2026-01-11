@@ -1,13 +1,41 @@
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Zap, CreditCard, Headphones, ArrowRight, Download } from 'lucide-react';
+import { ShieldCheck, Zap, CreditCard, Headphones, ArrowRight, Users, Target, Award, Heart, ChevronDown } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { productAPI } from '../utils/api';
+import { faqAPI, productAPI, tutorialAPI } from '../utils/api';
 import ProductCard from '../components/ProductCard';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { isAndroidWebView } from '../utils/appMode';
 
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [faqs, setFaqs] = useState([]);
+  const [openFaqId, setOpenFaqId] = useState(null);
+  const [tutorials, setTutorials] = useState([]);
+  const [openTutorialId, setOpenTutorialId] = useState(null);
+  const isApp = isAndroidWebView();
+
+  const getYouTubeEmbedUrl = (value) => {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+
+    try {
+      const url = new URL(raw);
+      if (url.hostname.includes('youtu.be')) {
+        const id = url.pathname.replace('/', '');
+        return id ? `https://www.youtube.com/embed/${id}` : '';
+      }
+      if (url.hostname.includes('youtube.com')) {
+        const id = url.searchParams.get('v');
+        return id ? `https://www.youtube.com/embed/${id}` : '';
+      }
+    } catch {
+      // not a full URL
+    }
+
+    // Treat as raw video id
+    return `https://www.youtube.com/embed/${raw}`;
+  };
 
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
@@ -24,24 +52,50 @@ const Home = () => {
     fetchFeaturedProducts();
   }, []);
 
+  useEffect(() => {
+    const fetchFaqs = async () => {
+      try {
+        const res = await faqAPI.getAll();
+        setFaqs(res.data.faqs || []);
+      } catch (error) {
+        console.error('Error fetching FAQs:', error);
+      }
+    };
+
+    fetchFaqs();
+  }, []);
+
+  useEffect(() => {
+    const fetchTutorials = async () => {
+      try {
+        const res = await tutorialAPI.getAll();
+        setTutorials(res.data.tutorials || []);
+      } catch (error) {
+        console.error('Error fetching tutorials:', error);
+      }
+    };
+
+    fetchTutorials();
+  }, []);
+
   const features = [
     {
-      icon: <ShieldCheck className="w-8 h-8" />,
+      icon: <ShieldCheck className="w-6 h-6" />,
       title: 'Secure & Trusted',
       description: 'All transactions are encrypted and secure'
     },
     {
-      icon: <Zap className="w-8 h-8" />,
+      icon: <Zap className="w-6 h-6" />,
       title: 'Instant Delivery',
       description: 'Get your subscription details instantly'
     },
     {
-      icon: <CreditCard className="w-8 h-8" />,
+      icon: <CreditCard className="w-6 h-6" />,
       title: 'Multiple Payment Options',
       description: 'PayPal, Credit/Debit cards accepted'
     },
     {
-      icon: <Headphones className="w-8 h-8" />,
+      icon: <Headphones className="w-6 h-6" />,
       title: '24/7 Support',
       description: 'We are here to help you anytime'
     }
@@ -49,107 +103,286 @@ const Home = () => {
 
   return (
     <div className="min-h-screen">
-      <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-700 text-white py-12 sm:py-16 md:py-20 overflow-hidden">
+      <section className="relative gradient-bg text-white py-6 sm:py-10 md:py-12 overflow-hidden">
         <div className="absolute inset-0 bg-black opacity-10"></div>
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDE0YzMuMzEgMCA2IDIuNjkgNiA2cy0yLjY5IDYtNiA2LTYtMi42OS02LTYgMi42OS02IDYtNk0yNCA0NGMzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA2LTYiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-20"></div>
         <div className="absolute top-20 right-10 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 left-10 w-96 h-96 bg-secondary-500/20 rounded-full blur-3xl"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center">
-            <div className="inline-block mb-4 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold animate-fade-in">
+            <div className="inline-block mb-3 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full text-xs sm:text-sm font-semibold animate-fade-in">
               🎉 Premium Subscriptions at 50% Off
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold mb-6 animate-fade-in leading-tight px-2">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-extrabold mb-3 sm:mb-4 animate-fade-in leading-tight px-2">
               Premium OTT Subscriptions
               <br />
               <span className="bg-gradient-to-r from-yellow-300 via-yellow-200 to-yellow-300 text-transparent bg-clip-text">At Unbeatable Prices</span>
             </h1>
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-8 sm:mb-10 text-white/90 max-w-3xl mx-auto animate-slide-in-right px-4">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-5 sm:mb-6 text-white/90 max-w-3xl mx-auto animate-slide-in-right px-4">
               Netflix, Prime Video, Disney+, Spotify & More - All in One Place
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center animate-slide-in-left px-4 max-w-4xl mx-auto">
-              <Link to="/shop" className="bg-white text-primary-600 hover:bg-gray-50 font-bold py-3.5 sm:py-4 px-6 sm:px-10 rounded-xl transition-all transform active:scale-95 hover:scale-105 hover:shadow-2xl inline-flex items-center justify-center group text-sm sm:text-base">
+              <Link to="/shop" className="bg-white text-primary-600 hover:bg-gray-50 font-bold py-2.5 sm:py-3 px-5 sm:px-8 rounded-xl transition-all transform active:scale-95 hover:scale-105 hover:shadow-2xl inline-flex items-center justify-center group text-sm">
                 Browse Subscriptions
                 <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <Link to="/support" className="bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white hover:bg-white/20 font-bold py-3.5 sm:py-4 px-6 sm:px-10 rounded-xl transition-all transform active:scale-95 hover:scale-105 inline-flex items-center justify-center text-sm sm:text-base">
-                Contact Support
-              </Link>
             </div>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-gray-50 dark:from-gray-900 to-transparent"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-12 sm:h-20 bg-gradient-to-t from-gray-50 dark:from-gray-900 to-transparent"></div>
       </section>
 
-      <section className="py-12 sm:py-16 md:py-20 bg-white dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-            {features.map((feature, index) => (
-              <div key={index} className="text-center group animate-scale-in" style={{animationDelay: `${index * 0.1}s`}}>
-                <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-2xl mb-3 sm:mb-4 shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-                  {feature.icon}
+      <div className="flex flex-col">
+        <section className="order-1 md:order-2 py-12 sm:py-16 md:py-20 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-10 sm:mb-16">
+              {!isApp && (
+                <div className="inline-block mb-4 px-4 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs sm:text-sm font-semibold">
+                  🔥 Hot Deals
                 </div>
-                <h3 className="text-sm sm:text-base lg:text-lg font-bold mb-1 sm:mb-2 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{feature.title}</h3>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hidden sm:block">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-20 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-block mb-4 px-4 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm font-semibold">
-              🔥 Hot Deals
+              )}
+              {!isApp && (
+                <>
+                  <h2 className="text-xl sm:text-4xl md:text-5xl font-extrabold mb-3 sm:mb-4 bg-gradient-to-r from-primary-600 to-secondary-600 text-transparent bg-clip-text">
+                    Featured Subscriptions
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-lg max-w-2xl mx-auto">
+                    Discover our handpicked selection of premium streaming services at incredible prices
+                  </p>
+                </>
+              )}
             </div>
-            <h2 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-primary-600 to-secondary-600 text-transparent bg-clip-text">
-              Featured Subscriptions
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
-              Discover our handpicked selection of premium streaming services at incredible prices
-            </p>
-            <div className="mt-4 inline-block">
-              <Link to="/shop" className="text-primary-600 hover:text-primary-700 font-semibold inline-flex items-center">
+
+            {loading ? (
+              <div className="py-12">
+                <LoadingSpinner size="lg" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
+                {featuredProducts.map((product) => (
+                  <ProductCard key={product._id} product={product} hideProfileTypes hideDetails />
+                ))}
+              </div>
+            )}
+
+            <div className="text-center mt-10 sm:mt-12">
+              <Link to="/shop" className="btn-primary inline-flex items-center px-5 py-2.5 text-sm">
                 View All Products
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
             </div>
           </div>
+        </section>
 
-          {loading ? (
-            <div className="py-12">
-              <LoadingSpinner size="lg" />
+        <section className="order-2 md:order-1 py-10 sm:py-16 md:py-20 bg-white dark:bg-gray-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-8 sm:mb-12">
+              <div className="inline-block mb-3 px-4 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs sm:text-sm font-semibold">
+                ⚡ Features
+              </div>
+              <h2 className="text-xl sm:text-3xl md:text-4xl font-extrabold mb-2 sm:mb-3 bg-gradient-to-r from-primary-600 to-secondary-600 text-transparent bg-clip-text">
+                Why You’ll Love Digital Dudes
+              </h2>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                Everything you need for a smooth subscription experience
+              </p>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
+
+            <div className="grid grid-cols-4 md:grid-cols-4 gap-2 sm:gap-6 md:gap-8 animate-fade-in">
+              {features.map((feature, index) => (
+                <div key={index} className="card-hover text-center transform transition-all duration-300 hover:-translate-y-2">
+                  <div className="inline-flex items-center justify-center w-10 h-10 sm:w-16 sm:h-16 bg-gradient-to-br from-primary-100 via-primary-200 to-primary-300 dark:from-primary-900/30 dark:via-primary-800/30 dark:to-primary-700/30 rounded-2xl text-primary-600 dark:text-primary-400 mb-2 sm:mb-4 shadow-lg">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-[10px] sm:text-base lg:text-lg font-bold mb-0.5 sm:mb-2 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors leading-tight">{feature.title}</h3>
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hidden sm:block">{feature.description}</p>
+                </div>
               ))}
             </div>
-          )}
+          </div>
+        </section>
+      </div>
 
-          <div className="text-center mt-12">
-            <Link to="/shop" className="btn-primary inline-flex items-center">
-              View All Products
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Link>
+      <section className="py-16 sm:py-20 md:py-24 bg-gradient-to-br from-gray-50 via-white to-primary-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM2MzY2ZjEiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDE0YzMuMzEgMCA2IDIuNjkgNiA2cy0yLjY5IDYtNiA2LTYtMi42OS02LTYgMi42OS02IDYtNk0yNCA0NGMzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA2LTYiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-40"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
+            <div className="inline-block mb-4 px-4 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs sm:text-sm font-semibold">
+              💫 About Us
+            </div>
+            <h2 className="text-xl sm:text-4xl md:text-5xl font-extrabold mb-3 sm:mb-6 bg-gradient-to-r from-primary-600 via-secondary-600 to-primary-600 text-transparent bg-clip-text">
+              Your Trusted OTT Subscription Partner
+            </h2>
+            <p className="text-sm sm:text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed">
+              We're on a mission to make premium entertainment accessible to everyone. With years of experience and thousands of satisfied customers, we deliver the best streaming subscriptions at unbeatable prices.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-4 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-8 mb-12 sm:mb-16">
+            <div className="group bg-white dark:bg-gray-800 p-3 sm:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 border border-gray-100 dark:border-gray-700 animate-slide-in-left">
+              <div className="inline-flex items-center justify-center w-10 h-10 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl text-white mb-2 sm:mb-6 shadow-lg group-hover:scale-110 transition-transform">
+                <Users className="w-5 h-5 sm:w-8 sm:h-8" />
+              </div>
+              <h3 className="text-sm sm:text-2xl font-bold mb-1 sm:mb-3 text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">10,000+</h3>
+              <p className="text-[10px] sm:text-base text-gray-600 dark:text-gray-400 leading-tight">Happy Customers Worldwide</p>
+            </div>
+
+            <div className="group bg-white dark:bg-gray-800 p-3 sm:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 border border-gray-100 dark:border-gray-700 animate-slide-in-left" style={{animationDelay: '100ms'}}>
+              <div className="inline-flex items-center justify-center w-10 h-10 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl text-white mb-2 sm:mb-6 shadow-lg group-hover:scale-110 transition-transform">
+                <Target className="w-5 h-5 sm:w-8 sm:h-8" />
+              </div>
+              <h3 className="text-sm sm:text-2xl font-bold mb-1 sm:mb-3 text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">99.9%</h3>
+              <p className="text-[10px] sm:text-base text-gray-600 dark:text-gray-400 leading-tight">Customer Satisfaction Rate</p>
+            </div>
+
+            <div className="group bg-white dark:bg-gray-800 p-3 sm:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 border border-gray-100 dark:border-gray-700 animate-slide-in-left" style={{animationDelay: '200ms'}}>
+              <div className="inline-flex items-center justify-center w-10 h-10 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl text-white mb-2 sm:mb-6 shadow-lg group-hover:scale-110 transition-transform">
+                <Award className="w-5 h-5 sm:w-8 sm:h-8" />
+              </div>
+              <h3 className="text-sm sm:text-2xl font-bold mb-1 sm:mb-3 text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">5+ Years</h3>
+              <p className="text-[10px] sm:text-base text-gray-600 dark:text-gray-400 leading-tight">Industry Experience</p>
+            </div>
+
+            <div className="group bg-white dark:bg-gray-800 p-3 sm:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 border border-gray-100 dark:border-gray-700 animate-slide-in-left" style={{animationDelay: '300ms'}}>
+              <div className="inline-flex items-center justify-center w-10 h-10 sm:w-16 sm:h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl text-white mb-2 sm:mb-6 shadow-lg group-hover:scale-110 transition-transform">
+                <Heart className="w-5 h-5 sm:w-8 sm:h-8" />
+              </div>
+              <h3 className="text-sm sm:text-2xl font-bold mb-1 sm:mb-3 text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">24/7</h3>
+              <p className="text-[10px] sm:text-base text-gray-600 dark:text-gray-400 leading-tight">Dedicated Support Team</p>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-primary-600 via-secondary-600 to-primary-600 rounded-3xl p-8 sm:p-12 md:p-16 text-center shadow-2xl transform hover:scale-105 transition-all duration-300 animate-fade-in">
+            <h3 className="text-lg sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-6">
+              Why Choose Digital Dudes?
+            </h3>
+            <p className="text-sm sm:text-lg md:text-xl text-white/90 mb-5 sm:mb-8 max-w-3xl mx-auto leading-relaxed">
+              We believe everyone deserves access to premium entertainment. That's why we offer authentic subscriptions at prices that won't break the bank, backed by our commitment to excellent service and instant delivery.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link to="/shop" className="bg-white text-primary-600 hover:bg-gray-50 font-bold py-3.5 sm:py-4 px-6 sm:px-10 rounded-xl transition-all transform active:scale-95 hover:scale-105 hover:shadow-2xl inline-flex items-center justify-center group text-sm sm:text-base">
+                Start Shopping Now
+                <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link to="/contact" className="bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white hover:bg-white/20 font-bold py-3.5 sm:py-4 px-6 sm:px-10 rounded-xl transition-all transform active:scale-95 hover:scale-105 inline-flex items-center justify-center text-sm sm:text-base">
+                Contact Us
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="py-16 gradient-bg text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Ready to Get Started?
-          </h2>
-          <p className="text-xl mb-8">
-            Join thousands of happy customers enjoying premium subscriptions at amazing prices
-          </p>
-          <Link to="/shop" className="bg-white text-primary-600 hover:bg-gray-100 font-bold py-4 px-8 rounded-lg transition-all transform hover:scale-105 inline-flex items-center">
-            Start Shopping Now
-            <ArrowRight className="ml-2 w-5 h-5" />
-          </Link>
+      <section className="py-12 sm:py-16 bg-white dark:bg-gray-900">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8 sm:mb-10">
+            <div className="inline-block mb-3 px-4 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs sm:text-sm font-semibold">
+              ❓ FAQ
+            </div>
+            <h2 className="text-xl sm:text-3xl md:text-4xl font-extrabold mb-2 sm:mb-4 bg-gradient-to-r from-primary-600 to-secondary-600 text-transparent bg-clip-text">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+              Quick answers to common questions
+            </p>
+          </div>
+
+          {faqs.length === 0 ? (
+            <div className="text-center text-gray-600 dark:text-gray-400">
+              No FAQs available.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {faqs.map((faq) => {
+                const isOpen = openFaqId === faq._id;
+                return (
+                  <div key={faq._id} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    <button
+                      type="button"
+                      className="w-full flex items-center justify-between gap-4 p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                      onClick={() => setOpenFaqId(isOpen ? null : faq._id)}
+                    >
+                      <span className="font-semibold text-sm sm:text-base dark:text-white">
+                        {faq.question}
+                      </span>
+                      <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isOpen && (
+                      <div className="px-4 pb-4 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+                        {faq.answer}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="py-12 sm:py-16 bg-white dark:bg-gray-900">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8 sm:mb-10">
+            <div className="inline-block mb-3 px-4 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs sm:text-sm font-semibold">
+              ▶ Tutorials
+            </div>
+            <h2 className="text-xl sm:text-3xl md:text-4xl font-extrabold mb-2 sm:mb-4 bg-gradient-to-r from-primary-600 to-secondary-600 text-transparent bg-clip-text">
+              Video Tutorials
+            </h2>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+              Watch step-by-step guides inside our website
+            </p>
+          </div>
+
+          {tutorials.length === 0 ? (
+            <div className="text-center text-gray-600 dark:text-gray-400">
+              No tutorials available.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {tutorials.map((tutorial) => {
+                const isOpen = openTutorialId === tutorial._id;
+                const embedUrl = getYouTubeEmbedUrl(tutorial.youtubeUrl);
+
+                return (
+                  <div key={tutorial._id} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    <button
+                      type="button"
+                      className="w-full flex items-center justify-between gap-4 p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                      onClick={() => setOpenTutorialId(isOpen ? null : tutorial._id)}
+                    >
+                      <span className="font-semibold text-sm sm:text-base dark:text-white">
+                        {tutorial.title}
+                      </span>
+                      <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isOpen && (
+                      <div className="px-4 pb-4">
+                        {embedUrl && (
+                          <div className="w-full aspect-video rounded-lg overflow-hidden bg-black mb-3">
+                            <iframe
+                              className="w-full h-full"
+                              src={embedUrl}
+                              title={tutorial.title}
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                              allowFullScreen
+                            />
+                          </div>
+                        )}
+
+                        {tutorial.description && (
+                          <div className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+                            {tutorial.description}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
     </div>

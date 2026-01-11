@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, LogOut, LayoutDashboard, Menu, X, Bell } from 'lucide-react';
+import { ShoppingCart, User, LogOut, LayoutDashboard, Bell, Headphones } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import useAuthStore from '../store/useAuthStore';
 import useCartStore from '../store/useCartStore';
@@ -7,12 +7,14 @@ import { subscriptionAPI, orderAPI, ticketAPI } from '../utils/api';
 import Logo from './Logo';
 
 const Navbar = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showAdminNotifications, setShowAdminNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [readNotifications, setReadNotifications] = useState([]);
   const [unreadTicketCount, setUnreadTicketCount] = useState(0);
+  const [adminPendingOrders, setAdminPendingOrders] = useState(0);
+  const [adminOpenTickets, setAdminOpenTickets] = useState(0);
   const { user, isAuthenticated, logout } = useAuthStore();
   const { getItemCount } = useCartStore();
   const navigate = useNavigate();
@@ -28,7 +30,24 @@ const Navbar = () => {
       fetchNotifications();
       fetchUnreadTicketCount();
     }
+    if (isAuthenticated && user?.role === 'admin') {
+      fetchAdminNotifications();
+    }
   }, [isAuthenticated, user, readNotifications]);
+
+  const fetchAdminNotifications = async () => {
+    try {
+      const [ordersRes, ticketsRes] = await Promise.all([
+        orderAPI.getAll({ status: 'pending' }),
+        ticketAPI.getAll({ status: 'open' })
+      ]);
+
+      setAdminPendingOrders(ordersRes?.data?.orders?.length || 0);
+      setAdminOpenTickets(ticketsRes?.data?.tickets?.length || 0);
+    } catch (error) {
+      console.error('Error fetching admin notifications:', error);
+    }
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -95,6 +114,7 @@ const Navbar = () => {
   };
 
   const cartItemCount = getItemCount();
+  const adminNotificationCount = adminPendingOrders + adminOpenTickets;
 
   return (
     <nav className="bg-white dark:bg-gray-900 shadow-lg sticky top-0 z-50 border-b border-gray-200 dark:border-gray-800">
@@ -130,6 +150,60 @@ const Navbar = () => {
                 </Link>
               </>
             )}
+
+            {isAuthenticated && user?.role === 'admin' && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowAdminNotifications(!showAdminNotifications)}
+                  className="relative p-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all"
+                  aria-label="Admin Notifications"
+                >
+                  <Bell className="w-6 h-6" />
+                  {adminNotificationCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse">
+                      {adminNotificationCount}
+                    </span>
+                  )}
+                </button>
+
+                {showAdminNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl border dark:border-gray-700 z-50">
+                    <div className="p-4 border-b dark:border-gray-700">
+                      <h3 className="font-bold dark:text-white">Admin Notifications</h3>
+                    </div>
+                    <div className="p-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAdminNotifications(false);
+                          navigate('/admin/orders');
+                        }}
+                        className="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                      >
+                        <span className="text-sm font-medium dark:text-white">New Orders (Pending)</span>
+                        <span className="text-sm font-bold text-primary-600 dark:text-primary-400">{adminPendingOrders}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAdminNotifications(false);
+                          navigate('/admin/tickets');
+                        }}
+                        className="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                      >
+                        <span className="text-sm font-medium dark:text-white">Open Support Tickets</span>
+                        <span className="text-sm font-bold text-primary-600 dark:text-primary-400">{adminOpenTickets}</span>
+                      </button>
+                      {adminNotificationCount === 0 && (
+                        <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                          No new notifications
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             {isAuthenticated && user?.role === 'admin' && (
               <Link to="/admin" className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all font-medium">
                 Admin Panel
@@ -140,6 +214,59 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
               <>
+                {user?.role === 'admin' && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowAdminNotifications(!showAdminNotifications)}
+                      className="relative p-3 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all"
+                      aria-label="Admin Notifications"
+                    >
+                      <Bell className="w-6 h-6" />
+                      {adminNotificationCount > 0 && (
+                        <span className="absolute top-1 right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse">
+                          {adminNotificationCount}
+                        </span>
+                      )}
+                    </button>
+
+                    {showAdminNotifications && (
+                      <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl border dark:border-gray-700 z-50">
+                        <div className="p-4 border-b dark:border-gray-700">
+                          <h3 className="font-bold dark:text-white">Admin Notifications</h3>
+                        </div>
+                        <div className="p-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAdminNotifications(false);
+                              navigate('/admin/orders');
+                            }}
+                            className="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                          >
+                            <span className="text-sm font-medium dark:text-white">New Orders (Pending)</span>
+                            <span className="text-sm font-bold text-primary-600 dark:text-primary-400">{adminPendingOrders}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAdminNotifications(false);
+                              navigate('/admin/tickets');
+                            }}
+                            className="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                          >
+                            <span className="text-sm font-medium dark:text-white">Open Support Tickets</span>
+                            <span className="text-sm font-bold text-primary-600 dark:text-primary-400">{adminOpenTickets}</span>
+                          </button>
+                          {adminNotificationCount === 0 && (
+                            <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                              No new notifications
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 {user?.role === 'customer' && (
                   <>
                     <Link to="/cart" className="relative p-3 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all">
@@ -257,87 +384,100 @@ const Navbar = () => {
             )}
           </div>
 
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all active:scale-95"
-            aria-label="Toggle mobile menu"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-      </div>
-
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-white dark:bg-gray-900 border-t dark:border-gray-800 animate-slide-down">
-          <div className="px-4 py-4 space-y-2">
-            <Link to="/" className="flex items-center py-3.5 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-gray-800 hover:text-primary-600 dark:hover:text-primary-400 rounded-xl px-4 transition-all active:scale-95" onClick={() => setMobileMenuOpen(false)}>
-              Home
-            </Link>
-            <Link to="/shop" className="flex items-center py-3.5 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-gray-800 hover:text-primary-600 dark:hover:text-primary-400 rounded-xl px-4 transition-all active:scale-95" onClick={() => setMobileMenuOpen(false)}>
-              Shop
-            </Link>
-            {isAuthenticated ? (
+          <div className="md:hidden flex items-center space-x-2">
+            {isAuthenticated && user?.role === 'customer' && (
               <>
-                {user?.role === 'customer' && (
-                  <>
-                    <Link to="/dashboard" className="flex items-center py-3.5 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-gray-800 hover:text-primary-600 dark:hover:text-primary-400 rounded-xl px-4 transition-all active:scale-95" onClick={() => setMobileMenuOpen(false)}>
-                      My Dashboard
-                    </Link>
-                    <Link to="/support" className="flex items-center justify-between py-3.5 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-gray-800 hover:text-primary-600 dark:hover:text-primary-400 rounded-xl px-4 transition-all active:scale-95" onClick={() => setMobileMenuOpen(false)}>
-                      <span>Support</span>
-                      {unreadTicketCount > 0 && (
-                        <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 font-bold">
-                          {unreadTicketCount}
-                        </span>
-                      )}
-                    </Link>
-                    <Link to="/cart" className="flex items-center justify-between py-3.5 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-gray-800 hover:text-primary-600 dark:hover:text-primary-400 rounded-xl px-4 transition-all active:scale-95" onClick={() => setMobileMenuOpen(false)}>
-                      <span>Cart</span>
-                      {cartItemCount > 0 && (
-                        <span className="bg-primary-600 text-white text-xs rounded-full px-2 py-1 font-bold">
-                          {cartItemCount}
-                        </span>
-                      )}
-                    </Link>
-                    {notifications.length > 0 && (
-                      <div className="py-3 px-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                        <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-                          {notifications.filter(n => !readNotifications.includes(n.id)).length} New Notifications
-                        </p>
-                        <Link to="/dashboard" className="text-sm text-primary-600 dark:text-primary-400 underline" onClick={() => setMobileMenuOpen(false)}>
-                          View All
-                        </Link>
-                      </div>
+                <Link
+                  to="/support"
+                  className="relative p-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all"
+                  aria-label="Support"
+                >
+                  <Headphones className="w-6 h-6" />
+                  {unreadTicketCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                      {unreadTicketCount}
+                    </span>
+                  )}
+                </Link>
+
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      const wasOpen = showNotifications;
+                      setShowNotifications(!showNotifications);
+                      if (!wasOpen && notifications.length > 0) {
+                        const allIds = notifications.map(n => n.id);
+                        const updated = [...readNotifications, ...allIds];
+                        setReadNotifications(updated);
+                        localStorage.setItem('readNotifications', JSON.stringify(updated));
+                      }
+                    }}
+                    className="relative p-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all"
+                    aria-label="Notifications"
+                  >
+                    <Bell className="w-6 h-6" />
+                    {notifications.filter(n => !readNotifications.includes(n.id)).length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse">
+                        {notifications.filter(n => !readNotifications.includes(n.id)).length}
+                      </span>
                     )}
-                  </>
-                )}
-                {user?.role === 'admin' && (
-                  <Link to="/admin" className="block py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
-                    Admin Panel
-                  </Link>
-                )}
-                <div className="pt-3 border-t dark:border-gray-700">
-                  <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                    Signed in as <span className="font-medium text-gray-700 dark:text-gray-300">{user?.name}</span>
-                  </div>
-                  <button onClick={handleLogout} className="block w-full text-left py-3 px-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
-                    Logout
                   </button>
+
+                  {showNotifications && (
+                    <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl border dark:border-gray-700 z-50">
+                      <div className="p-4 border-b dark:border-gray-700">
+                        <h3 className="font-bold dark:text-white">Notifications</h3>
+                      </div>
+                      <div className="max-h-96 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                          <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                            No new notifications
+                          </div>
+                        ) : (
+                          notifications.map((notif) => (
+                            <div
+                              key={notif.id}
+                              className={`p-4 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${
+                                notif.type === 'expiring' ? 'bg-yellow-50 dark:bg-yellow-900/10' : 'bg-green-50 dark:bg-green-900/10'
+                              }`}
+                              onClick={() => {
+                                setShowNotifications(false);
+                                navigate('/dashboard');
+                              }}
+                            >
+                              <p className="text-sm dark:text-white">{notif.message}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                {new Date(notif.date).toLocaleDateString()}
+                              </p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </>
-            ) : (
+            )}
+
+            {!isAuthenticated && (
               <>
-                <Link to="/login" className="block py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3" onClick={() => setMobileMenuOpen(false)}>
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all font-medium"
+                >
                   Login
                 </Link>
-                <Link to="/register" className="block py-3 bg-primary-600 text-white text-center rounded-lg font-medium hover:bg-primary-700" onClick={() => setMobileMenuOpen(false)}>
+                <Link
+                  to="/register"
+                  className="px-4 py-2 bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white rounded-lg transition-all font-medium"
+                >
                   Sign Up
                 </Link>
               </>
             )}
           </div>
         </div>
-      )}
+      </div>
     </nav>
   );
 };

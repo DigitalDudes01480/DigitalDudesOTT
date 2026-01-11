@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingBag, Users, CreditCard, Truck, LogOut, Menu, X, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, CreditCard, Truck, LogOut, Menu, X, MessageCircle, FolderTree, HelpCircle, Video } from 'lucide-react';
 import { useState } from 'react';
 import useAuthStore from '../../store/useAuthStore';
 
@@ -17,11 +17,14 @@ const AdminLayout = () => {
   const menuItems = [
     { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
     { path: '/admin/products', icon: Package, label: 'Products' },
+    { path: '/admin/categories', icon: FolderTree, label: 'Categories' },
     { path: '/admin/orders', icon: ShoppingBag, label: 'Orders' },
     { path: '/admin/subscriptions', icon: Truck, label: 'Subscriptions' },
     { path: '/admin/transactions', icon: CreditCard, label: 'Transactions' },
     { path: '/admin/customers', icon: Users, label: 'Customers' },
-    { path: '/admin/tickets', icon: MessageCircle, label: 'Support Tickets' }
+    { path: '/admin/tickets', icon: MessageCircle, label: 'Support Tickets' },
+    { path: '/admin/faqs', icon: HelpCircle, label: 'FAQs' },
+    { path: '/admin/tutorials', icon: Video, label: 'Tutorials' }
   ];
 
   const isActive = (path, exact = false) => {

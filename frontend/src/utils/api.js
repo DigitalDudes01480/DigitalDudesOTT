@@ -1,12 +1,15 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Hardcoded production API URL to ensure it works in Capacitor app
+const API_URL = 'https://backend-tau-blush-82.vercel.app/api';
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 seconds timeout
+  validateStatus: (status) => status < 500, // Don't throw on 4xx errors
 });
 
 api.interceptors.request.use(
@@ -25,6 +28,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Enhanced error handling
+    if (error.code === 'ECONNABORTED') {
+      error.message = 'Request timeout. Please check your internet connection and try again.';
+    } else if (error.code === 'ERR_NETWORK') {
+      error.message = 'Network error. Please check your internet connection.';
+    } else if (!error.response) {
+      error.message = 'Unable to connect to server. Please check your internet connection.';
+    }
+    
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -97,13 +109,36 @@ export const transactionAPI = {
 
 export const ticketAPI = {
   create: (data) => api.post('/tickets', data),
-  getMyTickets: (params) => api.get('/tickets/my-tickets', { params }),
-  getUnreadCount: () => api.get('/tickets/unread-count'),
+  getMyTickets: () => api.get('/tickets/my-tickets'),
   getAll: (params) => api.get('/tickets/all', { params }),
   getById: (id) => api.get(`/tickets/${id}`),
-  addMessage: (id, data) => api.post(`/tickets/${id}/message`, data),
+  addMessage: (id, data) => api.post(`/tickets/${id}/messages`, data),
   updateStatus: (id, data) => api.put(`/tickets/${id}/status`, data),
-  delete: (id) => api.delete(`/tickets/${id}`),
+  getUnreadCount: () => api.get('/tickets/unread-count'),
+  markAsRead: (id) => api.put(`/tickets/${id}/mark-read`),
+};
+
+export const categoryAPI = {
+  getAll: (params) => api.get('/categories', { params }),
+  getById: (id) => api.get(`/categories/${id}`),
+  create: (data) => api.post('/categories', data),
+  update: (id, data) => api.put(`/categories/${id}`, data),
+  delete: (id) => api.delete(`/categories/${id}`),
+  updateOrder: (categories) => api.put('/categories/order/update', { categories }),
+};
+
+export const faqAPI = {
+  getAll: (params) => api.get('/faqs', { params }),
+  create: (data) => api.post('/faqs', data),
+  update: (id, data) => api.put(`/faqs/${id}`, data),
+  delete: (id) => api.delete(`/faqs/${id}`)
+};
+
+export const tutorialAPI = {
+  getAll: (params) => api.get('/tutorials', { params }),
+  create: (data) => api.post('/tutorials', data),
+  update: (id, data) => api.put(`/tutorials/${id}`, data),
+  delete: (id) => api.delete(`/tutorials/${id}`)
 };
 
 export const adminAPI = {
@@ -120,6 +155,12 @@ export const paymentAPI = {
   confirmStripePayment: (data) => api.post('/payment/stripe/confirm', data),
   createPayPalOrder: (data) => api.post('/payment/paypal/create-order', data),
   capturePayPalOrder: (data) => api.post('/payment/paypal/capture-order', data),
+};
+
+export const chatbotAPI = {
+  chat: (data) => api.post('/chatbot/chat', data),
+  createTicket: (data) => api.post('/chatbot/create-ticket', data),
+  getSuggestions: () => api.get('/chatbot/suggestions')
 };
 
 export default api;

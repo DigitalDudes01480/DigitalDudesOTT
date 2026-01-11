@@ -1,0 +1,5 @@
+public/downloads/
+android/
+*.apk
+node_modules/
+.git/

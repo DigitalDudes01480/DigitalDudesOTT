@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Plus, Edit, Trash2, Search } from 'lucide-react';
-import { productAPI } from '../../utils/api';
+import { productAPI, categoryAPI } from '../../utils/api';
 import { formatCurrency } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import toast from 'react-hot-toast';
@@ -191,6 +191,7 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
     image: '',
     status: 'active',
     stockQuantity: 0,
+    category: '',
     profileTypes: [{
       name: 'Shared',
       description: '',
@@ -203,7 +204,21 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
       }]
     }]
   });
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await categoryAPI.getAll({ isActive: 'true' });
+        setCategories(response.data.categories);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // Initialize form data when product changes
   useEffect(() => {
@@ -216,6 +231,7 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
 
       const newFormData = {
         ...product,
+        category: product.category?._id || product.category || '',
         profileTypes: profileTypesWithDefaults
       };
       
@@ -316,6 +332,11 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
       submitData.append('status', formData.status);
       submitData.append('stockQuantity', formData.stockQuantity);
       
+      // Add category if selected
+      if (formData.category) {
+        submitData.append('category', formData.category);
+      }
+      
       submitData.append('profileTypes', JSON.stringify(formData.profileTypes));
       
       // Add image URL if provided
@@ -375,6 +396,22 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
                 <option value="SonyLIV">SonyLIV</option>
                 <option value="Voot">Voot</option>
                 <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Category</label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="input-field"
+              >
+                <option value="">Select Category (Optional)</option>
+                {categories.map((category) => (
+                  <option key={category._id} value={category._id}>
+                    {category.icon} {category.name}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -559,6 +596,7 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
                             onChange={(e) => updatePricingOption(profileIndex, optionIndex, 'duration.unit', e.target.value)}
                             className="input-field text-sm"
                           >
+                            <option value="days">Days</option>
                             <option value="month">Month</option>
                             <option value="months">Months</option>
                             <option value="year">Year</option>

@@ -8,7 +8,7 @@ const pricingOptionSchema = new mongoose.Schema({
     },
     unit: {
       type: String,
-      enum: ['month', 'months', 'year'],
+      enum: ['days', 'month', 'months', 'year'],
       default: 'month'
     }
   },

@@ -3,10 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Phone, Loader } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import toast from 'react-hot-toast';
+import { getQueryParam, isAndroidWebView } from '../utils/appMode';
 
 const Register = () => {
   const navigate = useNavigate();
   const { register, loading } = useAuthStore();
+  const isApp = isAndroidWebView();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,6 +16,36 @@ const Register = () => {
     confirmPassword: '',
     phone: ''
   });
+
+  const getOAuthBaseUrl = () => {
+    const origin = 'https://backend-tau-blush-82-omega.vercel.app';
+    return `${origin}/api`;
+  };
+
+  const startOAuth = (provider) => {
+    const queryRedirect = getQueryParam('appRedirect');
+    const storedRedirect = typeof window !== 'undefined' ? localStorage.getItem('appRedirect') : null;
+    const appRedirect = queryRedirect || storedRedirect || (isApp ? 'digitaldudes://auth/callback' : null);
+
+    const webRedirect = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : null;
+
+    if (queryRedirect && typeof window !== 'undefined') {
+      localStorage.setItem('appRedirect', queryRedirect);
+    }
+
+    const url = new URL(`${getOAuthBaseUrl()}/auth/${provider}`);
+    if (isApp && appRedirect) {
+      url.searchParams.set('redirect', appRedirect);
+    } else if (!isApp && webRedirect) {
+      url.searchParams.set('redirect', webRedirect);
+    }
+
+    if (isApp) {
+      window.location.href = url.toString();
+      return;
+    }
+    window.location.href = url.toString();
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -185,7 +217,7 @@ const Register = () => {
 
             <div className="mt-6 grid grid-cols-2 gap-3">
               <button
-                onClick={() => window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/auth/google`}
+                onClick={() => startOAuth('google')}
                 type="button"
                 className="w-full inline-flex justify-center items-center py-2.5 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
@@ -199,7 +231,7 @@ const Register = () => {
               </button>
 
               <button
-                onClick={() => window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/auth/facebook`}
+                onClick={() => startOAuth('facebook')}
                 type="button"
                 className="w-full inline-flex justify-center items-center py-2.5 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >

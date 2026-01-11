@@ -4,6 +4,12 @@ import Subscription from '../models/Subscription.js';
 import Transaction from '../models/Transaction.js';
 import { sendAdminNewOrderNotification, sendOrderConfirmation, sendOrderStatusUpdate, sendSubscriptionDelivery } from '../utils/emailService.js';
 
+const addDays = (date, days) => {
+  const d = new Date(date);
+  d.setDate(d.getDate() + Math.round(days));
+  return d;
+};
+
 // Helper function to safely parse object from string
 const parseObjectFromString = (value) => {
   if (value === null || value === undefined) {
@@ -397,12 +403,18 @@ export const deliverOrder = async (req, res) => {
     if (!isAlreadyDelivered) {
       for (const item of order.orderItems) {
       const subscriptionStartDate = startDate ? new Date(startDate) : new Date();
-      const expiryDate = new Date(subscriptionStartDate);
-      
-      if (item.duration.unit === 'year') {
-        expiryDate.setFullYear(expiryDate.getFullYear() + item.duration.value);
+      let expiryDate = new Date(subscriptionStartDate);
+
+      const durationValue = Number(item?.duration?.value || 0);
+      const durationUnit = String(item?.duration?.unit || 'month');
+
+      if (durationUnit === 'days') {
+        expiryDate = addDays(expiryDate, durationValue);
+      } else if (durationUnit === 'year') {
+        expiryDate = addDays(expiryDate, durationValue * 365);
       } else {
-        expiryDate.setMonth(expiryDate.getMonth() + item.duration.value);
+        // Treat month/months as 30 days so fractional months (e.g. 1.5) work as expected.
+        expiryDate = addDays(expiryDate, durationValue * 30);
       }
 
       const subscription = await Subscription.create({

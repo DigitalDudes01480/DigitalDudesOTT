@@ -1,38 +1,28 @@
 import { Download, Smartphone, Shield, CheckCircle, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { compareSemver, getQueryParam, isAndroidWebView } from '../utils/appMode';
 
 const DownloadApp = () => {
   const [apkAvailable, setApkAvailable] = useState(false);
   const [checkingApk, setCheckingApk] = useState(true);
+  const isApp = isAndroidWebView();
+  const latestVersion = '1.2';
+  const currentAppVersion = getQueryParam('appVersion');
+  const needsUpdate = isApp && currentAppVersion && compareSemver(currentAppVersion, latestVersion) === -1;
 
   useEffect(() => {
-    let cancelled = false;
-
-    const checkApkAvailability = async () => {
-      try {
-        const res = await fetch('/downloads/digital-dudes.apk', { method: 'HEAD', cache: 'no-store' });
-        const isAvailable = Boolean(res.ok || res.status === 405);
-        if (!cancelled) setApkAvailable(isAvailable);
-      } catch (e) {
-        if (!cancelled) setApkAvailable(false);
-      } finally {
-        if (!cancelled) setCheckingApk(false);
-      }
-    };
-
-    checkApkAvailability();
-
-    return () => {
-      cancelled = true;
-    };
+    // APK is hosted on GitHub Releases
+    setApkAvailable(true);
+    setCheckingApk(false);
   }, []);
 
   const handleDownload = () => {
-    // Download the APK file
+    // Download the APK file from GitHub Releases
     const link = document.createElement('a');
-    link.href = '/downloads/digital-dudes.apk';
-    link.download = 'digital-dudes.apk';
+    link.href = 'https://github.com/DigitalDudes01480/DigitalDudesOTT/releases/download/v1.2/digital-dudes-v1.2-network-fixed.apk';
+    link.download = 'digital-dudes-v1.2-network-fixed.apk';
+    link.target = '_blank';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -63,7 +53,7 @@ const DownloadApp = () => {
               className="h-24 w-auto mx-auto mb-4"
             />
             <h2 className="text-2xl font-bold dark:text-white mb-2">Digital Dudes OTT</h2>
-            <p className="text-gray-600 dark:text-gray-400">Version 1.0.0 • 5.2 MB</p>
+            <p className="text-gray-600 dark:text-gray-400">Version 1.2 • 5.1 MB</p>
           </div>
 
           {apkAvailable ? (
@@ -73,11 +63,11 @@ const DownloadApp = () => {
                 className="btn-primary inline-flex items-center justify-center text-lg mb-4"
               >
                 <Download className="w-6 h-6 mr-2" />
-                Download APK
+                {needsUpdate ? 'Update App' : 'Download APK'}
               </button>
 
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                For Android 7.0 and above • Version 1.0.0
+                For Android 7.0 and above • Version {latestVersion}
               </p>
             </>
           ) : (
@@ -111,7 +101,7 @@ const DownloadApp = () => {
               </button>
 
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                For Android 7.0 and above • Version 1.0.0
+                For Android 7.0 and above • Version 1.2
               </p>
             </>
           )}
