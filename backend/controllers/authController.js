@@ -309,11 +309,71 @@ export const changePassword = async (req, res) => {
 };
 
 // Google OAuth
-export const googleAuth = passport.authenticate('google', {
-  scope: ['profile', 'email']
-});
+export const googleAuth = (req, res, next) => {
+  if (!passport?._strategy?.('google')) {
+    return res.status(503).json({
+      success: false,
+      message: 'Google login is not configured on the server'
+    });
+  }
+
+  const sanitizeRedirect = (candidate) => {
+    if (!candidate) return null;
+    const value = String(candidate).trim();
+    const allowPrefixes = ['digitaldudes://', 'digitaldudesapp://', 'intent://'];
+    if (allowPrefixes.some((p) => value.startsWith(p))) return value;
+    try {
+      const u = new URL(value);
+      const f = new URL(process.env.FRONTEND_URL);
+      if (u.origin === f.origin) return value;
+    } catch (_) {
+    }
+    return null;
+  };
+
+  const redirect = sanitizeRedirect(req.query.redirect);
+  const state = redirect ? Buffer.from(JSON.stringify({ redirect })).toString('base64url') : undefined;
+
+  return passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    ...(state ? { state } : {})
+  })(req, res, next);
+};
 
 export const googleCallback = (req, res, next) => {
+  if (!passport?._strategy?.('google')) {
+    return res.redirect(`${process.env.FRONTEND_URL}/login?error=google_not_configured`);
+  }
+
+  const sanitizeRedirect = (candidate) => {
+    if (!candidate) return null;
+    const value = String(candidate).trim();
+    const allowPrefixes = ['digitaldudes://', 'digitaldudesapp://', 'intent://'];
+    if (allowPrefixes.some((p) => value.startsWith(p))) return value;
+    try {
+      const u = new URL(value);
+      const f = new URL(process.env.FRONTEND_URL);
+      if (u.origin === f.origin) return value;
+    } catch (_) {
+    }
+    return null;
+  };
+
+  const parseStateRedirect = () => {
+    try {
+      if (!req.query.state) return null;
+      const parsed = JSON.parse(Buffer.from(String(req.query.state), 'base64url').toString('utf8'));
+      return sanitizeRedirect(parsed?.redirect);
+    } catch (_) {
+      return null;
+    }
+  };
+
+  const appendParams = (base, params) => {
+    const q = new URLSearchParams(params);
+    return base.includes('?') ? `${base}&${q.toString()}` : `${base}?${q.toString()}`;
+  };
+
   passport.authenticate('google', { session: false }, (err, user, info) => {
     if (err || !user) {
       return res.redirect(`${process.env.FRONTEND_URL}/login?error=authentication_failed`);
@@ -332,16 +392,87 @@ export const googleCallback = (req, res, next) => {
 
     // Redirect to frontend with token
     const userParam = encodeURIComponent(Buffer.from(JSON.stringify(safeUser)).toString('base64'));
-    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&provider=google&user=${userParam}`);
+    const stateRedirect = parseStateRedirect();
+    const fallback = `${process.env.FRONTEND_URL}/auth/callback?token=${token}&provider=google&user=${userParam}`;
+    if (!stateRedirect) {
+      return res.redirect(fallback);
+    }
+    return res.redirect(
+      appendParams(stateRedirect, {
+        token,
+        provider: 'google',
+        user: userParam
+      })
+    );
   })(req, res, next);
 };
 
 // Facebook OAuth
-export const facebookAuth = passport.authenticate('facebook', {
-  scope: ['email']
-});
+export const facebookAuth = (req, res, next) => {
+  if (!passport?._strategy?.('facebook')) {
+    return res.status(503).json({
+      success: false,
+      message: 'Facebook login is not configured on the server'
+    });
+  }
+
+  const sanitizeRedirect = (candidate) => {
+    if (!candidate) return null;
+    const value = String(candidate).trim();
+    const allowPrefixes = ['digitaldudes://', 'digitaldudesapp://', 'intent://'];
+    if (allowPrefixes.some((p) => value.startsWith(p))) return value;
+    try {
+      const u = new URL(value);
+      const f = new URL(process.env.FRONTEND_URL);
+      if (u.origin === f.origin) return value;
+    } catch (_) {
+    }
+    return null;
+  };
+
+  const redirect = sanitizeRedirect(req.query.redirect);
+  const state = redirect ? Buffer.from(JSON.stringify({ redirect })).toString('base64url') : undefined;
+
+  return passport.authenticate('facebook', {
+    scope: ['email'],
+    ...(state ? { state } : {})
+  })(req, res, next);
+};
 
 export const facebookCallback = (req, res, next) => {
+  if (!passport?._strategy?.('facebook')) {
+    return res.redirect(`${process.env.FRONTEND_URL}/login?error=facebook_not_configured`);
+  }
+
+  const sanitizeRedirect = (candidate) => {
+    if (!candidate) return null;
+    const value = String(candidate).trim();
+    const allowPrefixes = ['digitaldudes://', 'digitaldudesapp://', 'intent://'];
+    if (allowPrefixes.some((p) => value.startsWith(p))) return value;
+    try {
+      const u = new URL(value);
+      const f = new URL(process.env.FRONTEND_URL);
+      if (u.origin === f.origin) return value;
+    } catch (_) {
+    }
+    return null;
+  };
+
+  const parseStateRedirect = () => {
+    try {
+      if (!req.query.state) return null;
+      const parsed = JSON.parse(Buffer.from(String(req.query.state), 'base64url').toString('utf8'));
+      return sanitizeRedirect(parsed?.redirect);
+    } catch (_) {
+      return null;
+    }
+  };
+
+  const appendParams = (base, params) => {
+    const q = new URLSearchParams(params);
+    return base.includes('?') ? `${base}&${q.toString()}` : `${base}?${q.toString()}`;
+  };
+
   passport.authenticate('facebook', { session: false }, (err, user, info) => {
     if (err || !user) {
       return res.redirect(`${process.env.FRONTEND_URL}/login?error=authentication_failed`);
@@ -360,6 +491,17 @@ export const facebookCallback = (req, res, next) => {
 
     // Redirect to frontend with token
     const userParam = encodeURIComponent(Buffer.from(JSON.stringify(safeUser)).toString('base64'));
-    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&provider=facebook&user=${userParam}`);
+    const stateRedirect = parseStateRedirect();
+    const fallback = `${process.env.FRONTEND_URL}/auth/callback?token=${token}&provider=facebook&user=${userParam}`;
+    if (!stateRedirect) {
+      return res.redirect(fallback);
+    }
+    return res.redirect(
+      appendParams(stateRedirect, {
+        token,
+        provider: 'facebook',
+        user: userParam
+      })
+    );
   })(req, res, next);
 };

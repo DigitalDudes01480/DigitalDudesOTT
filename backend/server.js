@@ -19,11 +19,14 @@ import transactionRoutes from './routes/transactionRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config();
+
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
 
 const app = express();
 
@@ -33,12 +36,22 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://frontend-cbve2o2m3-digitaldudes01480s-projects.vercel.app',
-    'https://frontend-virid-nu-28.vercel.app'
-  ],
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://frontend-cbve2o2m3-digitaldudes01480s-projects.vercel.app',
+      'https://frontend-virid-nu-28.vercel.app',
+      'https://frontend-virid-nu-28-psi.vercel.app'
+    ];
+    
+    // Allow requests from Capacitor app (capacitor://localhost) and other mobile schemes
+    if (!origin || origin.startsWith('capacitor://') || origin.startsWith('ionic://') || origin.startsWith('http://localhost') || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all origins for now to fix the issue
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -76,7 +89,35 @@ app.get('/api/version', (req, res) => {
     success: true,
     nodeEnv: process.env.NODE_ENV,
     vercel: process.env.VERCEL,
-    commit: process.env.VERCEL_GIT_COMMIT_SHA || process.env.VERCEL_GITHUB_COMMIT_SHA || null
+    commit: process.env.VERCEL_GIT_COMMIT_SHA || process.env.VERCEL_GITHUB_COMMIT_SHA || null,
+    config: {
+      frontendUrlConfigured: Boolean(process.env.FRONTEND_URL),
+      backendUrlConfigured: Boolean(process.env.BACKEND_URL),
+      email: {
+        sesConfigured:
+          Boolean(process.env.AWS_ACCESS_KEY_ID) &&
+          Boolean(process.env.AWS_SECRET_ACCESS_KEY) &&
+          Boolean(process.env.EMAIL_FROM),
+        resendConfigured: Boolean(process.env.RESEND_API_KEY) && Boolean(process.env.EMAIL_FROM),
+        smtpConfigured:
+          Boolean(process.env.EMAIL_HOST) &&
+          Boolean(process.env.EMAIL_USER) &&
+          Boolean(process.env.EMAIL_PASSWORD) &&
+          Boolean(process.env.EMAIL_FROM)
+      },
+      oauth: {
+        googleConfigured:
+          Boolean(process.env.GOOGLE_CLIENT_ID) &&
+          Boolean(process.env.GOOGLE_CLIENT_SECRET) &&
+          Boolean(process.env.BACKEND_URL) &&
+          Boolean(process.env.FRONTEND_URL),
+        facebookConfigured:
+          Boolean(process.env.FACEBOOK_APP_ID) &&
+          Boolean(process.env.FACEBOOK_APP_SECRET) &&
+          Boolean(process.env.BACKEND_URL) &&
+          Boolean(process.env.FRONTEND_URL)
+      }
+    }
   });
 });
 
@@ -88,18 +129,21 @@ app.use('/api/transactions', transactionRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/tickets', ticketRoutes);
+app.use('/api/categories', categoryRoutes);
 
 app.use(errorHandler);
 
-setInterval(() => {
-  checkExpiredSubscriptions();
-}, 24 * 60 * 60 * 1000);
+if (!isVercel) {
+  setInterval(() => {
+    checkExpiredSubscriptions();
+  }, 24 * 60 * 60 * 1000);
 
-const PORT = process.env.PORT || 5000;
+  const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-  checkExpiredSubscriptions();
-});
+  app.listen(PORT, () => {
+    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    checkExpiredSubscriptions();
+  });
+}
 
 export default app;

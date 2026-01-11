@@ -17,6 +17,7 @@
   "author": "Digital Dudes",
   "license": "MIT",
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.966.0",
     "@paypal/checkout-server-sdk": "^1.0.3",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

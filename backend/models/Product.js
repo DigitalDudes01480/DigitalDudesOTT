@@ -92,9 +92,9 @@ const productSchema = new mongoose.Schema({
     default: 0
   },
   category: {
-    type: String,
-    enum: ['OTT Platform', 'Music & Entertainment', 'AI Tools & Productivity', 'Dating Services', 'Others'],
-    default: 'OTT Platform'
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    default: null
   }
 }, {
   timestamps: true
@@ -107,7 +107,8 @@ productSchema.virtual('minPrice').get(function() {
   
   let minPrice = Infinity;
   this.profileTypes.forEach(profile => {
-    profile.pricingOptions.forEach(option => {
+    const pricingOptions = Array.isArray(profile?.pricingOptions) ? profile.pricingOptions : [];
+    pricingOptions.forEach(option => {
       if (option.price < minPrice) {
         minPrice = option.price;
       }
