@@ -143,9 +143,9 @@ export const generateAIResponse = async (userMessage, userId = null, conversatio
       parts: [{ text: msg.message }]
     }));
     
-    // Initialize Gemini model
+    // Initialize Gemini model (using latest available model)
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash-exp',
       systemInstruction: SYSTEM_INSTRUCTION + productContext + orderContext + subscriptionContext
     });
     
