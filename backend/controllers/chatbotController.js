@@ -480,7 +480,7 @@ const generateResponse = async (message, userId, conversationHistory = []) => {
       try {
         // Extract product name from message
         const products = await Product.find({ status: 'active' })
-          .select('name ottType pricing profileTypes')
+          .select('name ottType profileTypes')
           .lean()
           .catch(() => []);
         
@@ -537,13 +537,12 @@ const generateResponse = async (message, userId, conversationHistory = []) => {
 
           return {
             type: 'product_details',
-            message,
-            suggestions: ['Proceed with payment', 'View other plans', 'Contact support'],
+            message: response,
+            suggestions: matchedProduct.pricing.slice(0, 3).map(p => p.profileType).concat(['View payment methods']),
             data: {
               productId: matchedProduct._id,
               productName: matchedProduct.name,
-              profileType: matchedProfile.name,
-              pricing: matchedProfile.pricingOptions,
+              pricing: matchedProduct.pricing,
               paymentDetails: PAYMENT_DETAILS
             }
           };
