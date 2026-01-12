@@ -2,6 +2,28 @@ import Ticket from '../models/Ticket.js';
 import Product from '../models/Product.js';
 import Order from '../models/Order.js';
 import Subscription from '../models/Subscription.js';
+import User from '../models/User.js';
+
+// Payment QR codes and details
+const PAYMENT_DETAILS = {
+  khalti: {
+    name: 'Khalti',
+    number: '9876543210',
+    qrCode: 'https://i.imgur.com/khalti-qr.png' // Replace with actual QR code URL
+  },
+  esewa: {
+    name: 'eSewa',
+    number: '9876543210',
+    qrCode: 'https://i.imgur.com/esewa-qr.png' // Replace with actual QR code URL
+  },
+  bank: {
+    name: 'Bank Transfer',
+    bankName: 'Nepal Bank Limited',
+    accountNumber: '1234567890',
+    accountName: 'Digital Dudes',
+    branch: 'Kathmandu'
+  }
+};
 
 // Intelligent chatbot response system
 const generateResponse = async (message, userId) => {
@@ -115,6 +137,116 @@ const generateResponse = async (message, userId) => {
           suggestions: ['Go to Dashboard', 'Contact support', 'Create ticket']
         };
       }
+    }
+
+    // Check if user wants to buy/order a specific plan
+    if (/i want|buy|purchase|order|get/.test(lowerMessage) && /plan|subscription|netflix|prime|hotstar|disney/.test(lowerMessage)) {
+      try {
+        // Extract product name from message
+        const products = await Product.find({ status: 'active' })
+          .select('name ottType profileTypes')
+          .lean()
+          .catch(() => []);
+        
+        let matchedProduct = null;
+        let matchedProfile = null;
+        
+        // Try to match product name
+        for (const product of products) {
+          if (lowerMessage.includes(product.name.toLowerCase()) || lowerMessage.includes(product.ottType.toLowerCase())) {
+            matchedProduct = product;
+            
+            // Try to match profile type
+            if (product.profileTypes && product.profileTypes.length > 0) {
+              for (const profile of product.profileTypes) {
+                if (lowerMessage.includes(profile.name.toLowerCase()) || 
+                    lowerMessage.includes('shared') && profile.name.toLowerCase().includes('shared') ||
+                    lowerMessage.includes('private') && profile.name.toLowerCase().includes('private') ||
+                    lowerMessage.includes('premium') && profile.name.toLowerCase().includes('premium')) {
+                  matchedProfile = profile;
+                  break;
+                }
+              }
+            }
+            break;
+          }
+        }
+        
+        if (matchedProduct && matchedProfile) {
+          // Show pricing for matched plan
+          let response = `🎯 ${matchedProduct.name} - ${matchedProfile.name}\n\n`;
+          response += `📺 ${matchedProfile.description}\n`;
+          response += `📊 Quality: ${matchedProfile.quality}\n`;
+          response += `👥 Screens: ${matchedProfile.screenCount}\n\n`;
+          response += `💰 Pricing Options:\n\n`;
+          
+          if (matchedProfile.pricingOptions && matchedProfile.pricingOptions.length > 0) {
+            matchedProfile.pricingOptions.forEach((pricing, idx) => {
+              response += `${idx + 1}. ${pricing.duration.value} ${pricing.duration.unit} - ₹${pricing.price}\n`;
+            });
+          }
+          
+          response += `\n✅ Ready to order? I'll guide you through the payment process!`;
+          
+          return {
+            type: 'plan_selected',
+            message: response,
+            suggestions: ['Proceed with payment', 'Choose different plan', 'View all plans'],
+            data: {
+              productId: matchedProduct._id,
+              productName: matchedProduct.name,
+              profileType: matchedProfile.name,
+              pricing: matchedProfile.pricingOptions
+            }
+          };
+        } else if (matchedProduct) {
+          // Show all plans for the product
+          let response = `🎯 ${matchedProduct.name} Plans:\n\n`;
+          
+          if (matchedProduct.profileTypes && matchedProduct.profileTypes.length > 0) {
+            matchedProduct.profileTypes.forEach((profile, idx) => {
+              response += `${idx + 1}. ${profile.name}\n`;
+              response += `   ${profile.description}\n`;
+              if (profile.pricingOptions && profile.pricingOptions.length > 0) {
+                const minPrice = Math.min(...profile.pricingOptions.map(p => p.price));
+                response += `   Starting from ₹${minPrice}\n\n`;
+              }
+            });
+          }
+          
+          response += `Which plan would you like?`;
+          
+          return {
+            type: 'product_plans',
+            message: response,
+            suggestions: matchedProduct.profileTypes.map(p => p.name),
+            data: { productId: matchedProduct._id, productName: matchedProduct.name }
+          };
+        } else {
+          return {
+            type: 'info',
+            message: "I'd love to help you order! Please specify which product you're interested in.\n\nWe offer:\n• Netflix\n• Prime Video\n• Disney+ Hotstar\n• And more!",
+            suggestions: ['Show all products', 'Netflix plans', 'Prime plans']
+          };
+        }
+      } catch (error) {
+        console.error('Error processing order request:', error);
+        return {
+          type: 'info',
+          message: "I can help you place an order! Please visit our shop to browse products.",
+          suggestions: ['Go to Shop', 'Contact support']
+        };
+      }
+    }
+    
+    // Payment process initiation
+    if (/payment|pay now|proceed|khalti|esewa|bank/.test(lowerMessage)) {
+      return {
+        type: 'payment_instructions',
+        message: `💳 Payment Methods:\n\nChoose your preferred payment method:\n\n1️⃣ Khalti - ${PAYMENT_DETAILS.khalti.number}\n2️⃣ eSewa - ${PAYMENT_DETAILS.esewa.number}\n3️⃣ Bank Transfer - ${PAYMENT_DETAILS.bank.bankName}\n\nSelect a method to see QR code and details!`,
+        suggestions: ['Khalti', 'eSewa', 'Bank Transfer'],
+        data: { paymentDetails: PAYMENT_DETAILS }
+      };
     }
 
     // Product/pricing queries

@@ -160,7 +160,12 @@ export const paymentAPI = {
 export const chatbotAPI = {
   chat: (data) => api.post('/chatbot/chat', data),
   createTicket: (data) => api.post('/chatbot/create-ticket', data),
-  getSuggestions: () => api.get('/chatbot/suggestions')
+  getSuggestions: () => api.get('/chatbot/suggestions'),
+  placeOrder: (formData) => api.post('/chatbot/place-order', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
 };
 
 export default api;

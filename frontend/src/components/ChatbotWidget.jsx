@@ -12,7 +12,12 @@ const ChatbotWidget = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showTicketForm, setShowTicketForm] = useState(false);
   const [ticketData, setTicketData] = useState({ category: '', subject: '', message: '' });
+  const [showOrderForm, setShowOrderForm] = useState(false);
+  const [orderData, setOrderData] = useState({ productId: '', profileType: '', duration: null, paymentMethod: '', phone: '' });
+  const [receiptFile, setReceiptFile] = useState(null);
+  const [currentOrderContext, setCurrentOrderContext] = useState(null);
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
   const { isAuthenticated, user } = useAuthStore();
 
   const scrollToBottom = () => {
@@ -75,6 +80,7 @@ const ChatbotWidget = () => {
         message: responseData.message || 'I received your message but had trouble responding. Please try again.',
         suggestions: responseData.suggestions || ['Try again', 'Create ticket'],
         responseType: responseData.type || 'default',
+        data: responseData.data || null,
         timestamp: new Date()
       };
 
@@ -111,7 +117,7 @@ const ChatbotWidget = () => {
     }
   };
 
-  const handleSuggestionClick = (suggestion) => {
+  const handleSuggestionClick = (suggestion, messageData) => {
     if (suggestion === 'Create support ticket' || suggestion === 'Create ticket') {
       setShowTicketForm(true);
       return;
@@ -122,6 +128,51 @@ const ChatbotWidget = () => {
     if (ticketCategories.includes(suggestion)) {
       setTicketData(prev => ({ ...prev, category: suggestion }));
       setShowTicketForm(true);
+      return;
+    }
+
+    // Handle payment method selection
+    if (['Khalti', 'eSewa', 'Bank Transfer'].includes(suggestion)) {
+      const paymentDetails = messageData?.paymentDetails;
+      if (paymentDetails) {
+        let qrMessage = `💳 ${suggestion} Payment Details:\n\n`;
+        
+        if (suggestion === 'Khalti' && paymentDetails.khalti) {
+          qrMessage += `📱 Number: ${paymentDetails.khalti.number}\n\n`;
+          qrMessage += `Scan QR code to pay:\n`;
+          qrMessage += `[QR_CODE:${paymentDetails.khalti.qrCode}]\n\n`;
+        } else if (suggestion === 'eSewa' && paymentDetails.esewa) {
+          qrMessage += `📱 Number: ${paymentDetails.esewa.number}\n\n`;
+          qrMessage += `Scan QR code to pay:\n`;
+          qrMessage += `[QR_CODE:${paymentDetails.esewa.qrCode}]\n\n`;
+        } else if (suggestion === 'Bank Transfer' && paymentDetails.bank) {
+          qrMessage += `🏦 Bank: ${paymentDetails.bank.bankName}\n`;
+          qrMessage += `📋 Account: ${paymentDetails.bank.accountNumber}\n`;
+          qrMessage += `👤 Name: ${paymentDetails.bank.accountName}\n`;
+          qrMessage += `🏢 Branch: ${paymentDetails.bank.branch}\n\n`;
+        }
+        
+        qrMessage += `After payment, please upload your receipt below.`;
+        
+        setMessages(prev => [...prev, {
+          id: Date.now(),
+          type: 'bot',
+          message: qrMessage,
+          paymentMethod: suggestion,
+          showUpload: true,
+          timestamp: new Date()
+        }]);
+        
+        setOrderData(prev => ({ ...prev, paymentMethod: suggestion }));
+      }
+      return;
+    }
+
+    // Handle "Proceed with payment"
+    if (suggestion === 'Proceed with payment' && messageData) {
+      setCurrentOrderContext(messageData);
+      setInputMessage('payment');
+      setTimeout(() => handleSendMessage(), 100);
       return;
     }
 
@@ -167,6 +218,53 @@ const ChatbotWidget = () => {
       
       const errorMsg = error.response?.data?.message || error.message || 'Failed to create ticket. Please try again.';
       toast.error(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!receiptFile) {
+      toast.error('Please upload payment receipt first');
+      return;
+    }
+
+    if (!currentOrderContext) {
+      toast.error('Order context missing. Please start over.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('receipt', receiptFile);
+      formData.append('productId', currentOrderContext.productId);
+      formData.append('profileType', currentOrderContext.profileType);
+      formData.append('duration', JSON.stringify(currentOrderContext.pricing[0].duration));
+      formData.append('paymentMethod', orderData.paymentMethod);
+      formData.append('phone', user?.phone || '');
+
+      const response = await chatbotAPI.placeOrder(formData);
+
+      if (response.data.success) {
+        toast.success(response.data.message);
+        
+        const successMessage = {
+          id: Date.now(),
+          type: 'bot',
+          message: `✅ ${response.data.message}\n\nOrder #${response.data.order.orderNumber}\nAmount: ₹${response.data.order.totalAmount}\n\nYou can track your order in the Dashboard.`,
+          suggestions: ['Go to Dashboard', 'Track order', 'Need help'],
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, successMessage]);
+        setReceiptFile(null);
+        setCurrentOrderContext(null);
+        setOrderData({ productId: '', profileType: '', duration: null, paymentMethod: '', phone: '' });
+      }
+    } catch (error) {
+      console.error('Order placement error:', error);
+      toast.error(error.response?.data?.message || 'Failed to place order');
     } finally {
       setIsLoading(false);
     }
@@ -249,12 +347,73 @@ const ChatbotWidget = () => {
                           {msg.suggestions.map((suggestion, idx) => (
                             <button
                               key={idx}
-                              onClick={() => handleSuggestionClick(suggestion)}
+                              onClick={() => handleSuggestionClick(suggestion, msg.data)}
                               className="text-xs bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 px-3 py-1.5 rounded-full hover:bg-primary-200 dark:hover:bg-primary-800 transition-colors font-medium"
                             >
                               {suggestion}
                             </button>
                           ))}
+                        </div>
+                      )}
+                      {/* Display QR Code if present */}
+                      {msg.message && msg.message.includes('[QR_CODE:') && (
+                        <div className="mt-3">
+                          {(() => {
+                            const qrMatch = msg.message.match(/\[QR_CODE:(.*?)\]/);
+                            if (qrMatch && qrMatch[1]) {
+                              return (
+                                <img 
+                                  src={qrMatch[1]} 
+                                  alt="Payment QR Code" 
+                                  className="w-48 h-48 mx-auto border-2 border-gray-300 rounded-lg"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'block';
+                                  }}
+                                />
+                              );
+                            }
+                            return null;
+                          })()}
+                          <p className="text-xs text-center mt-2 text-gray-500" style={{display: 'none'}}>
+                            QR code not available
+                          </p>
+                        </div>
+                      )}
+                      {/* Receipt Upload Button */}
+                      {msg.showUpload && (
+                        <div className="mt-3">
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                setReceiptFile(file);
+                                toast.success('Receipt uploaded! Click "Place Order" to complete.');
+                              }
+                            }}
+                            className="hidden"
+                          />
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            📎 Upload Payment Receipt
+                          </button>
+                          {receiptFile && (
+                            <div className="mt-2 space-y-2">
+                              <p className="text-xs text-green-600">✓ {receiptFile.name}</p>
+                              <button
+                                onClick={handlePlaceOrder}
+                                disabled={isLoading}
+                                className="w-full bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                              >
+                                {isLoading ? 'Placing Order...' : '🛒 Place Order'}
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
                       <p className="text-xs mt-2 opacity-60">
@@ -304,59 +463,3 @@ const ChatbotWidget = () => {
                     <input
                       type="text"
                       placeholder="Subject"
-                      value={ticketData.subject}
-                      onChange={(e) => setTicketData(prev => ({ ...prev, subject: e.target.value }))}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    />
-                    <textarea
-                      placeholder="Describe your issue..."
-                      value={ticketData.message}
-                      onChange={(e) => setTicketData(prev => ({ ...prev, message: e.target.value }))}
-                      rows={3}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
-                    />
-                    <button
-                      onClick={handleCreateTicket}
-                      disabled={isLoading}
-                      className="w-full bg-primary-600 hover:bg-primary-700 text-white py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                    >
-                      {isLoading ? 'Creating...' : 'Create Ticket'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Input Area */}
-              <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex items-end space-x-2">
-                  <textarea
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Type your message..."
-                    rows={1}
-                    className="flex-1 px-4 py-3 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
-                    style={{ minHeight: '44px', maxHeight: '120px' }}
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!inputMessage.trim() || isLoading}
-                    className="bg-primary-600 hover:bg-primary-700 text-white p-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Send message"
-                  >
-                    <Send className="w-5 h-5" />
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                  Press Enter to send • Shift+Enter for new line
-                </p>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-    </>
-  );
-};
-
-export default ChatbotWidget;
