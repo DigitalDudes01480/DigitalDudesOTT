@@ -10,16 +10,14 @@ const ChatbotWidget = () => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
-  const [typingMessage, setTypingMessage] = useState('');
   const [showTicketForm, setShowTicketForm] = useState(false);
   const [ticketData, setTicketData] = useState({ category: '', subject: '', message: '' });
+  const [showOrderForm, setShowOrderForm] = useState(false);
+  const [orderData, setOrderData] = useState({ productId: '', profileType: '', duration: null, paymentMethod: '', phone: '' });
   const [receiptFile, setReceiptFile] = useState(null);
   const [currentOrderContext, setCurrentOrderContext] = useState(null);
-  const [orderData, setOrderData] = useState({ paymentMethod: '' });
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
-  const typingIntervalRef = useRef(null);
   const { isAuthenticated, user } = useAuthStore();
 
   const scrollToBottom = () => {
@@ -28,40 +26,7 @@ const ChatbotWidget = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isTyping, typingMessage]);
-
-  // Typing animation effect
-  const simulateTyping = (fullMessage, callback) => {
-    setIsTyping(true);
-    setTypingMessage('');
-    let currentIndex = 0;
-    
-    // Clear any existing interval
-    if (typingIntervalRef.current) {
-      clearInterval(typingIntervalRef.current);
-    }
-    
-    typingIntervalRef.current = setInterval(() => {
-      if (currentIndex < fullMessage.length) {
-        setTypingMessage(fullMessage.substring(0, currentIndex + 1));
-        currentIndex++;
-      } else {
-        clearInterval(typingIntervalRef.current);
-        setIsTyping(false);
-        setTypingMessage('');
-        callback();
-      }
-    }, 20); // 20ms per character for smooth typing
-  };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (typingIntervalRef.current) {
-        clearInterval(typingIntervalRef.current);
-      }
-    };
-  }, []);
+  }, [messages]);
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -119,16 +84,12 @@ const ChatbotWidget = () => {
         timestamp: new Date()
       };
 
-      // Use typing animation for bot response
-      setIsLoading(false);
-      simulateTyping(botMessage.message, () => {
-        setMessages(prev => [...prev, botMessage]);
-        
-        // If response suggests creating a ticket, show ticket form
-        if (responseData.type === 'ticket_prompt') {
-          setShowTicketForm(true);
-        }
-      });
+      setMessages(prev => [...prev, botMessage]);
+
+      // If response suggests creating a ticket, show ticket form
+      if (responseData.type === 'ticket_prompt') {
+        setShowTicketForm(true);
+      }
     } catch (error) {
       console.error('Chat error:', error.message);
       
@@ -137,20 +98,22 @@ const ChatbotWidget = () => {
       if (error.response?.status === 401) {
         errorMsg = 'Your session has expired. Please refresh the page and log in again.';
       } else if (error.response?.status === 500) {
-        errorMsg = 'Server error. Our team has been notified. Please try again later.';
-      } else if (error.message) {
-        errorMsg = `Error: ${error.message}`;
+        errorMsg = 'Server error. Our team has been notified. Please try again later or create a support ticket.';
+      } else if (error.code === 'ERR_NETWORK') {
+        errorMsg = 'Network error. Please check your internet connection and try again.';
       }
       
-      setIsLoading(false);
-      setMessages(prev => [...prev, {
+      const errorMessage = {
         id: Date.now() + 1,
         type: 'bot',
         message: errorMsg,
-        suggestions: ['Try again', 'Create support ticket'],
+        suggestions: ['Create ticket', 'Try again'],
         timestamp: new Date()
-      }]);
+      };
+      setMessages(prev => [...prev, errorMessage]);
       toast.error(errorMsg);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -466,13 +429,6 @@ const ChatbotWidget = () => {
                     </div>
                   </div>
                 )}
-                {isTyping && (
-                  <div className="flex justify-start">
-                    <div className="max-w-[80%] bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 shadow-sm">
-                      <p className="text-sm whitespace-pre-line">{typingMessage}<span className="animate-pulse">|</span></p>
-                    </div>
-                  </div>
-                )}
                 <div ref={messagesEndRef} />
               </div>
 
@@ -507,59 +463,3 @@ const ChatbotWidget = () => {
                     <input
                       type="text"
                       placeholder="Subject"
-                      value={ticketData.subject}
-                      onChange={(e) => setTicketData(prev => ({ ...prev, subject: e.target.value }))}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    />
-                    <textarea
-                      placeholder="Describe your issue..."
-                      value={ticketData.message}
-                      onChange={(e) => setTicketData(prev => ({ ...prev, message: e.target.value }))}
-                      rows={3}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
-                    />
-                    <button
-                      onClick={handleCreateTicket}
-                      disabled={isLoading}
-                      className="w-full bg-primary-600 hover:bg-primary-700 text-white py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                    >
-                      {isLoading ? 'Creating...' : 'Create Ticket'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Input Area */}
-              <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex items-end space-x-2">
-                  <textarea
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Type your message..."
-                    rows={1}
-                    className="flex-1 px-4 py-3 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
-                    style={{ minHeight: '44px', maxHeight: '120px' }}
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!inputMessage.trim() || isLoading}
-                    className="bg-primary-600 hover:bg-primary-700 text-white p-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Send message"
-                  >
-                    <Send className="w-5 h-5" />
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                  Press Enter to send • Shift+Enter for new line
-                </p>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-    </>
-  );
-};
-
-export default ChatbotWidget;

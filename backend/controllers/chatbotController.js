@@ -25,16 +25,51 @@ const PAYMENT_DETAILS = {
   }
 };
 
-// Intelligent chatbot response system
+// Store conversation context (in production, use Redis or database)
+const conversationContext = new Map();
+
+// Get or initialize conversation context
+const getContext = (userId) => {
+  if (!conversationContext.has(userId)) {
+    conversationContext.set(userId, {
+      lastIntent: null,
+      lastProduct: null,
+      lastQuery: null,
+      preferences: {},
+      history: []
+    });
+  }
+  return conversationContext.get(userId);
+};
+
+// Update conversation context
+const updateContext = (userId, updates) => {
+  const context = getContext(userId);
+  Object.assign(context, updates);
+  context.history.push({ timestamp: new Date(), ...updates });
+  if (context.history.length > 10) context.history.shift();
+};
+
+// Intelligent chatbot response system with learning
 const generateResponse = async (message, userId) => {
   try {
     const lowerMessage = message.toLowerCase().trim();
+    const context = userId ? getContext(userId) : null;
+    
+    // Learn from message patterns
+    if (context) {
+      context.lastQuery = message;
+    }
     
     // Greeting patterns
     if (/^(hi|hello|hey|good morning|good afternoon|good evening)/.test(lowerMessage)) {
+      const greeting = context?.history.length > 0 
+        ? "Welcome back! 👋 How can I help you today?" 
+        : "Hello! 👋 I'm your Digital Dudes support assistant. How can I help you today?";
+      
       return {
         type: 'greeting',
-        message: "Hello! 👋 I'm your Digital Dudes support assistant. How can I help you today?\n\nI can assist you with:\n• Order status and tracking\n• Subscription information\n• Account issues\n• Product inquiries\n• Technical support\n• Billing questions",
+        message: `${greeting}\n\nI can assist you with:\n• Order status and tracking\n• Subscription information\n• Account issues\n• Product inquiries\n• Technical support\n• Billing questions`,
         suggestions: ['Check my orders', 'View subscriptions', 'Product catalog', 'Create support ticket']
       };
     }
@@ -139,8 +174,21 @@ const generateResponse = async (message, userId) => {
       }
     }
 
+    // Learn from previous interactions - user confirming interest
+    if (context?.lastIntent === 'product_inquiry' && /yes|sure|ok|proceed|continue|interested/.test(lowerMessage)) {
+      if (context.lastProduct) {
+        updateContext(userId, { lastIntent: 'payment_selection' });
+        return {
+          type: 'payment_selection',
+          message: `Great! Let's proceed with ${context.lastProduct.productName}.\n\nPlease select your payment method:`,
+          suggestions: ['Khalti', 'eSewa', 'Bank Transfer'],
+          data: context.lastProduct
+        };
+      }
+    }
+
     // Check if user wants to buy/order a specific plan
-    if (/i want|buy|purchase|order|get/.test(lowerMessage) && /plan|subscription|netflix|prime|hotstar|disney/.test(lowerMessage)) {
+    if (/i want|buy|purchase|order|get|interested|looking for|need/.test(lowerMessage) && /plan|subscription|netflix|prime|hotstar|disney|spotify|youtube/.test(lowerMessage)) {
       try {
         // Extract product name from message
         const products = await Product.find({ status: 'active' })
@@ -176,27 +224,39 @@ const generateResponse = async (message, userId) => {
           // Show pricing for matched plan
           let response = `🎯 ${matchedProduct.name} - ${matchedProfile.name}\n\n`;
           response += `📺 ${matchedProfile.description}\n`;
-          response += `📊 Quality: ${matchedProfile.quality}\n`;
-          response += `👥 Screens: ${matchedProfile.screenCount}\n\n`;
-          response += `💰 Pricing Options:\n\n`;
           
           if (matchedProfile.pricingOptions && matchedProfile.pricingOptions.length > 0) {
             matchedProfile.pricingOptions.forEach((pricing, idx) => {
-              response += `${idx + 1}. ${pricing.duration.value} ${pricing.duration.unit} - ₹${pricing.price}\n`;
+              message += `${idx + 1}. ${pricing.duration.value} ${pricing.duration.unit} - ₹${pricing.price}\n`;
             });
           }
           
-          response += `\n✅ Ready to order? I'll guide you through the payment process!`;
-          
+          message += `\n\nWould you like to proceed with this plan?`;
+
+          // Save context for learning
+          if (context) {
+            updateContext(userId, {
+              lastIntent: 'product_inquiry',
+              lastProduct: {
+                productId: matchedProduct._id,
+                productName: matchedProduct.name,
+                profileType: matchedProfile.name,
+                pricing: matchedProfile.pricingOptions,
+                paymentDetails: PAYMENT_DETAILS
+              }
+            });
+          }
+
           return {
-            type: 'plan_selected',
-            message: response,
-            suggestions: ['Proceed with payment', 'Choose different plan', 'View all plans'],
+            type: 'product_details',
+            message,
+            suggestions: ['Proceed with payment', 'View other plans', 'Contact support'],
             data: {
               productId: matchedProduct._id,
               productName: matchedProduct.name,
               profileType: matchedProfile.name,
-              pricing: matchedProfile.pricingOptions
+              pricing: matchedProfile.pricingOptions,
+              paymentDetails: PAYMENT_DETAILS
             }
           };
         } else if (matchedProduct) {
@@ -360,19 +420,44 @@ const generateResponse = async (message, userId) => {
     };
   }
 
-    // Default response
+  // Smart fallback with context awareness
+  let fallbackMessage = "I'm here to help! ";
+  
+  // Provide contextual suggestions based on conversation history
+  if (context?.lastIntent === 'product_inquiry') {
+    fallbackMessage += "I noticed you were looking at our products. Would you like to:\n\n• Continue with your previous selection\n• Browse other products\n• Get pricing information\n• Speak with support";
+    
+    if (context) {
+      updateContext(userId, { lastIntent: 'contextual_help' });
+    }
+    
     return {
-      type: 'default',
-      message: "I'm here to help! I can assist you with:\n\n• 📦 Order status and tracking\n• 🎬 Subscription information\n• 💳 Payment and billing\n• 🔧 Technical support\n• 📝 Creating support tickets\n\nWhat would you like help with?",
-      suggestions: ['Check orders', 'View subscriptions', 'Browse products', 'Create ticket']
+      type: 'contextual_help',
+      message: fallbackMessage,
+      suggestions: ['Continue previous', 'Browse products', 'Get pricing', 'Contact support']
     };
+  }
+  
+  if (context?.history.length > 0) {
+    fallbackMessage += "Based on our conversation, I can help you with:\n\n";
+  } else {
+    fallbackMessage += "I can assist you with:\n\n";
+  }
+  
+  fallbackMessage += "• 📦 Order status and tracking\n• 🎬 Subscription information\n• 💳 Payment and billing\n• 🔧 Technical support\n• 📝 Creating support tickets\n\nWhat would you like help with?";
+  
+  return {
+    type: 'default',
+    message: fallbackMessage,
+    suggestions: ['Check my orders', 'View subscriptions', 'Browse products', 'Create support ticket']
+  };
+  
   } catch (error) {
-    console.error('Error in generateResponse:', error);
-    // Return safe default response on any error
+    console.error('Error generating chatbot response:', error);
     return {
-      type: 'default',
-      message: "I'm here to help! I can assist you with:\n\n• 📦 Order status and tracking\n• 🎬 Subscription information\n• 💳 Payment and billing\n• 🔧 Technical support\n• 📝 Creating support tickets\n\nWhat would you like help with?",
-      suggestions: ['Browse products', 'Contact support', 'Create ticket']
+      type: 'error',
+      message: "I'm having trouble processing your request. Please try again or create a support ticket for assistance.",
+      suggestions: ['Try again', 'Create support ticket', 'Contact support']
     };
   }
 };
