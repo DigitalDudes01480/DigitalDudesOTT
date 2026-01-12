@@ -72,9 +72,18 @@ const OrderAssistant = () => {
       }
     } catch (error) {
       console.error('Chat error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        url: `${API_URL}/order-assistant/chat`
+      });
+      
+      const errorMessage = error.response?.data?.message || error.message || 'Sorry, I encountered an error. Please try again.';
+      
       setMessages(prev => [...prev, {
         type: 'bot',
-        message: 'Sorry, I encountered an error. Please try again.'
+        message: `Error: ${errorMessage}\n\nAPI URL: ${API_URL}/order-assistant/chat\nPlease check browser console for details.`
       }]);
     } finally {
       setIsLoading(false);
