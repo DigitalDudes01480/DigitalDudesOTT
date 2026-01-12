@@ -67,22 +67,44 @@ export const uploadReceipt = async (req, res) => {
     });
 
     if (!product) {
+      console.error('Product not found:', orderData.product);
       return res.status(404).json({
         success: false,
-        message: 'Product not found'
+        message: `Product not found: ${orderData.product}`
       });
     }
 
-    // Find matching pricing
-    const pricing = product.pricing.find(p => 
-      p.profileType.toLowerCase() === orderData.profileType.toLowerCase() &&
-      p.duration.toLowerCase().includes(orderData.duration.toLowerCase())
-    );
+    if (!product.pricing || !Array.isArray(product.pricing)) {
+      console.error('Product pricing is invalid:', product);
+      return res.status(500).json({
+        success: false,
+        message: 'Product pricing data is invalid'
+      });
+    }
+
+    // Find matching pricing with flexible matching
+    const pricing = product.pricing.find(p => {
+      if (!p || !p.profileType || !p.duration) return false;
+      
+      const profileMatch = p.profileType.toLowerCase().includes(orderData.profileType.toLowerCase()) || 
+                          orderData.profileType.toLowerCase().includes(p.profileType.toLowerCase());
+      
+      const durationMatch = p.duration.toLowerCase().includes(orderData.duration.toLowerCase()) ||
+                           orderData.duration.toLowerCase().includes(p.duration.toLowerCase());
+      
+      return profileMatch && durationMatch;
+    });
 
     if (!pricing) {
+      console.error('Pricing not found for:', { 
+        product: orderData.product, 
+        profileType: orderData.profileType, 
+        duration: orderData.duration,
+        availablePricing: product.pricing 
+      });
       return res.status(404).json({
         success: false,
-        message: 'Pricing not found'
+        message: `Pricing not found for ${orderData.profileType} ${orderData.duration}`
       });
     }
 
