@@ -66,64 +66,29 @@ export const uploadReceipt = async (req, res) => {
       status: 'active'
     });
 
-    if (!product) {
-      console.error('Product not found:', orderData.product);
-      return res.status(404).json({
-        success: false,
-        message: `Product not found: ${orderData.product}`
-      });
-    }
+    // Use order data from conversation state (already validated during chat)
+    const productId = product?._id || null;
+    const profileType = orderData.profileType;
+    const duration = orderData.duration;
+    const price = orderData.price;
 
-    if (!product.pricing || !Array.isArray(product.pricing)) {
-      console.error('Product pricing is invalid:', product);
-      return res.status(500).json({
-        success: false,
-        message: 'Product pricing data is invalid'
-      });
-    }
-
-    // Find matching pricing with flexible matching
-    const pricing = product.pricing.find(p => {
-      if (!p || !p.profileType || !p.duration) return false;
-      
-      const profileMatch = p.profileType.toLowerCase().includes(orderData.profileType.toLowerCase()) || 
-                          orderData.profileType.toLowerCase().includes(p.profileType.toLowerCase());
-      
-      const durationMatch = p.duration.toLowerCase().includes(orderData.duration.toLowerCase()) ||
-                           orderData.duration.toLowerCase().includes(p.duration.toLowerCase());
-      
-      return profileMatch && durationMatch;
-    });
-
-    if (!pricing) {
-      console.error('Pricing not found for:', { 
-        product: orderData.product, 
-        profileType: orderData.profileType, 
-        duration: orderData.duration,
-        availablePricing: product.pricing 
-      });
-      return res.status(404).json({
-        success: false,
-        message: `Pricing not found for ${orderData.profileType} ${orderData.duration}`
-      });
-    }
-
-    // Create order
+    // Create order with data from conversation state
     const order = await Order.create({
       user: req.user?._id || null,
       orderItems: [{
-        product: product._id,
-        profileType: pricing.profileType,
-        duration: pricing.duration,
-        price: pricing.price,
+        product: productId,
+        profileType: profileType,
+        duration: duration,
+        price: price,
         quantity: 1
       }],
-      totalAmount: pricing.price,
+      totalAmount: price,
       paymentMethod: orderData.paymentMethod.toLowerCase().includes('khalti') ? 'khalti' : 'bank',
       paymentStatus: 'pending',
       paymentReceipt: receiptPath,
       orderStatus: 'pending',
-      orderSource: 'chatbot'
+      orderSource: 'chatbot',
+      customerEmail: orderData.email || null
     });
 
     res.json({
