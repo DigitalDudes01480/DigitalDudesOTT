@@ -2,7 +2,6 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import Product from '../models/Product.js';
 import Order from '../models/Order.js';
 import Subscription from '../models/Subscription.js';
-import Conversation from '../models/Conversation.js';
 
 // Initialize Gemini AI (FREE - no API key needed for basic usage)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AIzaSyDummy-Key-For-Testing');
@@ -69,7 +68,7 @@ RESPONSE FORMAT:
 const getProductContext = async () => {
   try {
     const products = await Product.find({ status: 'active' })
-      .select('name ottType description profileTypes')
+      .select('name ottType pricing description profileTypes')
       .lean();
     
     if (!products || products.length === 0) {
@@ -82,30 +81,17 @@ const getProductContext = async () => {
       if (product.description) {
         context += `Description: ${product.description}\n`;
       }
-      
-      if (product.profileTypes && product.profileTypes.length > 0) {
-        context += 'ALL PLANS AND PRICING:\n';
-        product.profileTypes.forEach(profile => {
-          context += `\n  Plan: ${profile.name}\n`;
-          if (profile.description) {
-            context += `  Info: ${profile.description}\n`;
-          }
-          context += `  Screens: ${profile.screenCount || 1}\n`;
-          context += `  Quality: ${profile.quality || 'HD'}\n`;
-          context += `  Account Type: ${profile.requiresOwnAccount ? 'Own Account Required' : 'Shared Profile'}\n`;
-          
-          if (profile.pricingOptions && profile.pricingOptions.length > 0) {
-            context += `  Pricing:\n`;
-            profile.pricingOptions.forEach(pricing => {
-              context += `    - ${pricing.duration.value} ${pricing.duration.unit}: Rs ${pricing.price}\n`;
-            });
-          }
+      if (product.pricing && product.pricing.length > 0) {
+        context += 'ALL PRICING OPTIONS:\n';
+        product.pricing.forEach(price => {
+          const screens = price.screens ? ` (${price.screens} screens)` : '';
+          context += `  ${price.profileType}${screens}: Rs ${price.price} for ${price.duration.value} ${price.duration.unit}\n`;
         });
       }
       context += '\n';
     });
     
-    context += '\nWhen customer asks for pricing, show ALL plans and prices above.\n';
+    context += '\nWhen customer asks for pricing, show ALL options above.\n';
     context += 'When customer wants to order, guide them through: select plan → choose payment → upload receipt → order created.\n';
     
     return context;
@@ -169,62 +155,24 @@ const getUserSubscriptionContext = async (userId) => {
   }
 };
 
-// Main AI chat function using Gemini with conversation history tracking
-export const generateAIResponse = async (userMessage, userId = null, conversationHistory = [], sessionId = null) => {
+// Main AI chat function using Gemini
+export const generateAIResponse = async (userMessage, userId = null, conversationHistory = []) => {
   try {
-    // Fetch real-time context
+    // Get real-time context
     const productContext = await getProductContext();
     const orderContext = await getUserOrderContext(userId);
     const subscriptionContext = await getUserSubscriptionContext(userId);
     
-    // Get or create conversation record for persistent history
-    let conversation = null;
-    let dbHistory = [];
-    
-    if (userId && sessionId) {
-      try {
-        conversation = await Conversation.getOrCreateConversation(userId, sessionId);
-        // Get last 10 messages from database for better context
-        dbHistory = conversation.getRecentMessages(10);
-      } catch (err) {
-        console.error('Error fetching conversation history:', err);
-      }
-    }
-    
-    // Combine database history with current session history
-    const allHistory = dbHistory.length > 0 
-      ? dbHistory.map(msg => ({
-          type: msg.role === 'user' ? 'user' : 'bot',
-          message: msg.content
-        }))
-      : conversationHistory;
-    
-    // Build conversation history for Gemini (last 8 messages for context)
-    const chatHistory = allHistory.slice(-8).map(msg => ({
+    // Build conversation history for Gemini
+    const chatHistory = conversationHistory.slice(-6).map(msg => ({
       role: msg.type === 'user' ? 'user' : 'model',
       parts: [{ text: msg.message }]
     }));
     
-    // Add conversation context to system instruction
-    let contextualInstruction = SYSTEM_INSTRUCTION + productContext + orderContext + subscriptionContext;
-    
-    if (conversation && conversation.context) {
-      contextualInstruction += '\n\nCONVERSATION CONTEXT:\n';
-      if (conversation.context.lastIntent) {
-        contextualInstruction += `Last Intent: ${conversation.context.lastIntent}\n`;
-      }
-      if (conversation.context.lastProduct) {
-        contextualInstruction += `Last Product Discussed: ${conversation.context.lastProduct.productName}\n`;
-      }
-      if (conversation.context.orderInProgress) {
-        contextualInstruction += `Order in Progress: Yes\n`;
-      }
-    }
-    
-    // Initialize Gemini model
+    // Initialize Gemini model (using available model)
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-2.5-flash',
-      systemInstruction: contextualInstruction
+      systemInstruction: SYSTEM_INSTRUCTION + productContext + orderContext + subscriptionContext
     });
     
     // Start chat with history
@@ -240,36 +188,9 @@ export const generateAIResponse = async (userMessage, userId = null, conversatio
     const result = await chat.sendMessage(userMessage);
     const aiResponse = result.response.text();
     
-    // Analyze response for intent and suggestions
+    // Analyze intent and extract suggestions
     const intent = analyzeIntent(userMessage, aiResponse);
     const suggestions = extractSuggestions(aiResponse, intent);
-    
-    // Save conversation to database
-    if (conversation) {
-      try {
-        conversation.addMessage('user', userMessage, { intent });
-        conversation.addMessage('assistant', aiResponse, { 
-          intent, 
-          aiPowered: true, 
-          suggestions 
-        });
-        
-        // Update context
-        if (intent === 'product_inquiry' || intent === 'buy') {
-          const productMatch = userMessage.match(/netflix|prime|disney|hotstar|spotify/i);
-          if (productMatch) {
-            conversation.context.lastProduct = {
-              productName: productMatch[0]
-            };
-          }
-        }
-        conversation.context.lastIntent = intent;
-        
-        await conversation.save();
-      } catch (err) {
-        console.error('Error saving conversation:', err);
-      }
-    }
     
     return {
       success: true,
@@ -281,6 +202,7 @@ export const generateAIResponse = async (userMessage, userId = null, conversatio
     
   } catch (error) {
     console.error('Gemini AI Error:', error);
+    
     return {
       success: false,
       error: error.message,

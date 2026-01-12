@@ -3,7 +3,6 @@ import Product from '../models/Product.js';
 import Order from '../models/Order.js';
 import Subscription from '../models/Subscription.js';
 import User from '../models/User.js';
-import Conversation from '../models/Conversation.js';
 import { generateAIResponse, isAIAvailable } from '../services/geminiAIService.js';
 
 // Payment QR codes and details
@@ -11,20 +10,19 @@ const PAYMENT_DETAILS = {
   khalti: {
     name: 'Khalti',
     number: '9876543210',
-    qrCode: '/images/WhatsApp Image 2026-01-06 at 17.24.10.jpeg'
+    qrCode: 'https://i.imgur.com/khalti-qr.png' // Replace with actual QR code URL
   },
   esewa: {
     name: 'eSewa',
     number: '9876543210',
-    qrCode: '/images/nic-asia-qr.png'
+    qrCode: 'https://i.imgur.com/esewa-qr.png' // Replace with actual QR code URL
   },
   bank: {
-    name: 'Bank Transfer (NIC Asia)',
-    bankName: 'NIC Asia Bank',
-    accountNumber: 'See QR Code',
+    name: 'Bank Transfer',
+    bankName: 'Nepal Bank Limited',
+    accountNumber: '1234567890',
     accountName: 'Digital Dudes',
-    branch: 'Kathmandu',
-    qrCode: '/images/nic-asia-qr.png'
+    branch: 'Kathmandu'
   }
 };
 
@@ -144,11 +142,12 @@ const updateContext = (userId, updates) => {
 };
 
 // Intelligent chatbot response system with AI and learning
-const generateResponse = async (message, userId, conversationHistory = [], sessionId = null) => {
+const generateResponse = async (message, userId, conversationHistory = []) => {
   try {
     const lowerMessage = message.toLowerCase().trim();
     const context = userId ? getContext(userId) : null;
     
+    // Learn from message patterns
     if (context) {
       context.lastQuery = message;
     }
@@ -156,10 +155,11 @@ const generateResponse = async (message, userId, conversationHistory = [], sessi
     // TRY AI FIRST if available
     if (isAIAvailable()) {
       try {
-        const aiResult = await generateAIResponse(message, userId, conversationHistory, sessionId);
+        const aiResult = await generateAIResponse(message, userId, conversationHistory);
         
         if (aiResult.success && aiResult.message) {
-          if (context) { 
+          // AI successfully generated response
+          if (context) {
             updateContext(userId, { 
               lastIntent: aiResult.intent,
               lastQuery: message 
@@ -588,41 +588,11 @@ const generateResponse = async (message, userId, conversationHistory = [], sessi
     
     // Payment process initiation
     if (/payment|pay now|proceed|khalti|esewa|bank/.test(lowerMessage)) {
-      let selectedMethod = null;
-      let qrCode = null;
-      let instructions = '';
-      
-      if (/khalti/i.test(lowerMessage)) {
-        selectedMethod = 'khalti';
-        qrCode = PAYMENT_DETAILS.khalti.qrCode;
-        instructions = `📱 Khalti Payment\n\n1. Open your Khalti app\n2. Scan the QR code below\n3. Complete the payment\n4. Upload your payment receipt\n\nQR Code: ${qrCode}`;
-      } else if (/esewa/i.test(lowerMessage)) {
-        selectedMethod = 'esewa';
-        qrCode = PAYMENT_DETAILS.esewa.qrCode;
-        instructions = `📱 eSewa Payment\n\n1. Open your eSewa app\n2. Scan the QR code below\n3. Complete the payment\n4. Upload your payment receipt\n\nQR Code: ${qrCode}`;
-      } else if (/bank/i.test(lowerMessage)) {
-        selectedMethod = 'bank';
-        qrCode = PAYMENT_DETAILS.bank.qrCode;
-        instructions = `🏦 Bank Transfer (NIC Asia)\n\n1. Scan the QR code for account details\n2. Transfer the amount\n3. Upload your payment receipt\n\nQR Code: ${qrCode}`;
-      } else {
-        return {
-          type: 'payment_methods',
-          message: `💳 Choose Your Payment Method:\n\n1️⃣ Khalti - Mobile wallet\n2️⃣ eSewa - Mobile wallet\n3️⃣ Bank Transfer - NIC Asia Bank\n\nClick a method to see QR code and payment instructions!`,
-          suggestions: ['Khalti', 'eSewa', 'Bank Transfer'],
-          data: { paymentDetails: PAYMENT_DETAILS }
-        };
-      }
-      
       return {
-        type: 'payment_qr',
-        message: instructions,
-        suggestions: ['Upload Receipt', 'Change Payment Method'],
-        data: { 
-          paymentMethod: selectedMethod,
-          qrCode: qrCode,
-          paymentDetails: PAYMENT_DETAILS,
-          showReceiptUpload: true
-        }
+        type: 'payment_instructions',
+        message: `💳 Payment Methods:\n\nChoose your preferred payment method:\n\n1️⃣ Khalti - ${PAYMENT_DETAILS.khalti.number}\n2️⃣ eSewa - ${PAYMENT_DETAILS.esewa.number}\n3️⃣ Bank Transfer - ${PAYMENT_DETAILS.bank.bankName}\n\nSelect a method to see QR code and details!`,
+        suggestions: ['Khalti', 'eSewa', 'Bank Transfer'],
+        data: { paymentDetails: PAYMENT_DETAILS }
       };
     }
 
@@ -810,7 +780,7 @@ const generateResponse = async (message, userId, conversationHistory = [], sessi
 // Chat endpoint
 export const chat = async (req, res) => {
   try {
-    const { message, conversationHistory, sessionId } = req.body;
+    const { message, conversationHistory } = req.body;
     const userId = req.user?._id;
 
     if (!message || message.trim().length === 0) {
@@ -820,23 +790,19 @@ export const chat = async (req, res) => {
       });
     }
 
-    // Generate sessionId if not provided (for tracking conversations)
-    const chatSessionId = sessionId || `session_${userId || 'guest'}_${Date.now()}`;
-
-    const response = await generateResponse(message, userId, conversationHistory || [], chatSessionId);
+    // Pass conversation history to AI for context
+    const response = await generateResponse(message, userId, conversationHistory || []);
 
     res.status(200).json({
       success: true,
       response,
-      sessionId: chatSessionId,
       aiEnabled: isAIAvailable()
     });
   } catch (error) {
     console.error('Chat error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to process chat message',
-      error: error.message
+      message: error.message
     });
   }
 };

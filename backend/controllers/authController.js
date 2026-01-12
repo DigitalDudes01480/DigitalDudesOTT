@@ -374,17 +374,7 @@ export const googleAuth = (req, res, next) => {
 };
 
 export const googleCallback = (req, res, next) => {
-  // Set timeout to prevent serverless function hanging
-  const timeoutId = setTimeout(() => {
-    if (!res.headersSent) {
-      console.error('Google callback timeout');
-      const fallbackBase = process.env.FRONTEND_URL || 'https://www.digitaldudesott.shop';
-      res.redirect(`${fallbackBase}/login?error=timeout`);
-    }
-  }, 8000);
-
   if (!passport?._strategy?.('google')) {
-    clearTimeout(timeoutId);
     const fallbackBase = process.env.FRONTEND_URL
       ? process.env.FRONTEND_URL.replace(/\/+$/, '')
       : 'https://www.digitaldudesott.shop';
@@ -449,20 +439,32 @@ export const googleCallback = (req, res, next) => {
     }
   };
 
-    const token = generateToken(user._id);
-    
-    // Get redirect URL from state if present
-    const redirectUrl = req.query.state ? 
-      decodeURIComponent(req.query.state) : 
-      `${process.env.FRONTEND_URL}/auth/callback?token=${token}`;
+  const appendParams = (base, params) => {
+    const q = new URLSearchParams(params);
+    return base.includes('?') ? `${base}&${q.toString()}` : `${base}?${q.toString()}`;
+  };
 
-    clearTimeout(timeoutId);
-    
+  passport.authenticate('google', { session: false }, (err, user, info) => {
+    if (err || !user) {
+      return res.redirect(`${getDefaultFrontendBase()}/login?error=authentication_failed`);
+    }
+
+    const token = generateToken(user._id);
+
+    const safeUser = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+      avatar: user.avatar
+    };
+
     // Redirect to frontend with token
-    if (redirectUrl.includes('?')) {
-      res.redirect(`${redirectUrl}&token=${token}`);
-    } else {
-      res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
+    const userParam = encodeURIComponent(Buffer.from(JSON.stringify(safeUser)).toString('base64'));
+    const stateRedirect = parseStateRedirect();
+    const fallback = `${getDefaultFrontendBase()}/auth/callback?token=${token}&provider=google&user=${userParam}`;
+    if (!stateRedirect) {
       return res.redirect(fallback);
     }
     return res.redirect(

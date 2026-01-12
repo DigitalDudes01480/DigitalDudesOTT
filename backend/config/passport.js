@@ -11,23 +11,17 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         callbackURL: `${process.env.BACKEND_URL}/api/auth/google/callback`,
-        scope: ['profile', 'email'],
-        proxy: true
+        scope: ['profile', 'email']
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
-          // Validate profile data
-          if (!profile || !profile.id || !profile.emails || !profile.emails[0]) {
-            return done(new Error('Invalid profile data from Google'), null);
-          }
-
-          // Check if user already exists with timeout
-          let user = await User.findOne({
+          // Check if user already exists
+          let user = await User.findOne({ 
             $or: [
               { providerId: profile.id, authProvider: 'google' },
               { email: profile.emails[0].value }
             ]
-          }).maxTimeMS(5000);
+          });
 
           if (user) {
             // Update existing user if they signed up with email/password
@@ -47,7 +41,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.
             authProvider: 'google',
             providerId: profile.id,
             isEmailVerified: true,
-            avatar: profile.photos[0].value,
+            avatar: profile.photos && profile.photos[0] ? profile.photos[0].value : '',
             role: 'customer'
           });
 
@@ -72,13 +66,13 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET && process.en
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
-          // Check if user already exists with timeout
-          let user = await User.findOne({
+          // Check if user already exists
+          let user = await User.findOne({ 
             $or: [
               { providerId: profile.id, authProvider: 'facebook' },
               { email: profile.emails && profile.emails[0] ? profile.emails[0].value : null }
             ]
-          }).maxTimeMS(5000);
+          });
 
           if (user) {
             // Update existing user if they signed up with email/password
