@@ -138,9 +138,15 @@ const OrderAssistant = () => {
       setReceiptFile(null);
     } catch (error) {
       console.error('Receipt upload error:', error);
+      console.error('Error response:', error.response?.data);
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'Failed to upload receipt. Please try again.';
+      
       setMessages(prev => [...prev, {
         type: 'bot',
-        message: 'Failed to upload receipt. Please try again.'
+        message: `❌ ${errorMessage}\n\nPlease ensure:\n• File is an image (JPEG, PNG, GIF, WebP, BMP) or PDF\n• File size is under 5MB\n• You have completed the payment`
       }]);
     } finally {
       setIsLoading(false);

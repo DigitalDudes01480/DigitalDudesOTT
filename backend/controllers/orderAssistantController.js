@@ -36,7 +36,8 @@ export const chat = async (req, res) => {
 // Upload receipt and create order
 export const uploadReceipt = async (req, res) => {
   try {
-    const userId = req.user?._id?.toString() || req.sessionID || 'guest';
+    const { sessionId } = req.body;
+    const userId = sessionId || req.user?._id?.toString() || 'guest';
     
     if (!req.file) {
       return res.status(400).json({
@@ -45,7 +46,8 @@ export const uploadReceipt = async (req, res) => {
       });
     }
 
-    const receiptPath = req.file.path;
+    // Handle both disk storage (path) and memory storage (buffer)
+    const receiptPath = req.file.path || `receipt-${Date.now()}-${req.file.originalname}`;
 
     // Confirm order with receipt
     const result = await orderAssistantService.confirmOrder(userId, receiptPath);
@@ -109,9 +111,10 @@ export const uploadReceipt = async (req, res) => {
     });
   } catch (error) {
     console.error('Receipt upload error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
-      message: 'Failed to upload receipt',
+      message: error.message || 'Failed to upload receipt',
       error: error.message
     });
   }
