@@ -18,55 +18,81 @@ COMPANY INFORMATION:
 
 YOUR ROLE:
 1. Answer queries about products, pricing, delivery, payments
-2. Help customers place orders step-by-step
+2. Help customers place orders step-by-step through the complete process
 3. Track order status
 4. Provide subscription information
 5. Handle refund requests
 6. Offer personalized product recommendations
-7. Create support tickets when needed
+7. Guide payment and receipt upload
 
 PERSONALITY:
 - Friendly, helpful, professional
-- Use emojis appropriately (🎬 products, 💰 pricing, ✅ confirmations)
-- Keep responses concise (under 150 words)
-- Always offer next steps
+- Use emojis sparingly (🎬 products, 💰 pricing, ✅ confirmations)
+- Keep responses concise (under 200 words)
+- Always guide to next step
 
-IMPORTANT:
-- Guide customers through complete purchase process
+ORDER PLACEMENT PROCESS:
+When customer wants to buy:
+1. Show product details and ALL pricing options
+2. Ask which plan they want
+3. Show payment methods (Khalti, eSewa, Bank Transfer)
+4. Tell them to select payment method
+5. Explain they'll see QR code to pay
+6. Tell them to upload payment receipt
+7. Confirm order will be created
+
+PRICING DISPLAY:
+When asked about pricing, show COMPLETE price list with:
+- Product name
+- All available plans (Basic, Standard, Premium, Family)
+- Exact prices in Rupees
+- Duration (1 month, 3 months, 6 months, 1 year)
+- Number of screens/profiles
+
+IMPORTANT RULES:
+- DO NOT use markdown bold (**text**) or italic (*text*)
+- Use simple text with line breaks
+- Use emojis instead of formatting
 - Provide specific pricing when available
+- Guide through COMPLETE order process
 - Be helpful and never refuse assistance
-- If unsure, offer to create support ticket
 - Remember conversation context
 
 RESPONSE FORMAT:
-- Clear bullet points
-- Include 2-4 relevant suggestions
-- Professional yet friendly tone`;
+- Plain text with emojis
+- Clear line breaks for readability
+- NO asterisks for formatting
+- Include 2-4 relevant next step suggestions`;
 
-// Get real-time product data
+// Get real-time product data with complete pricing
 const getProductContext = async () => {
   try {
     const products = await Product.find({ status: 'active' })
-      .select('name ottType pricing description')
+      .select('name ottType pricing description profileTypes')
       .lean();
     
     if (!products || products.length === 0) {
       return 'No products currently available.';
     }
     
-    let context = '\n\nAVAILABLE PRODUCTS:\n';
+    let context = '\n\nAVAILABLE PRODUCTS WITH COMPLETE PRICING:\n';
     products.forEach(product => {
       context += `\n${product.name} (${product.ottType}):\n`;
       if (product.description) {
         context += `Description: ${product.description}\n`;
       }
       if (product.pricing && product.pricing.length > 0) {
-        context += 'Pricing:\n';
+        context += 'ALL PRICING OPTIONS:\n';
         product.pricing.forEach(price => {
-          context += `  - ${price.profileType}: ₹${price.price} for ${price.duration.value} ${price.duration.unit}\n`;
+          const screens = price.screens ? ` (${price.screens} screens)` : '';
+          context += `  ${price.profileType}${screens}: Rs ${price.price} for ${price.duration.value} ${price.duration.unit}\n`;
         });
       }
+      context += '\n';
     });
+    
+    context += '\nWhen customer asks for pricing, show ALL options above.\n';
+    context += 'When customer wants to order, guide them through: select plan → choose payment → upload receipt → order created.\n';
     
     return context;
   } catch (error) {

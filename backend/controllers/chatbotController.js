@@ -480,7 +480,7 @@ const generateResponse = async (message, userId, conversationHistory = []) => {
       try {
         // Extract product name from message
         const products = await Product.find({ status: 'active' })
-          .select('name ottType profileTypes')
+          .select('name ottType pricing profileTypes')
           .lean()
           .catch(() => []);
         
