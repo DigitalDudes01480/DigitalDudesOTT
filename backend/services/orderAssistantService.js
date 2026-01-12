@@ -167,12 +167,23 @@ Available durations are:
       p.name.toLowerCase().includes(productName.toLowerCase())
     );
 
-    if (!product) return null;
+    if (!product || !product.pricing) return null;
 
-    const priceItem = product.pricing.find(p => 
-      p.profileType.toLowerCase() === profileType.toLowerCase() &&
-      p.duration.toLowerCase().includes(duration.toLowerCase())
-    );
+    // Extract numeric value from duration input (e.g., "1.5 months" -> 1.5)
+    const durationValue = parseFloat(duration.match(/[\d.]+/)?.[0]);
+    
+    const priceItem = product.pricing.find(p => {
+      const profileMatch = p.profileType.toLowerCase().includes(profileType.toLowerCase()) || 
+                          profileType.toLowerCase().includes(p.profileType.toLowerCase());
+      
+      // Extract numeric value from stored duration
+      const storedDurationValue = parseFloat(p.duration.match(/[\d.]+/)?.[0]);
+      
+      const durationMatch = storedDurationValue === durationValue || 
+                           p.duration.toLowerCase().includes(duration.toLowerCase());
+      
+      return profileMatch && durationMatch;
+    });
 
     return priceItem;
   }
