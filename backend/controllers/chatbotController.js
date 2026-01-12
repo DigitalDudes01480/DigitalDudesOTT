@@ -15,13 +15,14 @@ const PAYMENT_DETAILS = {
   esewa: {
     number: '9876543210',
     name: 'Digital Dudes',
-    qrCode: '/images/esewa-qr.png'
+    qrCode: '/images/WhatsApp Image 2026-01-09 at 19.27.46.jpeg'
   },
   bank: {
     bankName: 'Nepal Bank Limited',
     accountNumber: '1234567890',
     accountName: 'Digital Dudes Pvt. Ltd.',
-    branch: 'Kathmandu'
+    branch: 'Kathmandu',
+    qrCode: '/images/WhatsApp Image 2026-01-09 at 19.27.46.jpeg'
   }
 };
 
