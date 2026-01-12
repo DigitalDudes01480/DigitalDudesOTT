@@ -97,6 +97,48 @@ const ChatbotWidget = () => {
     setIsLoading(true);
 
     try {
+      // Check if user is confirming order creation
+      const lastBotMessage = messages[messages.length - 1];
+      if (lastBotMessage?.data?.awaitingOrderConfirmation && 
+          /yes|create|confirm|proceed/i.test(inputMessage)) {
+        
+        if (!currentOrderContext?.receiptFile) {
+          toast.error('Receipt file is missing. Please upload again.');
+          setIsLoading(false);
+          return;
+        }
+
+        // Create order with receipt
+        try {
+          const formData = new FormData();
+          formData.append('receipt', currentOrderContext.receiptFile);
+          formData.append('paymentMethod', currentOrderContext.paymentMethod);
+          formData.append('chatHistory', JSON.stringify(messages.slice(-10)));
+          
+          const orderResponse = await chatbotAPI.placeOrder(formData);
+          
+          const successMsg = {
+            id: Date.now() + 1,
+            type: 'bot',
+            message: `🎉 Order Created Successfully!\n\nOrder ID: ${orderResponse.data.order?.orderNumber || 'Pending'}\n\nYour order has been placed and is being processed. You'll receive your credentials within 2-24 hours.\n\nCheck your email and dashboard for updates!`,
+            suggestions: ['View My Orders', 'Track Order', 'Browse More Products'],
+            timestamp: new Date()
+          };
+          
+          setMessages(prev => [...prev, successMsg]);
+          setCurrentOrderContext(null);
+          setReceiptFile(null);
+          setIsLoading(false);
+          toast.success('Order placed successfully!');
+          return;
+        } catch (orderError) {
+          console.error('Order creation error:', orderError);
+          toast.error(orderError.response?.data?.message || 'Failed to create order');
+          setIsLoading(false);
+          return;
+        }
+      }
+
       // Send conversation history and sessionId for AI context
       const conversationHistory = messages.map(msg => ({
         type: msg.type,

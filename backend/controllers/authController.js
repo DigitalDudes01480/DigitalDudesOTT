@@ -439,32 +439,20 @@ export const googleCallback = (req, res, next) => {
     }
   };
 
-  const appendParams = (base, params) => {
-    const q = new URLSearchParams(params);
-    return base.includes('?') ? `${base}&${q.toString()}` : `${base}?${q.toString()}`;
-  };
-
-  passport.authenticate('google', { session: false }, (err, user, info) => {
-    if (err || !user) {
-      return res.redirect(`${getDefaultFrontendBase()}/login?error=authentication_failed`);
-    }
-
     const token = generateToken(user._id);
+    
+    // Get redirect URL from state if present
+    const redirectUrl = req.query.state ? 
+      decodeURIComponent(req.query.state) : 
+      `${process.env.FRONTEND_URL}/auth/callback?token=${token}`;
 
-    const safeUser = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      phone: user.phone,
-      avatar: user.avatar
-    };
-
+    clearTimeout(timeoutId);
+    
     // Redirect to frontend with token
-    const userParam = encodeURIComponent(Buffer.from(JSON.stringify(safeUser)).toString('base64'));
-    const stateRedirect = parseStateRedirect();
-    const fallback = `${getDefaultFrontendBase()}/auth/callback?token=${token}&provider=google&user=${userParam}`;
-    if (!stateRedirect) {
+    if (redirectUrl.includes('?')) {
+      res.redirect(`${redirectUrl}&token=${token}`);
+    } else {
+      res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
       return res.redirect(fallback);
     }
     return res.redirect(
