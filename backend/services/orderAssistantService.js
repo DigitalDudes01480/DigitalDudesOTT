@@ -73,7 +73,7 @@ class OrderAssistantService {
       p.name.toLowerCase().includes(productName.toLowerCase())
     );
 
-    if (!product) {
+    if (!product || !product.pricing || product.pricing.length === 0) {
       return null;
     }
 
@@ -89,14 +89,14 @@ class OrderAssistantService {
       groupedPricing[profileType].push(item);
     });
 
-    // Format each profile type
+    // Format each profile type with prices
     Object.entries(groupedPricing).forEach(([profileType, prices]) => {
-      response += `**${profileType} Profile**\n`;
+      response += `**${profileType}**\n`;
       
-      // Sort by duration
+      // Sort by duration value
       prices.sort((a, b) => {
-        const durationA = parseInt(a.duration) || 0;
-        const durationB = parseInt(b.duration) || 0;
+        const durationA = parseFloat(a.duration.match(/[\d.]+/)?.[0]) || 0;
+        const durationB = parseFloat(b.duration.match(/[\d.]+/)?.[0]) || 0;
         return durationA - durationB;
       });
 
@@ -106,7 +106,7 @@ class OrderAssistantService {
       response += '\n';
     });
 
-    response += '**Which profile type would you like to buy?**';
+    response += '**Which profile type would you like to buy? (Shared / Private)**';
     
     return {
       message: response,
