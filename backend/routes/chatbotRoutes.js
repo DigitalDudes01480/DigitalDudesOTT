@@ -6,11 +6,11 @@ import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
-// All chatbot routes require authentication
-router.use(protect);
-
-// Chat endpoint
+// Chat endpoint - public access for order creation
 router.post('/chat', chat);
+
+// Protected routes require authentication
+router.use(protect);
 
 // Create ticket from chat
 router.post('/create-ticket', createTicketFromChat);
