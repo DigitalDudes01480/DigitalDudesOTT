@@ -3,6 +3,7 @@ import Product from '../models/Product.js';
 import Order from '../models/Order.js';
 import Subscription from '../models/Subscription.js';
 import User from '../models/User.js';
+import { generateAIResponse, isAIAvailable } from '../services/geminiAIService.js';
 
 // Payment QR codes and details
 const PAYMENT_DETAILS = {
@@ -140,8 +141,8 @@ const updateContext = (userId, updates) => {
   if (context.history.length > 10) context.history.shift();
 };
 
-// Intelligent chatbot response system with learning
-const generateResponse = async (message, userId) => {
+// Intelligent chatbot response system with AI and learning
+const generateResponse = async (message, userId, conversationHistory = []) => {
   try {
     const lowerMessage = message.toLowerCase().trim();
     const context = userId ? getContext(userId) : null;
@@ -151,7 +152,34 @@ const generateResponse = async (message, userId) => {
       context.lastQuery = message;
     }
     
-    // AI Intent Recognition
+    // TRY AI FIRST if available
+    if (isAIAvailable()) {
+      try {
+        const aiResult = await generateAIResponse(message, userId, conversationHistory);
+        
+        if (aiResult.success && aiResult.message) {
+          // AI successfully generated response
+          if (context) {
+            updateContext(userId, { 
+              lastIntent: aiResult.intent,
+              lastQuery: message 
+            });
+          }
+          
+          return {
+            type: aiResult.type || 'ai_response',
+            message: aiResult.message,
+            suggestions: aiResult.suggestions || ['Browse products', 'Check pricing', 'Contact support'],
+            aiPowered: true
+          };
+        }
+      } catch (aiError) {
+        console.error('AI generation failed, falling back to pattern matching:', aiError.message);
+        // Continue to pattern matching fallback
+      }
+    }
+    
+    // FALLBACK: Pattern matching and rule-based responses
     const intents = recognizeIntent(message);
     
     // Check FAQ first for quick answers
@@ -753,7 +781,7 @@ const generateResponse = async (message, userId) => {
 // Chat endpoint
 export const chat = async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, conversationHistory } = req.body;
     const userId = req.user?._id;
 
     if (!message || message.trim().length === 0) {
@@ -763,22 +791,19 @@ export const chat = async (req, res) => {
       });
     }
 
-    const response = await generateResponse(message, userId);
+    // Pass conversation history to AI for context
+    const response = await generateResponse(message, userId, conversationHistory || []);
 
     res.status(200).json({
       success: true,
-      response
+      response,
+      aiEnabled: isAIAvailable()
     });
   } catch (error) {
-    console.error('Chatbot error:', error);
+    console.error('Chat error:', error);
     res.status(500).json({
       success: false,
-      message: 'Sorry, I encountered an error. Please try again or create a support ticket.',
-      response: {
-        type: 'error',
-        message: 'Sorry, I encountered an error. Please try again or create a support ticket.',
-        suggestions: ['Create ticket', 'Contact support']
-      }
+      message: error.message
     });
   }
 };

@@ -97,7 +97,16 @@ const ChatbotWidget = () => {
     setIsLoading(true);
 
     try {
-      const response = await chatbotAPI.chat({ message: inputMessage });
+      // Send conversation history for AI context
+      const conversationHistory = messages.map(msg => ({
+        type: msg.type,
+        message: msg.message
+      }));
+      
+      const response = await chatbotAPI.chat({ 
+        message: inputMessage,
+        conversationHistory: conversationHistory
+      });
       
       // Validate response structure
       if (!response || !response.data) {
@@ -107,6 +116,11 @@ const ChatbotWidget = () => {
       const responseData = response.data.response || response.data;
       if (!responseData) {
         throw new Error('No response data received');
+      }
+      
+      // Show AI indicator if AI-powered
+      if (response.data.aiEnabled && responseData.aiPowered) {
+        console.log('✨ AI-powered response');
       }
 
       const botMessage = {
