@@ -325,10 +325,15 @@ Available durations are:
   async confirmOrder(userId, receiptData) {
     const state = this.conversationState.get(userId);
     
+    console.log('confirmOrder called with userId:', userId);
+    console.log('Current state:', state);
+    console.log('All conversation states:', Array.from(this.conversationState.keys()));
+    
     if (!state || state.step !== 'receipt_upload') {
+      console.log('State check failed:', { hasState: !!state, currentStep: state?.step });
       return {
         success: false,
-        message: "Please complete the order process first."
+        message: `Please complete the order process first. Current step: ${state?.step || 'no state found'}`
       };
     }
 
