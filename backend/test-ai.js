@@ -13,7 +13,7 @@ const genAI = new GoogleGenerativeAI(apiKey);
 
 async function testAI() {
   try {
-    const model = genAI.getGenerativeModel({ model: 'models/gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     
     const prompt = "Say hello in one sentence";
     
