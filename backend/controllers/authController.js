@@ -374,7 +374,17 @@ export const googleAuth = (req, res, next) => {
 };
 
 export const googleCallback = (req, res, next) => {
+  // Set timeout to prevent serverless function hanging
+  const timeoutId = setTimeout(() => {
+    if (!res.headersSent) {
+      console.error('Google callback timeout');
+      const fallbackBase = process.env.FRONTEND_URL || 'https://www.digitaldudesott.shop';
+      res.redirect(`${fallbackBase}/login?error=timeout`);
+    }
+  }, 8000);
+
   if (!passport?._strategy?.('google')) {
+    clearTimeout(timeoutId);
     const fallbackBase = process.env.FRONTEND_URL
       ? process.env.FRONTEND_URL.replace(/\/+$/, '')
       : 'https://www.digitaldudesott.shop';
