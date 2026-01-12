@@ -353,7 +353,7 @@ Available durations are:
 
     return {
       success: true,
-      message: `✅ **Payment received successfully!**\nYour ${state.product} order has been **confirmed**.\nOur team will deliver your subscription details shortly.\nThank you for choosing **Digital Dudes** ❤️`,
+      message: `✅ **Payment received successfully!**\n\nYour ${state.product} order has been **confirmed**.\n\nOur team will deliver your subscription details shortly.\n\nThank you for choosing **Digital Dudes** ❤️`,
       orderData: orderData
     };
   }
