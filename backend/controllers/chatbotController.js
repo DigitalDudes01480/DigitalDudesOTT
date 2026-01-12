@@ -774,6 +774,7 @@ const generateResponse = async (message, userId, conversationHistory = [], sessi
       suggestions: ['Try again', 'Create support ticket', 'Contact support']
     };
   }
+};
 
 // Chat endpoint
 export const chat = async (req, res) => {
