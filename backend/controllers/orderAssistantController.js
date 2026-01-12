@@ -20,7 +20,8 @@ export const chat = async (req, res) => {
 
     res.json({
       success: true,
-      response: response
+      response: response,
+      sessionId: userId
     });
   } catch (error) {
     console.error('Order assistant error:', error);

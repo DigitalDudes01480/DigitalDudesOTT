@@ -12,6 +12,7 @@ const OrderAssistant = () => {
   const [receiptFile, setReceiptFile] = useState(null);
   const [showReceiptUpload, setShowReceiptUpload] = useState(false);
   const [qrCodePath, setQrCodePath] = useState(null);
+  const [sessionId, setSessionId] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -46,10 +47,16 @@ const OrderAssistant = () => {
     try {
       const response = await axios.post(`${API_URL}/order-assistant/chat`, {
         message,
-        conversationHistory: messages
+        conversationHistory: messages,
+        sessionId: sessionId
       });
 
       const botResponse = response.data.response;
+      
+      // Update sessionId from response
+      if (response.data.sessionId && !sessionId) {
+        setSessionId(response.data.sessionId);
+      }
 
       // Add bot message
       const botMessage = {
