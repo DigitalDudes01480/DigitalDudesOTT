@@ -97,7 +97,7 @@ const ChatbotWidget = () => {
     setIsLoading(true);
 
     try {
-      // Send conversation history for AI context
+      // Send conversation history and sessionId for AI context
       const conversationHistory = messages.map(msg => ({
         type: msg.type,
         message: msg.message
@@ -105,7 +105,8 @@ const ChatbotWidget = () => {
       
       const response = await chatbotAPI.chat({ 
         message: inputMessage,
-        conversationHistory: conversationHistory
+        conversationHistory: conversationHistory,
+        sessionId: sessionId
       });
       
       // Validate response structure

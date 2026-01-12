@@ -3,6 +3,7 @@ import Product from '../models/Product.js';
 import Order from '../models/Order.js';
 import Subscription from '../models/Subscription.js';
 import User from '../models/User.js';
+import Conversation from '../models/Conversation.js';
 import { generateAIResponse, isAIAvailable } from '../services/geminiAIService.js';
 
 // Payment QR codes and details
@@ -142,12 +143,11 @@ const updateContext = (userId, updates) => {
 };
 
 // Intelligent chatbot response system with AI and learning
-const generateResponse = async (message, userId, conversationHistory = []) => {
+const generateResponse = async (message, userId, conversationHistory = [], sessionId = null) => {
   try {
     const lowerMessage = message.toLowerCase().trim();
     const context = userId ? getContext(userId) : null;
     
-    // Learn from message patterns
     if (context) {
       context.lastQuery = message;
     }
@@ -155,11 +155,10 @@ const generateResponse = async (message, userId, conversationHistory = []) => {
     // TRY AI FIRST if available
     if (isAIAvailable()) {
       try {
-        const aiResult = await generateAIResponse(message, userId, conversationHistory);
+        const aiResult = await generateAIResponse(message, userId, conversationHistory, sessionId);
         
         if (aiResult.success && aiResult.message) {
-          // AI successfully generated response
-          if (context) {
+          if (context) { 
             updateContext(userId, { 
               lastIntent: aiResult.intent,
               lastQuery: message 
@@ -775,12 +774,11 @@ const generateResponse = async (message, userId, conversationHistory = []) => {
       suggestions: ['Try again', 'Create support ticket', 'Contact support']
     };
   }
-};
 
 // Chat endpoint
 export const chat = async (req, res) => {
   try {
-    const { message, conversationHistory } = req.body;
+    const { message, conversationHistory, sessionId } = req.body;
     const userId = req.user?._id;
 
     if (!message || message.trim().length === 0) {
@@ -790,19 +788,23 @@ export const chat = async (req, res) => {
       });
     }
 
-    // Pass conversation history to AI for context
-    const response = await generateResponse(message, userId, conversationHistory || []);
+    // Generate sessionId if not provided (for tracking conversations)
+    const chatSessionId = sessionId || `session_${userId || 'guest'}_${Date.now()}`;
+
+    const response = await generateResponse(message, userId, conversationHistory || [], chatSessionId);
 
     res.status(200).json({
       success: true,
       response,
+      sessionId: chatSessionId,
       aiEnabled: isAIAvailable()
     });
   } catch (error) {
     console.error('Chat error:', error);
     res.status(500).json({
       success: false,
-      message: error.message
+      message: 'Failed to process chat message',
+      error: error.message
     });
   }
 };
