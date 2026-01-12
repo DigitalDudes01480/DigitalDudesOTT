@@ -8,20 +8,19 @@ import { generateAIResponse, isAIAvailable } from '../services/geminiAIService.j
 // Payment QR codes and details
 const PAYMENT_DETAILS = {
   khalti: {
-    name: 'Khalti',
     number: '9876543210',
-    qrCode: 'https://i.imgur.com/khalti-qr.png' // Replace with actual QR code URL
+    name: 'Digital Dudes',
+    qrCode: '/images/WhatsApp Image 2026-01-06 at 17.24.10.jpeg'
   },
   esewa: {
-    name: 'eSewa',
     number: '9876543210',
-    qrCode: 'https://i.imgur.com/esewa-qr.png' // Replace with actual QR code URL
+    name: 'Digital Dudes',
+    qrCode: '/images/esewa-qr.png'
   },
   bank: {
-    name: 'Bank Transfer',
     bankName: 'Nepal Bank Limited',
     accountNumber: '1234567890',
-    accountName: 'Digital Dudes',
+    accountName: 'Digital Dudes Pvt. Ltd.',
     branch: 'Kathmandu'
   }
 };

@@ -17,54 +17,91 @@ COMPANY INFORMATION:
 - 24/7 customer support
 
 YOUR ROLE:
-1. Answer queries about products, pricing, delivery, payments
-2. Help customers place orders step-by-step through the complete process
-3. Track order status
-4. Provide subscription information
-5. Handle refund requests
-6. Offer personalized product recommendations
-7. Guide payment and receipt upload
+1. Show COMPLETE price lists from database when asked
+2. Guide customers through COMPLETE order placement
+3. Explain differences between plan types (Shared, Private, Premium)
+4. Handle payment method selection
+5. Guide receipt upload process
+6. Confirm order completion
 
-PERSONALITY:
-- Friendly, helpful, professional
-- Use emojis sparingly (🎬 products, 💰 pricing, ✅ confirmations)
-- Keep responses concise (under 200 words)
-- Always guide to next step
+PLAN TYPE EXPLANATIONS (Use these exact descriptions):
 
-ORDER PLACEMENT PROCESS:
-When customer wants to buy:
-1. Show product details and ALL pricing options
-2. Ask which plan they want
-3. Show payment methods (Khalti, eSewa, Bank Transfer)
-4. Tell them to select payment method
-5. Explain they'll see QR code to pay
-6. Tell them to upload payment receipt
-7. Confirm order will be created
+NETFLIX PLANS:
+🔹 Shared Profile
+- Login allowed on only one device
+- Supported devices: Laptop, Mobile, Tablet
+- Budget-friendly option for single-device use
 
-PRICING DISPLAY:
-When asked about pricing, show COMPLETE price list with:
-- Product name
-- All available plans (Basic, Standard, Premium, Family)
-- Exact prices in Rupees
-- Duration (1 month, 3 months, 6 months, 1 year)
-- Number of screens/profiles
+🔹 Private Profile
+- Login on your personal device only
+- Strictly one device at a time
+- Sharing ID/Password is not allowed
+- More privacy and better stability
+
+🔹 Premium Account (4 Screen, UHD)
+- 4 Screens / 5 Profiles
+- Ultra HD 4K Quality
+- Download on up to 6 devices
+- Best choice for families and power users
+
+DISNEY+ PLANS:
+🔹 Shared Profile
+- Login allowed on only one device
+- Supported devices: Laptop, Mobile, Tablet
+- Budget-friendly option
+
+🔹 Private Profile
+- Login on your personal device only
+- One device at a time
+- More privacy and stability
+
+COMPLETE ORDER FLOW (Follow this exactly):
+
+STEP 1 - Price List Request:
+When customer asks for prices (e.g., "Netflix price list"):
+- Show ALL profile types (Shared, Private, Premium)
+- Show ALL durations (1 month, 3 months, 6 months, 12 months)
+- Show exact prices from database
+- Ask: "Which duration would you like?"
+
+STEP 2 - Duration Selection:
+When customer says duration (e.g., "1 month"):
+- Ask: "Would you like Shared or Private profile?"
+- If they ask difference, explain using the descriptions above
+
+STEP 3 - Plan Type Selection:
+When customer chooses plan type (e.g., "Shared is ok"):
+- Confirm: "Netflix Shared profile for 1 month is Rs 299"
+- Show payment options: "Choose payment method: Khalti, eSewa, or Bank Transfer"
+
+STEP 4 - Payment Method:
+When customer chooses payment (e.g., "Khalti"):
+- Say: "Please scan the QR code and make payment"
+- Tell them: "After payment, upload your receipt screenshot"
+- System will show QR code automatically
+
+STEP 5 - Receipt Upload:
+When customer uploads receipt:
+- Confirm: "Order placed successfully!"
+- Say: "You will receive your subscription details within 2-24 hours"
 
 IMPORTANT RULES:
-- DO NOT use markdown bold (**text**) or italic (*text*)
-- Use simple text with line breaks
-- Use emojis instead of formatting
-- Provide specific pricing when available
-- Guide through COMPLETE order process
-- Be helpful and never refuse assistance
+- ALWAYS show complete price list with ALL durations when asked
+- Use exact prices from database context
+- Follow the order flow step by step
+- DO NOT skip steps
+- DO NOT use markdown formatting (no ** or *)
+- Use emojis for clarity
+- Keep responses clear and concise
 - Remember conversation context
 
 RESPONSE FORMAT:
 - Plain text with emojis
-- Clear line breaks for readability
+- Clear line breaks
 - NO asterisks for formatting
-- Include 2-4 relevant next step suggestions`;
+- Guide to next step in every response`;
 
-// Get real-time product data with complete pricing
+// Get real-time product data with complete pricing breakdown
 const getProductContext = async () => {
   try {
     const products = await Product.find({ status: 'active' })
@@ -75,24 +112,46 @@ const getProductContext = async () => {
       return 'No products currently available.';
     }
     
-    let context = '\n\nAVAILABLE PRODUCTS WITH COMPLETE PRICING:\n';
+    let context = '\n\nCOMPLETE PRICE LIST FROM DATABASE:\n';
+    context += '(Show this EXACT pricing when customer asks)\n\n';
+    
     products.forEach(product => {
-      context += `\n${product.name} (${product.ottType}):\n`;
-      if (product.description) {
-        context += `Description: ${product.description}\n`;
-      }
-      if (product.pricing && product.pricing.length > 0) {
-        context += 'ALL PRICING OPTIONS:\n';
-        product.pricing.forEach(price => {
-          const screens = price.screens ? ` (${price.screens} screens)` : '';
-          context += `  ${price.profileType}${screens}: Rs ${price.price} for ${price.duration.value} ${price.duration.unit}\n`;
+      context += `${product.name.toUpperCase()}:\n`;
+      
+      // Group pricing by profile type
+      const pricesByProfile = {};
+      if (product.profileTypes && product.profileTypes.length > 0) {
+        product.profileTypes.forEach(profile => {
+          const profileName = profile.name;
+          pricesByProfile[profileName] = [];
+          
+          if (profile.pricingOptions && profile.pricingOptions.length > 0) {
+            profile.pricingOptions.forEach(pricing => {
+              pricesByProfile[profileName].push({
+                duration: `${pricing.duration.value} ${pricing.duration.unit}`,
+                price: pricing.price
+              });
+            });
+          }
         });
       }
+      
+      // Format output
+      Object.keys(pricesByProfile).forEach(profileName => {
+        context += `\n${profileName}:\n`;
+        pricesByProfile[profileName].forEach(item => {
+          context += `  ${item.duration}: Rs ${item.price}\n`;
+        });
+      });
+      
       context += '\n';
     });
     
-    context += '\nWhen customer asks for pricing, show ALL options above.\n';
-    context += 'When customer wants to order, guide them through: select plan → choose payment → upload receipt → order created.\n';
+    context += '\nIMPORTANT INSTRUCTIONS:\n';
+    context += '- When customer asks for price list, show ALL profile types and ALL durations\n';
+    context += '- When customer selects duration, ask which profile type (Shared/Private/Premium)\n';
+    context += '- When customer selects profile, confirm price and ask for payment method\n';
+    context += '- When customer selects payment, tell them to upload receipt after payment\n';
     
     return context;
   } catch (error) {
@@ -188,16 +247,36 @@ export const generateAIResponse = async (userMessage, userId = null, conversatio
     const result = await chat.sendMessage(userMessage);
     const aiResponse = result.response.text();
     
-    // Analyze intent and extract suggestions
+    // Analyze response and send back
     const intent = analyzeIntent(userMessage, aiResponse);
     const suggestions = extractSuggestions(aiResponse, intent);
+    
+    // Check if payment method was selected and include QR code
+    let paymentData = null;
+    const lowerResponse = aiResponse.toLowerCase();
+    const lowerMessage = userMessage.toLowerCase();
+    
+    if (lowerMessage.includes('khalti') || lowerResponse.includes('khalti')) {
+      paymentData = {
+        method: 'khalti',
+        qrCode: '/images/WhatsApp Image 2026-01-06 at 17.24.10.jpeg',
+        number: '9876543210'
+      };
+    } else if (lowerMessage.includes('esewa') || lowerResponse.includes('esewa')) {
+      paymentData = {
+        method: 'esewa',
+        qrCode: '/images/esewa-qr.png',
+        number: '9876543210'
+      };
+    }
     
     return {
       success: true,
       message: aiResponse,
       intent: intent,
       suggestions: suggestions,
-      type: intent
+      type: intent,
+      paymentData: paymentData
     };
     
   } catch (error) {
