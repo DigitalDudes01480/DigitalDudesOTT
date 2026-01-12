@@ -13,6 +13,11 @@ class OrderAssistantService {
         .select('name ottType pricing profileTypes description')
         .lean();
       
+      console.log('Products found:', products.length);
+      if (products.length > 0) {
+        console.log('Sample product:', JSON.stringify(products[0]));
+      }
+      
       return products.map(product => ({
         name: product.name,
         ottType: product.ottType,
