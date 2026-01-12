@@ -68,27 +68,45 @@ export const uploadReceipt = async (req, res) => {
 
     // Use order data from conversation state (already validated during chat)
     const productId = product?._id || null;
+    const productName = product?.name || orderData.product;
+    const ottType = product?.ottType || orderData.product;
     const profileType = orderData.profileType;
-    const duration = orderData.duration;
-    const price = orderData.price;
+    const price = Number(orderData.price) || 0;
 
-    // Create order with data from conversation state
+    const durationRaw = (orderData.duration || '').toString();
+    const durationValue = parseFloat(durationRaw.match(/[\d.]+/)?.[0]) || null;
+    const durationUnit = durationRaw.toLowerCase().includes('day') ? 'days' : 'months';
+
+    const paymentMethod = orderData.paymentMethod?.toLowerCase().includes('khalti')
+      ? 'khalti'
+      : 'bank-transfer';
+
+    // Create order with required fields filled to avoid validation errors
     const order = await Order.create({
       user: req.user?._id || null,
       orderItems: [{
         product: productId,
-        profileType: profileType,
-        duration: duration,
+        name: productName,
+        ottType: ottType,
+        duration: {
+          value: durationValue,
+          unit: durationUnit
+        },
         price: price,
-        quantity: 1
+        quantity: 1,
+        selectedProfile: { profileType },
+        selectedPricing: {
+          profileType,
+          duration: durationRaw,
+          price
+        },
+        customerEmail: orderData.email || null
       }],
       totalAmount: price,
-      paymentMethod: orderData.paymentMethod.toLowerCase().includes('khalti') ? 'khalti' : 'bank',
+      paymentMethod,
       paymentStatus: 'pending',
-      paymentReceipt: receiptPath,
       orderStatus: 'pending',
-      orderSource: 'chatbot',
-      customerEmail: orderData.email || null
+      receiptImage: receiptPath
     });
 
     res.json({
