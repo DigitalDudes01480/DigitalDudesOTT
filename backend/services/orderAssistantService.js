@@ -13,18 +13,32 @@ class OrderAssistantService {
         .select('name ottType pricing profileTypes description')
         .lean();
       
-      console.log('Products found:', products.length);
-      if (products.length > 0) {
-        console.log('Sample product:', JSON.stringify(products[0]));
-      }
-      
-      return products.map(product => ({
-        name: product.name,
-        ottType: product.ottType,
-        profileTypes: product.profileTypes || [],
-        pricing: product.pricing || [],
-        description: product.description
-      }));
+      return products.map(product => {
+        // Transform profileTypes structure to flat pricing array
+        const pricing = [];
+        
+        if (product.profileTypes && product.profileTypes.length > 0) {
+          product.profileTypes.forEach(profileType => {
+            if (profileType.pricingOptions && profileType.pricingOptions.length > 0) {
+              profileType.pricingOptions.forEach(option => {
+                pricing.push({
+                  profileType: profileType.name,
+                  duration: `${option.duration.value} ${option.duration.unit}`,
+                  price: option.price
+                });
+              });
+            }
+          });
+        }
+        
+        return {
+          name: product.name,
+          ottType: product.ottType,
+          profileTypes: product.profileTypes || [],
+          pricing: pricing,
+          description: product.description
+        };
+      });
     } catch (error) {
       console.error('Error fetching product catalog:', error);
       return [];
