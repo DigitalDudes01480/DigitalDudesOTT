@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Upload, Loader } from 'lucide-react';
 import axios from 'axios';
 
-const API_URL = 'https://digitaldudesott-production.up.railway.app/api';
+const API_URL = 'https://backend-tau-blush-82.vercel.app/api';
 
 const OrderAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
