@@ -24,7 +24,7 @@ const ProductCard = ({ product, hideProfileTypes = false, hideDetails = false })
       <div className={`card hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.02] h-full flex flex-col relative overflow-hidden ${isApp ? 'p-3' : 'md:p-6'}`}>
         <div className="absolute inset-0 bg-gradient-to-br from-primary-500/0 via-primary-500/0 to-primary-500/0 group-hover:from-primary-500/5 group-hover:via-transparent group-hover:to-secondary-500/5 transition-all duration-500 pointer-events-none"></div>
         <div className="relative z-10 flex flex-col h-full">
-        <div className={`relative overflow-hidden rounded-xl ${isApp ? 'mb-2' : 'mb-2 md:mb-4'} shadow-lg group-hover:shadow-2xl transition-shadow duration-500`}>
+        <div className={`relative overflow-hidden ${isApp ? 'mb-2' : 'mb-2 md:mb-4'} shadow-lg group-hover:shadow-2xl transition-shadow duration-500`}>
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
           <img
             src={
