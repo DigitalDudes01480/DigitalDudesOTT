@@ -16,8 +16,6 @@ export const getAllProducts = async (req, res) => {
 
     if (status) {
       query.status = status;
-    } else {
-      query.status = 'active';
     }
 
     if (minPrice || maxPrice) {
