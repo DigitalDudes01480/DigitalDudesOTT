@@ -230,4 +230,12 @@ if (!isVercel) {
   }, 5000); // Wait 5 seconds after server starts
 }
 
+const PORT = process.env.PORT || 5001;
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV}`);
+});
+
 export default app;
