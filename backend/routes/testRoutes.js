@@ -42,6 +42,7 @@ router.get('/format/:product', async (req, res) => {
 
 router.get('/db-direct', async (req, res) => {
   try {
+    await connectDB();
     const products = await Product.find({ status: 'active' }).lean();
     res.json({
       success: true,
