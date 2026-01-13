@@ -293,9 +293,9 @@ const Shop = () => {
                         {uncategorizedProducts.length} {uncategorizedProducts.length === 1 ? 'product' : 'products'}
                       </span>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
                       {uncategorizedProducts.map((product) => (
-                        <ProductCard key={product._id} product={product} />
+                        <ProductCard key={product._id} product={product} hideDetails />
                       ))}
                     </div>
                   </div>
