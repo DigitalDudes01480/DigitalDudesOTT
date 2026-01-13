@@ -33,10 +33,21 @@ const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
 
 const app = express();
 
-// Connect to database at startup (works for both Vercel and regular servers)
-connectDB().catch(err => {
-  console.error('Failed to connect to database:', err);
-});
+// Connect to database at startup and ensure connection before handling requests
+const initializeDatabase = async () => {
+  try {
+    await connectDB();
+    console.log('Database connection initialized successfully');
+  } catch (err) {
+    console.error('Failed to connect to database:', err);
+    if (!isVercel) {
+      process.exit(1);
+    }
+  }
+};
+
+// Initialize database connection
+initializeDatabase();
 
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
