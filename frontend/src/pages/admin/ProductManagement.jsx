@@ -224,12 +224,17 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
   // Initialize form data when product changes
   useEffect(() => {
     if (product) {
+      console.log('Loading product for edit:', product);
+      console.log('Product profile types:', product.profileTypes);
+      
       // Ensure all profile types have accountType and requiresOwnAccount fields
       const profileTypesWithDefaults = product.profileTypes?.map(profile => ({
         ...profile,
-        accountType: profile.accountType ?? 'own',
+        accountType: profile.accountType || 'own',
         requiresOwnAccount: profile.requiresOwnAccount ?? false
       })) || [];
+
+      console.log('Profile types with defaults:', profileTypesWithDefaults);
 
       const newFormData = {
         ...product,
@@ -237,6 +242,7 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
         profileTypes: profileTypesWithDefaults
       };
       
+      console.log('Setting form data:', newFormData);
       setFormData(newFormData);
     }
   }, [product]);
@@ -279,12 +285,14 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
   };
 
   const updateProfileType = (index, field, value) => {
+    console.log('Updating profile type:', { index, field, value });
     setFormData(prevFormData => {
       const newProfileTypes = [...prevFormData.profileTypes];
       newProfileTypes[index] = {
         ...newProfileTypes[index],
         [field]: value
       };
+      console.log('Updated profile:', newProfileTypes[index]);
       return { ...prevFormData, profileTypes: newProfileTypes };
     });
   };
