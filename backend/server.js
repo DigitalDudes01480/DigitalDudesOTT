@@ -23,6 +23,7 @@ import categoryRoutes from './routes/categoryRoutes.js';
 import faqRoutes from './routes/faqRoutes.js';
 import tutorialRoutes from './routes/tutorialRoutes.js';
 import orderAssistantRoutes from './routes/orderAssistantRoutes.js';
+import testRoutes from './routes/testRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -140,6 +141,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/faqs', faqRoutes);
 app.use('/api/tutorials', tutorialRoutes);
 app.use('/api/order-assistant', orderAssistantRoutes);
+app.use('/api/test', testRoutes);
 
 app.use(errorHandler);
 
