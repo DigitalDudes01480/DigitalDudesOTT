@@ -1,6 +1,7 @@
 import express from 'express';
 import orderAssistantService from '../services/orderAssistantService.js';
 import Product from '../models/Product.js';
+import connectDB from '../config/database.js';
 
 const router = express.Router();
 
