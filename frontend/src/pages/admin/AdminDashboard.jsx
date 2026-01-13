@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
-import { Users, ShoppingBag, Package, DollarSign, TrendingUp, Clock } from 'lucide-react';
-import { adminAPI } from '../../utils/api';
+import { Users, ShoppingBag, Package, DollarSign, TrendingUp, Clock, Tag, TrendingDown } from 'lucide-react';
+import { adminAPI, analyticsAPI } from '../../utils/api';
 import { formatCurrency, formatDate, getStatusColor } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState('30');
 
   useEffect(() => {
     fetchDashboardStats();
-  }, []);
+    fetchAnalytics();
+  }, [period]);
 
   const fetchDashboardStats = async () => {
     try {
@@ -18,6 +21,15 @@ const AdminDashboard = () => {
       setStats(response.data.stats);
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
+    }
+  };
+
+  const fetchAnalytics = async () => {
+    try {
+      const response = await analyticsAPI.getAnalytics(period);
+      setAnalytics(response.data.analytics);
+    } catch (error) {
+      console.error('Failed to fetch analytics:', error);
     } finally {
       setLoading(false);
     }
@@ -168,6 +180,97 @@ const AdminDashboard = () => {
           </table>
         </div>
       </div>
+
+      {analytics && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+            <div className="card">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Period Revenue</h3>
+                <DollarSign className="w-5 h-5 text-green-600" />
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                ₹{analytics.overview.recentRevenue.toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Last {period} days</p>
+            </div>
+
+            <div className="card">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Coupons</h3>
+                <Tag className="w-5 h-5 text-blue-600" />
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {analytics.coupons.activeCoupons}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {analytics.coupons.totalUsage} uses
+              </p>
+            </div>
+
+            <div className="card">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Discount</h3>
+                <Tag className="w-5 h-5 text-orange-600" />
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                ₹{analytics.coupons.totalDiscount.toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Savings given</p>
+            </div>
+
+            <div className="card">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Expiring Soon</h3>
+                <TrendingDown className="w-5 h-5 text-red-600" />
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {analytics.overview.expiringSubscriptions}
+              </p>
+              <p className="text-sm text-red-600 mt-1">Within 7 days</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div className="card">
+              <h3 className="text-lg font-bold mb-4 dark:text-white">Top Products</h3>
+              <div className="space-y-3">
+                {analytics.sales.topProducts.map((product, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div>
+                      <p className="font-semibold dark:text-white">{product._id}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{product.count} orders</p>
+                    </div>
+                    <p className="font-bold text-primary-600 dark:text-primary-400">
+                      ₹{product.revenue.toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="card">
+              <h3 className="text-lg font-bold mb-4 dark:text-white">Top Coupons</h3>
+              <div className="space-y-3">
+                {analytics.coupons.topCoupons.map((coupon, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div>
+                      <p className="font-semibold font-mono dark:text-white">{coupon.code}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{coupon.description}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-green-600">{coupon.usageCount} uses</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}`}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

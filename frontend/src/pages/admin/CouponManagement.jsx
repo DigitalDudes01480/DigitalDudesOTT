@@ -6,8 +6,22 @@ const CouponManagement = () => {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
   const [stats, setStats] = useState(null);
+  const [bulkCodes, setBulkCodes] = useState('');
+  const [bulkTemplate, setBulkTemplate] = useState({
+    description: '',
+    discountType: 'percentage',
+    discountValue: '',
+    minOrderAmount: '0',
+    maxDiscountAmount: '',
+    usageLimit: '1',
+    userUsageLimit: '1',
+    validFrom: '',
+    validUntil: '',
+    isActive: true
+  });
   const [formData, setFormData] = useState({
     code: '',
     description: '',

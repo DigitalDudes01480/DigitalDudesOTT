@@ -149,7 +149,14 @@ export const couponAPI = {
   updateCoupon: (id, data) => api.put(`/coupons/${id}`, data),
   deleteCoupon: (id) => api.delete(`/coupons/${id}`),
   validateCoupon: (data) => api.post('/coupons/validate', data),
+  applyCoupon: (data) => api.post('/coupons/apply', data),
   getCouponStats: () => api.get('/coupons/stats')
+};
+
+export const analyticsAPI = {
+  getAnalytics: (period = '30') => api.get(`/analytics?period=${period}`),
+  getRevenue: (startDate, endDate) => api.get(`/analytics/revenue?startDate=${startDate}&endDate=${endDate}`),
+  getCouponAnalytics: (period = '30') => api.get(`/analytics/coupons?period=${period}`)
 };
 
 export const adminAPI = {
