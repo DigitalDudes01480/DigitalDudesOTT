@@ -197,7 +197,6 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
       description: '',
       screenCount: 1,
       quality: 'HD',
-      accountType: 'own',
       requiresOwnAccount: true,
       pricingOptions: [{
         duration: { value: 1, unit: 'month' },
@@ -262,7 +261,6 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
           description: '',
           screenCount: 1,
           quality: 'HD',
-          accountType: 'own',
           requiresOwnAccount: true,
           pricingOptions: [{
             duration: { value: 1, unit: 'month' },
@@ -522,18 +520,6 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
                         placeholder="e.g., Shared, Private"
                         required
                       />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2 dark:text-gray-300">Account Type</label>
-                      <select
-                        value={profile.accountType || 'own'}
-                        onChange={(e) => updateProfileType(profileIndex, 'accountType', e.target.value)}
-                        className="input-field"
-                      >
-                        <option value="own">Own Account</option>
-                        <option value="shared">Shared Profile</option>
-                      </select>
                     </div>
 
                     <div>
