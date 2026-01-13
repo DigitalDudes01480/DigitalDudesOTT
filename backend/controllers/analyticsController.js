@@ -157,6 +157,13 @@ export const getRevenueAnalytics = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Start date and end date are required'
+      });
+    }
+    
     const match = { paymentStatus: 'completed' };
     if (startDate && endDate) {
       match.createdAt = {
@@ -180,12 +187,14 @@ export const getRevenueAnalytics = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      revenue
+      revenue: revenue || []
     });
   } catch (error) {
+    console.error('Revenue analytics error:', error);
     res.status(500).json({
       success: false,
-      message: error.message
+      message: 'Failed to fetch revenue analytics',
+      error: error.message
     });
   }
 };

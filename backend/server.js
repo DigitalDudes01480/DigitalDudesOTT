@@ -24,6 +24,7 @@ import faqRoutes from './routes/faqRoutes.js';
 import tutorialRoutes from './routes/tutorialRoutes.js';
 import orderAssistantRoutes from './routes/orderAssistantRoutes.js';
 import couponRoutes from './routes/couponRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

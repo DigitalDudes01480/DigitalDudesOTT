@@ -95,10 +95,17 @@ const sendViaResend = async ({ to, subject, html }) => {
 
 export const sendEmail = async (options) => {
   try {
+    const recipientEmail = options.to || options.email;
+    
+    if (!recipientEmail) {
+      console.error('No recipient email provided');
+      return { success: false, error: 'No recipient email provided' };
+    }
+
     // Try SES first (preferred if domain is verified in SES)
     if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
       const result = await sendViaSES({
-        to: options.email,
+        to: recipientEmail,
         subject: options.subject,
         html: options.html
       });
@@ -111,7 +118,7 @@ export const sendEmail = async (options) => {
     // Try Resend next
     if (process.env.RESEND_API_KEY) {
       const result = await sendViaResend({
-        to: options.email,
+        to: recipientEmail,
         subject: options.subject,
         html: options.html
       });
@@ -124,7 +131,7 @@ export const sendEmail = async (options) => {
     // Fallback to SMTP
     const mailOptions = {
       from: process.env.EMAIL_FROM,
-      to: options.email,
+      to: recipientEmail,
       subject: options.subject,
       html: options.html
     };
