@@ -37,10 +37,22 @@ export const getAllProducts = async (req, res) => {
 
     const products = await Product.find(query).populate('category').sort(sortOption);
 
+    // Ensure all products have accountType field in profileTypes (for backward compatibility)
+    const productsWithAccountType = products.map(product => {
+      const productObj = product.toObject();
+      if (productObj.profileTypes) {
+        productObj.profileTypes = productObj.profileTypes.map(profile => ({
+          ...profile,
+          accountType: profile.accountType || 'own'
+        }));
+      }
+      return productObj;
+    });
+
     res.status(200).json({
       success: true,
-      count: products.length,
-      products
+      count: productsWithAccountType.length,
+      products: productsWithAccountType
     });
   } catch (error) {
     res.status(500).json({
@@ -61,9 +73,18 @@ export const getProductById = async (req, res) => {
       });
     }
 
+    // Ensure accountType field exists in profileTypes (for backward compatibility)
+    const productObj = product.toObject();
+    if (productObj.profileTypes) {
+      productObj.profileTypes = productObj.profileTypes.map(profile => ({
+        ...profile,
+        accountType: profile.accountType || 'own'
+      }));
+    }
+
     res.status(200).json({
       success: true,
-      product
+      product: productObj
     });
   } catch (error) {
     res.status(500).json({
