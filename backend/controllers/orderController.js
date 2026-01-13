@@ -52,7 +52,17 @@ const parseObjectFromString = (value) => {
 
 export const createOrder = async (req, res, next) => {
   try {
-    let { orderItems, paymentMethod, totalAmount } = req.body;
+    console.log('📦 Creating order - Request body:', {
+      hasOrderItems: !!req.body.orderItems,
+      paymentMethod: req.body.paymentMethod,
+      totalAmount: req.body.totalAmount,
+      originalAmount: req.body.originalAmount,
+      couponCode: req.body.couponCode,
+      couponDiscount: req.body.couponDiscount,
+      hasReceipt: !!req.file
+    });
+    
+    let { orderItems, paymentMethod, totalAmount, originalAmount, couponCode, couponDiscount } = req.body;
     
     if (typeof orderItems === 'string') {
       try {
@@ -186,11 +196,21 @@ export const createOrder = async (req, res, next) => {
       user: req.user._id,
       orderItems: processedItems,
       totalAmount: totalAmount || calculatedTotal,
+      originalAmount: originalAmount || totalAmount || calculatedTotal,
+      couponCode: couponCode || undefined,
+      couponDiscount: couponDiscount ? Number(couponDiscount) : 0,
       paymentMethod: paymentMethod || 'khalti',
       receiptImage,
       receiptData,
       orderStatus: 'pending',
       paymentStatus: 'pending'
+    });
+    
+    console.log('✅ Order created successfully:', {
+      orderId: order._id,
+      totalAmount: order.totalAmount,
+      originalAmount: order.originalAmount,
+      couponDiscount: order.couponDiscount
     });
 
     await order.populate('user', 'name email');
@@ -204,6 +224,12 @@ export const createOrder = async (req, res, next) => {
       order
     });
   } catch (error) {
+    console.error('❌ Order creation error:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      body: req.body
+    });
     return next(error);
   }
 };

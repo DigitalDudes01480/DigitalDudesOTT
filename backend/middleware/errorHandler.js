@@ -13,12 +13,14 @@ const errorHandler = (err, req, res, next) => {
   error.message = err.message || 'Server Error';
 
   // Log error with more context
-  console.error('Error Handler:', {
+  console.error('❌ Error Handler:', {
     message: err.message,
     name: err.name,
     code: err.code,
     path: req.path,
-    method: req.method
+    method: req.method,
+    body: req.method === 'POST' || req.method === 'PUT' ? req.body : undefined,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
   });
 
   if (err.name === 'CastError') {
