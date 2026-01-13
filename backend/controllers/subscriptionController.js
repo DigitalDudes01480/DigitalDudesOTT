@@ -1,5 +1,8 @@
 import Subscription from '../models/Subscription.js';
 import Order from '../models/Order.js';
+import Product from '../models/Product.js';
+import User from '../models/User.js';
+import { sendEmail, emailTemplates } from '../utils/emailService.js';
 
 export const getMySubscriptions = async (req, res) => {
   try {
@@ -205,20 +208,47 @@ export const cancelSubscription = async (req, res) => {
 export const checkExpiredSubscriptions = async () => {
   try {
     const now = new Date();
+    const threeDaysFromNow = new Date(now.getTime() + (3 * 24 * 60 * 60 * 1000));
     
-    const expiredSubscriptions = await Subscription.updateMany(
-      {
-        expiryDate: { $lt: now },
-        status: 'active'
-      },
-      {
-        $set: { status: 'expired' }
-      }
-    );
+    // Find expired subscriptions
+    const expiredSubscriptions = await Subscription.find({
+      expiryDate: { $lt: now },
+      status: 'active'
+    }).populate('user');
 
-    console.log(`Updated ${expiredSubscriptions.modifiedCount} expired subscriptions`);
-    
-    return expiredSubscriptions;
+    for (const subscription of expiredSubscriptions) {
+      subscription.status = 'expired';
+      await subscription.save();
+    }
+
+    // Find subscriptions expiring in 3 days
+    const expiringSubscriptions = await Subscription.find({
+      expiryDate: { $gte: now, $lte: threeDaysFromNow },
+      status: 'active'
+    }).populate('user');
+
+    // Send expiry warning emails
+    for (const subscription of expiringSubscriptions) {
+      try {
+        if (subscription.user && subscription.user.email) {
+          const daysRemaining = Math.ceil((new Date(subscription.expiryDate) - now) / (1000 * 60 * 60 * 24));
+          const emailData = emailTemplates.subscriptionExpiring({
+            ...subscription.toObject(),
+            daysRemaining
+          }, subscription.user);
+          
+          await sendEmail({
+            to: subscription.user.email,
+            subject: emailData.subject,
+            html: emailData.html
+          });
+        }
+      } catch (emailError) {
+        console.error(`Failed to send expiry email for subscription ${subscription._id}:`, emailError);
+      }
+    }
+
+    console.log(`Checked subscriptions: ${expiredSubscriptions.length} expired, ${expiringSubscriptions.length} expiring soon`);
   } catch (error) {
     console.error('Error checking expired subscriptions:', error);
   }

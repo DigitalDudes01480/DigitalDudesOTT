@@ -1,7 +1,6 @@
 import User from '../models/User.js';
-import generateToken from '../utils/generateToken.js';
 import crypto from 'crypto';
-import { sendEmail } from '../utils/emailService.js';
+import { sendEmail, emailTemplates } from '../utils/emailService.js';
 import { sendPasswordResetEmail } from '../utils/emailService.js';
 import passport from '../config/passport.js';
 

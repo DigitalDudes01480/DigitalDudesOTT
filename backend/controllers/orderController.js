@@ -1,8 +1,8 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Subscription from '../models/Subscription.js';
-import Transaction from '../models/Transaction.js';
-import { sendAdminNewOrderNotification, sendOrderConfirmation, sendOrderStatusUpdate, sendSubscriptionDelivery } from '../utils/emailService.js';
+import User from '../models/User.js';
+import { sendEmail, emailTemplates, sendAdminNewOrderNotification, sendOrderConfirmation, sendOrderStatusUpdate, sendSubscriptionDelivery } from '../utils/emailService.js';
 
 const addDays = (date, days) => {
   const d = new Date(date);
