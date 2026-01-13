@@ -35,6 +35,7 @@ import TicketManagement from './pages/admin/TicketManagement';
 import FAQManagement from './pages/admin/FAQManagement';
 import TutorialManagement from './pages/admin/TutorialManagement';
 import CouponManagement from './pages/admin/CouponManagement';
+import SignInCodeRequests from './pages/admin/SignInCodeRequests';
 
 function App() {
   const isApp = isAndroidWebView();
@@ -60,6 +61,7 @@ function App() {
           <Route path="tickets" element={<TicketManagement />} />
           <Route path="faqs" element={<FAQManagement />} />
           <Route path="tutorials" element={<TutorialManagement />} />
+          <Route path="signin-requests" element={<SignInCodeRequests />} />
         </Route>
 
         <Route path="/*" element={

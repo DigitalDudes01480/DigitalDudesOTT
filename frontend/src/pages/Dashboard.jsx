@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, CreditCard, User, Calendar, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Package, CreditCard, User, Calendar, Clock, CheckCircle, XCircle, Key } from 'lucide-react';
 import { subscriptionAPI, orderAPI, transactionAPI } from '../utils/api';
 import { formatCurrency, formatDate, getDaysRemaining, getStatusColor } from '../utils/formatters';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { toast } from 'react-hot-toast';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('subscriptions');
@@ -187,12 +188,37 @@ const SubscriptionsTab = ({ subscriptions }) => {
                       {subscription.credentials.email || 'Not provided'}
                     </p>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 p-2 rounded">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Password</p>
-                    <p className="text-sm font-mono font-semibold dark:text-white break-all">
-                      {subscription.credentials.password || 'Not provided'}
-                    </p>
-                  </div>
+                  {subscription.credentials.credentialType === 'loginPin' ? (
+                    <>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Login PIN</p>
+                        <p className="text-sm font-mono font-semibold dark:text-white break-all">
+                          {subscription.credentials.loginPin || 'Not provided'}
+                        </p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await subscriptionAPI.requestSignInCode(subscription._id);
+                            toast.success('Sign-in code request submitted! Admin will send the code shortly.');
+                          } catch (error) {
+                            toast.error(error.response?.data?.message || 'Failed to request sign-in code');
+                          }
+                        }}
+                        className="w-full btn-secondary flex items-center justify-center space-x-2 text-sm"
+                      >
+                        <Key className="w-4 h-4" />
+                        <span>Request Sign-In Code</span>
+                      </button>
+                    </>
+                  ) : (
+                    <div className="bg-white dark:bg-gray-800 p-2 rounded">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Password</p>
+                      <p className="text-sm font-mono font-semibold dark:text-white break-all">
+                        {subscription.credentials.password || 'Not provided'}
+                      </p>
+                    </div>
+                  )}
                   <div className="bg-white dark:bg-gray-800 p-2 rounded">
                     <p className="text-xs text-gray-500 dark:text-gray-400">Profile</p>
                     <p className="text-sm font-mono font-semibold dark:text-white break-all">

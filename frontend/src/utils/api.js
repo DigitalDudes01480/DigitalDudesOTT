@@ -96,6 +96,9 @@ export const subscriptionAPI = {
   getById: (id) => api.get(`/subscriptions/${id}`),
   update: (id, data) => api.put(`/subscriptions/${id}`, data),
   cancel: (id) => api.put(`/subscriptions/${id}/cancel`),
+  requestSignInCode: (id) => api.post(`/subscriptions/${id}/request-signin-code`),
+  sendSignInCode: (data) => api.post('/subscriptions/send-signin-code', data),
+  getSignInRequests: () => api.get('/subscriptions/sign-in-requests'),
 };
 
 export const transactionAPI = {

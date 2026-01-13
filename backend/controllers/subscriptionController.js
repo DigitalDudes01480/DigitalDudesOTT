@@ -272,3 +272,154 @@ export const checkExpiredSubscriptions = async () => {
     // Don't throw - let the function complete gracefully
   }
 };
+
+// Customer requests sign-in code
+export const requestSignInCode = async (req, res) => {
+  try {
+    const subscription = await Subscription.findById(req.params.id);
+
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        message: 'Subscription not found'
+      });
+    }
+
+    // Check if user owns this subscription
+    if (subscription.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to access this subscription'
+      });
+    }
+
+    // Check if credential type is loginPin
+    if (subscription.credentials?.credentialType !== 'loginPin') {
+      return res.status(400).json({
+        success: false,
+        message: 'Sign-in code requests are only available for Login PIN credentials'
+      });
+    }
+
+    // Add request to the array
+    subscription.signInCodeRequests.push({
+      requestedAt: new Date(),
+      status: 'pending'
+    });
+
+    await subscription.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Sign-in code request submitted. Admin will send the code shortly.',
+      subscription
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Admin sends sign-in code to customer
+export const sendSignInCode = async (req, res) => {
+  try {
+    const { subscriptionId, requestId, code } = req.body;
+
+    const subscription = await Subscription.findById(subscriptionId)
+      .populate('user', 'name email')
+      .populate('product', 'name ottType');
+
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        message: 'Subscription not found'
+      });
+    }
+
+    // Find the request
+    const request = subscription.signInCodeRequests.id(requestId);
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: 'Request not found'
+      });
+    }
+
+    // Update request status
+    request.status = 'sent';
+    request.code = code;
+    request.sentAt = new Date();
+
+    await subscription.save();
+
+    // Send email to customer with the sign-in code
+    try {
+      await sendEmail({
+        to: subscription.user.email,
+        subject: `Sign-In Code for ${subscription.product.name}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>Your Sign-In Code</h2>
+            <p>Hello ${subscription.user.name},</p>
+            <p>Here is your sign-in code for <strong>${subscription.product.name}</strong>:</p>
+            <div style="background-color: #f5f5f5; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 2px; margin: 20px 0;">
+              ${code}
+            </div>
+            <p><strong>Email:</strong> ${subscription.credentials.email}</p>
+            <p>Use this code to sign in to your account.</p>
+            <p>If you didn't request this code, please contact support immediately.</p>
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
+            <p style="color: #666; font-size: 12px;">This is an automated message from Digital Dudes OTT.</p>
+          </div>
+        `
+      });
+    } catch (emailError) {
+      console.error('Failed to send sign-in code email:', emailError);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Sign-in code sent successfully',
+      subscription
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Admin gets all pending sign-in code requests
+export const getSignInCodeRequests = async (req, res) => {
+  try {
+    const subscriptions = await Subscription.find({
+      'signInCodeRequests.status': 'pending'
+    })
+      .populate('user', 'name email')
+      .populate('product', 'name ottType image')
+      .sort('-signInCodeRequests.requestedAt');
+
+    // Filter to only include subscriptions with pending requests
+    const requestsData = subscriptions.map(sub => {
+      const pendingRequests = sub.signInCodeRequests.filter(req => req.status === 'pending');
+      return {
+        subscription: sub,
+        pendingRequests
+      };
+    }).filter(item => item.pendingRequests.length > 0);
+
+    res.status(200).json({
+      success: true,
+      count: requestsData.length,
+      requests: requestsData
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
