@@ -249,14 +249,16 @@ export const getCouponAnalytics = async (req, res) => {
     res.status(200).json({
       success: true,
       analytics: {
-        couponUsage,
-        effectiveCoupons
+        couponUsage: couponUsage || [],
+        effectiveCoupons: effectiveCoupons || []
       }
     });
   } catch (error) {
+    console.error('Coupon analytics error:', error);
     res.status(500).json({
       success: false,
-      message: error.message
+      message: 'Failed to fetch coupon analytics',
+      error: error.message
     });
   }
 };
