@@ -6,7 +6,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AppBottomBar from './components/AppBottomBar';
 import UpdateAppBanner from './components/UpdateAppBanner';
 import MobileBottomNav from './components/MobileBottomNav';
-import OrderAssistant from './components/OrderAssistant';
 import { isAndroidWebView } from './utils/appMode';
 
 import Home from './pages/Home';
@@ -101,7 +100,6 @@ function App() {
             </div>
             <Footer />
             {isApp ? <AppBottomBar /> : <MobileBottomNav />}
-            <OrderAssistant />
           </>
         } />
       </Routes>
