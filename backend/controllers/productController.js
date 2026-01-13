@@ -37,22 +37,10 @@ export const getAllProducts = async (req, res) => {
 
     const products = await Product.find(query).populate('category').sort(sortOption);
 
-    // Ensure all products have accountType field in profileTypes (for backward compatibility)
-    const productsWithAccountType = products.map(product => {
-      const productObj = product.toObject();
-      if (productObj.profileTypes) {
-        productObj.profileTypes = productObj.profileTypes.map(profile => ({
-          ...profile,
-          accountType: profile.accountType || 'own'
-        }));
-      }
-      return productObj;
-    });
-
     res.status(200).json({
       success: true,
-      count: productsWithAccountType.length,
-      products: productsWithAccountType
+      count: products.length,
+      products
     });
   } catch (error) {
     res.status(500).json({
@@ -73,18 +61,9 @@ export const getProductById = async (req, res) => {
       });
     }
 
-    // Ensure accountType field exists in profileTypes (for backward compatibility)
-    const productObj = product.toObject();
-    if (productObj.profileTypes) {
-      productObj.profileTypes = productObj.profileTypes.map(profile => ({
-        ...profile,
-        accountType: profile.accountType || 'own'
-      }));
-    }
-
     res.status(200).json({
       success: true,
-      product: productObj
+      product
     });
   } catch (error) {
     res.status(500).json({
@@ -103,14 +82,7 @@ export const createProduct = async (req, res) => {
       productData.profileTypes = JSON.parse(productData.profileTypes);
     }
     
-    // Ensure requiresOwnAccount and accountType fields are set in profileTypes
-    if (productData.profileTypes && Array.isArray(productData.profileTypes)) {
-      productData.profileTypes = productData.profileTypes.map(profile => ({
-        ...profile,
-        requiresOwnAccount: profile.requiresOwnAccount === true || profile.requiresOwnAccount === 'true',
-        accountType: profile.accountType || 'own'
-      }));
-    }
+    // No special processing needed for profileTypes
     
     // Handle image upload
     if (req.file) {
@@ -174,21 +146,6 @@ export const updateProduct = async (req, res) => {
     }
     
     console.log('Parsed profileTypes:', JSON.stringify(updateData.profileTypes, null, 2));
-    
-    // Ensure requiresOwnAccount and accountType fields are preserved in profileTypes
-    if (updateData.profileTypes && Array.isArray(updateData.profileTypes)) {
-      updateData.profileTypes = updateData.profileTypes.map(profile => {
-        console.log('Processing profile:', profile.name, 'accountType:', profile.accountType);
-        return {
-          ...profile,
-          requiresOwnAccount: profile.requiresOwnAccount === true || profile.requiresOwnAccount === 'true',
-          // Preserve accountType exactly as sent, don't apply default
-          accountType: profile.accountType
-        };
-      });
-    }
-    
-    console.log('Final profileTypes to save:', JSON.stringify(updateData.profileTypes, null, 2));
     
     // Remove _id from profileTypes to ensure proper update (Mongoose subdocument issue)
     if (updateData.profileTypes && Array.isArray(updateData.profileTypes)) {

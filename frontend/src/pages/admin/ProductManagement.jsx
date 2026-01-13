@@ -197,8 +197,6 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
       description: '',
       screenCount: 1,
       quality: 'HD',
-      accountType: 'shared',
-      requiresOwnAccount: false,
       pricingOptions: [{
         duration: { value: 1, unit: 'month' },
         price: ''
@@ -229,12 +227,7 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
       console.log('Detailed profile types:', JSON.stringify(product.profileTypes, null, 2));
       
       // Preserve all profile type fields exactly as they are in the database
-      const profileTypesWithDefaults = product.profileTypes?.map(profile => ({
-        ...profile,
-        // Only set defaults if the field is actually undefined/null, not for empty strings
-        accountType: profile.accountType !== undefined && profile.accountType !== null ? profile.accountType : 'own',
-        requiresOwnAccount: profile.requiresOwnAccount ?? false
-      })) || [];
+      const profileTypesWithDefaults = product.profileTypes || [];
 
       console.log('Profile types loaded:', profileTypesWithDefaults);
 
@@ -267,8 +260,6 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
           description: '',
           screenCount: 1,
           quality: 'HD',
-          accountType: 'own',
-          requiresOwnAccount: false,
           pricingOptions: [{
             duration: { value: 1, unit: 'month' },
             price: '',
@@ -565,69 +556,6 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
                         placeholder="Profile description"
                       />
                     </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Account Type
-                    </label>
-                    <div className="space-y-2">
-                      <label className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name={`account-type-${profileIndex}`}
-                          checked={profile.accountType === 'own'}
-                          onChange={() => updateProfileType(profileIndex, 'accountType', 'own')}
-                          className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                        />
-                        <span className="text-sm font-medium dark:text-gray-300">
-                          Own Account
-                          {profile.accountType === 'own' && (
-                            <span className="ml-2 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">✓ Selected</span>
-                          )}
-                        </span>
-                      </label>
-                      <label className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name={`account-type-${profileIndex}`}
-                          checked={profile.accountType === 'private'}
-                          onChange={() => updateProfileType(profileIndex, 'accountType', 'private')}
-                          className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                        />
-                        <span className="text-sm font-medium dark:text-gray-300">
-                          Private Profile
-                          {profile.accountType === 'private' && (
-                            <span className="ml-2 text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded">✓ Selected</span>
-                          )}
-                        </span>
-                      </label>
-                      <label className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name={`account-type-${profileIndex}`}
-                          checked={profile.accountType === 'shared'}
-                          onChange={() => updateProfileType(profileIndex, 'accountType', 'shared')}
-                          className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                        />
-                        <span className="text-sm font-medium dark:text-gray-300">
-                          Shared Profile
-                          {profile.accountType === 'shared' && (
-                            <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded">✓ Selected</span>
-                          )}
-                        </span>
-                      </label>
-                    </div>
-                    {profile.accountType === 'private' && (
-                      <div className="mt-2 p-2 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded text-xs text-purple-700 dark:text-purple-300">
-                        <strong>Private Profile:</strong> Customers will receive direct password access for this profile type.
-                      </div>
-                    )}
-                    {profile.accountType === 'shared' && (
-                      <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-700 dark:text-blue-300">
-                        <strong>Shared Profile:</strong> Customers will receive access codes instead of passwords for this profile type.
-                      </div>
-                    )}
                   </div>
 
                   <div className="border-t dark:border-gray-600 pt-3 mt-3">
