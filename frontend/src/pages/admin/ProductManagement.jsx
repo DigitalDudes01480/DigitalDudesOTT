@@ -197,6 +197,7 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
       description: '',
       screenCount: 1,
       quality: 'HD',
+      requiresOwnAccount: true,
       pricingOptions: [{
         duration: { value: 1, unit: 'month' },
         price: ''
@@ -260,6 +261,7 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
           description: '',
           screenCount: 1,
           quality: 'HD',
+          requiresOwnAccount: true,
           pricingOptions: [{
             duration: { value: 1, unit: 'month' },
             price: '',
@@ -556,6 +558,23 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
                         placeholder="Profile description"
                       />
                     </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={profile.requiresOwnAccount !== false}
+                        onChange={(e) => updateProfileType(profileIndex, 'requiresOwnAccount', e.target.checked)}
+                        className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                      />
+                      <span className="text-sm font-medium dark:text-gray-300">
+                        Requires Own Account
+                      </span>
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
+                      Customer must use their own account credentials for this profile type
+                    </p>
                   </div>
 
                   <div className="border-t dark:border-gray-600 pt-3 mt-3">

@@ -38,6 +38,10 @@ const profileTypeSchema = new mongoose.Schema({
     enum: ['SD', 'HD', 'FHD', '4K', 'UHD'],
     default: 'HD'
   },
+  requiresOwnAccount: {
+    type: Boolean,
+    default: true
+  },
   pricingOptions: [pricingOptionSchema]
 }, { _id: true });
 
