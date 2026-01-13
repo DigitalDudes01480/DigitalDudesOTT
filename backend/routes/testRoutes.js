@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.get('/catalog', async (req, res) => {
   try {
+    await connectDB();
     const products = await orderAssistantService.getProductCatalog();
     res.json({
       success: true,
