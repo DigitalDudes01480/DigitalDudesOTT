@@ -79,3 +79,14 @@ export const testOrderEmail = async (req, res) => {
     });
   }
 };
+
+// Test endpoint to verify CORS is working
+export const testCors = async (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'CORS test successful',
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString(),
+    server: 'Digital Dudes Backend'
+  });
+};
