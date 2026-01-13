@@ -169,6 +169,7 @@ app.use('/api/faqs', faqRoutes);
 app.use('/api/tutorials', tutorialRoutes);
 app.use('/api/order-assistant', orderAssistantRoutes);
 app.use('/api/coupons', couponRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 app.use(errorHandler);
 
