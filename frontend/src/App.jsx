@@ -34,6 +34,7 @@ import CustomerManagement from './pages/admin/CustomerManagement';
 import TicketManagement from './pages/admin/TicketManagement';
 import FAQManagement from './pages/admin/FAQManagement';
 import TutorialManagement from './pages/admin/TutorialManagement';
+import CouponManagement from './pages/admin/CouponManagement';
 
 function App() {
   const isApp = isAndroidWebView();

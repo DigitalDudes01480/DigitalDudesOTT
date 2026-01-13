@@ -135,10 +135,21 @@ export const faqAPI = {
 };
 
 export const tutorialAPI = {
-  getAll: (params) => api.get('/tutorials', { params }),
-  create: (data) => api.post('/tutorials', data),
-  update: (id, data) => api.put(`/tutorials/${id}`, data),
-  delete: (id) => api.delete(`/tutorials/${id}`)
+  getAllTutorials: () => api.get('/tutorials'),
+  getTutorialById: (id) => api.get(`/tutorials/${id}`),
+  createTutorial: (data) => api.post('/tutorials', data),
+  updateTutorial: (id, data) => api.put(`/tutorials/${id}`, data),
+  deleteTutorial: (id) => api.delete(`/tutorials/${id}`)
+};
+
+export const couponAPI = {
+  getAllCoupons: () => api.get('/coupons'),
+  getCouponById: (id) => api.get(`/coupons/${id}`),
+  createCoupon: (data) => api.post('/coupons', data),
+  updateCoupon: (id, data) => api.put(`/coupons/${id}`, data),
+  deleteCoupon: (id) => api.delete(`/coupons/${id}`),
+  validateCoupon: (data) => api.post('/coupons/validate', data),
+  getCouponStats: () => api.get('/coupons/stats')
 };
 
 export const adminAPI = {
