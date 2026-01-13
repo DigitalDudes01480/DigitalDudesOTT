@@ -162,22 +162,33 @@ export const createProduct = async (req, res) => {
 
 export const updateProduct = async (req, res) => {
   try {
+    console.log('=== UPDATE PRODUCT BACKEND ===');
+    console.log('Received req.body:', JSON.stringify(req.body, null, 2));
+    
     const updateData = { ...req.body };
     
     // Parse profileTypes if it's a string
     if (typeof updateData.profileTypes === 'string') {
+      console.log('Parsing profileTypes from string:', updateData.profileTypes);
       updateData.profileTypes = JSON.parse(updateData.profileTypes);
     }
     
+    console.log('Parsed profileTypes:', JSON.stringify(updateData.profileTypes, null, 2));
+    
     // Ensure requiresOwnAccount and accountType fields are preserved in profileTypes
     if (updateData.profileTypes && Array.isArray(updateData.profileTypes)) {
-      updateData.profileTypes = updateData.profileTypes.map(profile => ({
-        ...profile,
-        requiresOwnAccount: profile.requiresOwnAccount === true || profile.requiresOwnAccount === 'true',
-        // Preserve accountType exactly as sent, don't apply default
-        accountType: profile.accountType
-      }));
+      updateData.profileTypes = updateData.profileTypes.map(profile => {
+        console.log('Processing profile:', profile.name, 'accountType:', profile.accountType);
+        return {
+          ...profile,
+          requiresOwnAccount: profile.requiresOwnAccount === true || profile.requiresOwnAccount === 'true',
+          // Preserve accountType exactly as sent, don't apply default
+          accountType: profile.accountType
+        };
+      });
     }
+    
+    console.log('Final profileTypes to save:', JSON.stringify(updateData.profileTypes, null, 2));
     
     // Handle image upload
     if (req.file) {

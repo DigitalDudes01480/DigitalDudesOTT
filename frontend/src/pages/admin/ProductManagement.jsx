@@ -354,7 +354,15 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
         submitData.append('category', formData.category);
       }
       
-      submitData.append('profileTypes', JSON.stringify(formData.profileTypes));
+      const profileTypesString = JSON.stringify(formData.profileTypes);
+      console.log('ProfileTypes string being sent:', profileTypesString);
+      submitData.append('profileTypes', profileTypesString);
+      
+      // Log FormData contents
+      console.log('FormData entries:');
+      for (let pair of submitData.entries()) {
+        console.log(pair[0] + ':', pair[1]);
+      }
       
       // Add image URL if provided
       if (formData.imageUrl) {
