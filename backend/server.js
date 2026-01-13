@@ -47,21 +47,13 @@ process.on('uncaughtException', (error) => {
 
 const app = express();
 
-// Connect to database at startup and ensure connection before handling requests
-const initializeDatabase = async () => {
-  try {
-    await connectDB();
-    console.log('Database connection initialized successfully');
-  } catch (err) {
+// Connect to database at startup - don't block server startup
+connectDB()
+  .then(() => console.log('Database connection initialized successfully'))
+  .catch((err) => {
     console.error('Failed to connect to database:', err);
-    if (!isVercel) {
-      process.exit(1);
-    }
-  }
-};
-
-// Initialize database connection
-initializeDatabase();
+    // Don't exit - let Railway restart the service
+  });
 
 // For Vercel serverless, ensure connection before each request
 if (isVercel) {
@@ -76,6 +68,15 @@ if (isVercel) {
         message: 'Database temporarily unavailable. Please try again.' 
       });
     }
+  });
+} else {
+  // For Railway/traditional hosting, add a simple health check
+  app.get('/health', (req, res) => {
+    res.status(200).json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
   });
 }
 
@@ -187,26 +188,42 @@ app.use('/api/analytics', analyticsRoutes);
 app.use(errorHandler);
 
 if (!isVercel) {
-  // Wrap in try-catch to prevent crashes
-  const safeCheckExpiredSubscriptions = async () => {
-    try {
-      await checkExpiredSubscriptions();
-    } catch (error) {
-      console.error('Error in checkExpiredSubscriptions:', error);
-      // Don't crash the server, just log the error
-    }
-  };
-
-  setInterval(() => {
-    safeCheckExpiredSubscriptions();
-  }, 24 * 60 * 60 * 1000);
-
   const PORT = process.env.PORT || 5000;
 
-  app.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-    safeCheckExpiredSubscriptions();
+  // Start server immediately - don't wait for anything
+  const server = app.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   });
+
+  // Handle server errors
+  server.on('error', (error) => {
+    console.error('Server error:', error);
+    if (error.code === 'EADDRINUSE') {
+      console.error(`Port ${PORT} is already in use`);
+      process.exit(1);
+    }
+  });
+
+  // Set up background tasks after server starts
+  setTimeout(() => {
+    // Wrap in try-catch to prevent crashes
+    const safeCheckExpiredSubscriptions = async () => {
+      try {
+        await checkExpiredSubscriptions();
+      } catch (error) {
+        console.error('Error in checkExpiredSubscriptions:', error);
+      }
+    };
+
+    // Run once on startup (after delay)
+    safeCheckExpiredSubscriptions();
+
+    // Then run daily
+    setInterval(() => {
+      safeCheckExpiredSubscriptions();
+    }, 24 * 60 * 60 * 1000);
+  }, 5000); // Wait 5 seconds after server starts
 }
 
 export default app;

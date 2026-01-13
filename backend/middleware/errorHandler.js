@@ -1,10 +1,25 @@
 import multer from 'multer';
 
 const errorHandler = (err, req, res, next) => {
-  let error = { ...err };
-  error.message = err.message;
+  // Prevent crashes by ensuring we always have an error object
+  if (!err) {
+    return res.status(500).json({
+      success: false,
+      message: 'Unknown error occurred'
+    });
+  }
 
-  console.error(err);
+  let error = { ...err };
+  error.message = err.message || 'Server Error';
+
+  // Log error with more context
+  console.error('Error Handler:', {
+    message: err.message,
+    name: err.name,
+    code: err.code,
+    path: req.path,
+    method: req.method
+  });
 
   if (err.name === 'CastError') {
     const message = 'Resource not found';
@@ -25,17 +40,25 @@ const errorHandler = (err, req, res, next) => {
   }
 
   if (err.name === 'ValidationError') {
-    const message = Object.values(err.errors).map(val => val.message);
+    const message = Object.values(err.errors || {}).map(val => val.message);
     error = { message, statusCode: 400 };
+  }
+
+  // Handle MongoDB connection errors
+  if (err.name === 'MongoNetworkError' || err.name === 'MongooseServerSelectionError') {
+    error = { message: 'Database connection error', statusCode: 503 };
   }
 
   const responseMessage = Array.isArray(error.message) ? error.message.join(', ') : error.message;
 
-  res.status(error.statusCode || 500).json({
-    success: false,
-    message: responseMessage || 'Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-  });
+  // Ensure response hasn't been sent already
+  if (!res.headersSent) {
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: responseMessage || 'Server Error',
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+  }
 };
 
 export default errorHandler;
