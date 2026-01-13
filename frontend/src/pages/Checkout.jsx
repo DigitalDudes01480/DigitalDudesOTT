@@ -24,7 +24,8 @@ const CheckoutForm = () => {
   const total = subtotal - discount;
   
   // Debug: Log to verify this version is running
-  console.log('🛒 Checkout loaded - subtotal:', subtotal, 'discount:', discount, 'total:', total);
+  console.log('🛒 Checkout v2.0 loaded [BUILD: 2026-01-13-13:27] - subtotal:', subtotal, 'discount:', discount, 'total:', total);
+  console.log('✅ SUBTOTAL FIX ACTIVE - If you see this, the fix is deployed!');
 
   // Get items that require own account email
   const ownAccountItems = items.filter(item => 
