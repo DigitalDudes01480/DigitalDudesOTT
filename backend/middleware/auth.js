@@ -60,3 +60,6 @@ export const authorize = (...roles) => {
     next();
   };
 };
+
+// Convenience middleware for admin-only routes
+export const admin = authorize('admin');
