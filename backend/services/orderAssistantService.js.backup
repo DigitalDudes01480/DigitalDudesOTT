@@ -69,20 +69,9 @@ class OrderAssistantService {
   // Format price list for a product
   async formatPriceList(productName) {
     const products = await this.getProductCatalog();
-    
-    // Search by ottType or name - flexible matching
-    const searchTerm = productName.toLowerCase();
-    const product = products.find(p => {
-      const ottTypeMatch = p.ottType && (
-        p.ottType.toLowerCase().includes(searchTerm) || 
-        searchTerm.includes(p.ottType.toLowerCase())
-      );
-      const nameMatch = p.name && (
-        p.name.toLowerCase().includes(searchTerm) || 
-        searchTerm.includes(p.name.toLowerCase())
-      );
-      return ottTypeMatch || nameMatch;
-    });
+    const product = products.find(p => 
+      p.name.toLowerCase().includes(productName.toLowerCase())
+    );
 
     if (!product || !product.pricing || product.pricing.length === 0) {
       return null;
@@ -174,19 +163,9 @@ Available durations are:
   // Get price for specific selection
   async getPrice(productName, profileType, duration) {
     const products = await this.getProductCatalog();
-    
-    const searchTerm = productName.toLowerCase();
-    const product = products.find(p => {
-      const ottTypeMatch = p.ottType && (
-        p.ottType.toLowerCase().includes(searchTerm) || 
-        searchTerm.includes(p.ottType.toLowerCase())
-      );
-      const nameMatch = p.name && (
-        p.name.toLowerCase().includes(searchTerm) || 
-        searchTerm.includes(p.name.toLowerCase())
-      );
-      return ottTypeMatch || nameMatch;
-    });
+    const product = products.find(p => 
+      p.name.toLowerCase().includes(productName.toLowerCase())
+    );
 
     if (!product || !product.pricing) return null;
 
