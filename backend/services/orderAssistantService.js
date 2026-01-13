@@ -1,15 +1,22 @@
 import Product from '../models/Product.js';
 
+// Order Assistant Service - Handles order workflow logic
 class OrderAssistantService {
   constructor() {
-    this.conversationState = new Map();
+    this.conversationState = new Map(); // Store conversation states
   }
 
+  // Get product catalog from database
   async getProductCatalog() {
     try {
-      const products = await Product.find({ status: 'active' }).select('name ottType profileTypes description').lean();
+      const products = await Product.find({ status: 'active' })
+        .select('name ottType pricing profileTypes description')
+        .lean();
+      
       return products.map(product => {
+        // Transform profileTypes structure to flat pricing array
         const pricing = [];
+        
         if (product.profileTypes && product.profileTypes.length > 0) {
           product.profileTypes.forEach(profileType => {
             if (profileType.pricingOptions && profileType.pricingOptions.length > 0) {
@@ -23,6 +30,7 @@ class OrderAssistantService {
             }
           });
         }
+        
         return {
           name: product.name,
           ottType: product.ottType,
@@ -37,8 +45,10 @@ class OrderAssistantService {
     }
   }
 
+  // Detect product intent from user message
   detectProductIntent(message) {
     const lowerMessage = message.toLowerCase();
+    
     const productKeywords = {
       netflix: ['netflix', 'netflex', 'netflx'],
       prime: ['prime', 'amazon prime', 'prime video'],
@@ -46,26 +56,41 @@ class OrderAssistantService {
       spotify: ['spotify', 'music'],
       youtube: ['youtube', 'youtube premium', 'yt premium']
     };
+
     for (const [product, keywords] of Object.entries(productKeywords)) {
       if (keywords.some(keyword => lowerMessage.includes(keyword))) {
         return product;
       }
     }
+
     return null;
   }
 
+  // Format price list for a product
   async formatPriceList(productName) {
     const products = await this.getProductCatalog();
+    
+    // Search by ottType or name - flexible matching
     const searchTerm = productName.toLowerCase();
     const product = products.find(p => {
-      const ottTypeMatch = p.ottType && (p.ottType.toLowerCase().includes(searchTerm) || searchTerm.includes(p.ottType.toLowerCase()));
-      const nameMatch = p.name && (p.name.toLowerCase().includes(searchTerm) || searchTerm.includes(p.name.toLowerCase()));
+      const ottTypeMatch = p.ottType && (
+        p.ottType.toLowerCase().includes(searchTerm) || 
+        searchTerm.includes(p.ottType.toLowerCase())
+      );
+      const nameMatch = p.name && (
+        p.name.toLowerCase().includes(searchTerm) || 
+        searchTerm.includes(p.name.toLowerCase())
+      );
       return ottTypeMatch || nameMatch;
     });
+
     if (!product || !product.pricing || product.pricing.length === 0) {
       return null;
     }
+
     let response = `**${product.name} Subscription Options**\n\n`;
+
+    // Group pricing by profile type
     const groupedPricing = {};
     product.pricing.forEach(item => {
       const profileType = item.profileType || 'Standard';
@@ -74,19 +99,26 @@ class OrderAssistantService {
       }
       groupedPricing[profileType].push(item);
     });
+
+    // Format each profile type with prices
     Object.entries(groupedPricing).forEach(([profileType, prices]) => {
       response += `**${profileType}**\n`;
+      
+      // Sort by duration value
       prices.sort((a, b) => {
         const durationA = parseFloat(a.duration.match(/[\d.]+/)?.[0]) || 0;
         const durationB = parseFloat(b.duration.match(/[\d.]+/)?.[0]) || 0;
         return durationA - durationB;
       });
+
       prices.forEach(item => {
         response += `• ${item.duration} – Rs ${item.price}\n`;
       });
       response += '\n';
     });
+
     response += '**Which profile type would you like to buy? (Shared / Private)**';
+    
     return {
       message: response,
       product: product,
@@ -94,59 +126,109 @@ class OrderAssistantService {
     };
   }
 
+  // Explain profile differences
   explainProfileDifference(productName) {
     const explanations = {
-      shared: `**Shared Profile**\n• Profile is shared with other users\n• Login allowed on **only one device**\n• **TV is NOT supported**\n• Supported devices: Mobile, Laptop, Tablet\n• Budget-friendly option`,
-      private: `**Private Profile**\n• Dedicated profile only for you\n• No one else can access your account\n• You can sign in on multiple devices\n• You can watch on **one device at a time**\n• **All devices supported (Mobile, Laptop, Tablet, TV)**\n• More privacy and stability`
+      shared: `**Shared Profile**
+• Profile is shared with other users
+• Login allowed on **only one device**
+• **TV is NOT supported**
+• Supported devices: Mobile, Laptop, Tablet
+• Budget-friendly option`,
+      
+      private: `**Private Profile**
+• Dedicated profile only for you
+• No one else can access your account
+• You can sign in on multiple devices
+• You can watch on **one device at a time**
+• **All devices supported (Mobile, Laptop, Tablet, TV)**
+• More privacy and stability`
     };
+
     return `${explanations.shared}\n\n${explanations.private}\n\n**Which profile would you like to continue with?**`;
   }
 
+  // Validate Private profile duration
   validatePrivateDuration(duration) {
     const validDurations = ['1.5 months', '45 days', '3 months', '6 months', '12 months'];
     const lowerDuration = duration.toLowerCase();
+    
     if (lowerDuration.includes('1 month') && !lowerDuration.includes('1.5')) {
       return {
         valid: false,
-        message: `Our **Private Profile subscription starts from 1.5 Months (45 Days)**.\n\nAvailable durations are:\n• 1.5 Months (45 Days)\n• 3 Months\n• 6 Months\n• 12 Months\n\n**Which duration would you like to choose?**`
+        message: `Our **Private Profile subscription starts from 1.5 Months (45 Days)**.
+
+Available durations are:
+• 1.5 Months (45 Days)
+• 3 Months
+• 6 Months
+• 12 Months
+
+**Which duration would you like to choose?**`
       };
     }
+
     return { valid: true };
   }
 
+  // Get price for specific selection
   async getPrice(productName, profileType, duration) {
     const products = await this.getProductCatalog();
+    
     const searchTerm = productName.toLowerCase();
     const product = products.find(p => {
-      const ottTypeMatch = p.ottType && (p.ottType.toLowerCase().includes(searchTerm) || searchTerm.includes(p.ottType.toLowerCase()));
-      const nameMatch = p.name && (p.name.toLowerCase().includes(searchTerm) || searchTerm.includes(p.name.toLowerCase()));
+      const ottTypeMatch = p.ottType && (
+        p.ottType.toLowerCase().includes(searchTerm) || 
+        searchTerm.includes(p.ottType.toLowerCase())
+      );
+      const nameMatch = p.name && (
+        p.name.toLowerCase().includes(searchTerm) || 
+        searchTerm.includes(p.name.toLowerCase())
+      );
       return ottTypeMatch || nameMatch;
     });
+
     if (!product || !product.pricing) return null;
+
+    // Extract numeric value from duration input (e.g., "1.5 months" -> 1.5)
     const durationValue = parseFloat(duration.match(/[\d.]+/)?.[0]);
+    
     const priceItem = product.pricing.find(p => {
-      const profileMatch = p.profileType.toLowerCase().includes(profileType.toLowerCase()) || profileType.toLowerCase().includes(p.profileType.toLowerCase());
+      const profileMatch = p.profileType.toLowerCase().includes(profileType.toLowerCase()) || 
+                          profileType.toLowerCase().includes(p.profileType.toLowerCase());
+      
+      // Extract numeric value from stored duration
       const storedDurationValue = parseFloat(p.duration.match(/[\d.]+/)?.[0]);
-      const durationMatch = storedDurationValue === durationValue || p.duration.toLowerCase().includes(duration.toLowerCase());
+      
+      const durationMatch = storedDurationValue === durationValue || 
+                           p.duration.toLowerCase().includes(duration.toLowerCase());
+      
       return profileMatch && durationMatch;
     });
+
     return priceItem;
   }
 
+  // Get payment QR code path
   getPaymentQR(paymentMethod) {
     const qrCodes = {
       khalti: '/images/WhatsApp Image 2026-01-06 at 17.24.10.jpeg',
       esewa: '/images/WhatsApp Image 2026-01-09 at 19.27.46.jpeg',
       bank: '/images/WhatsApp Image 2026-01-09 at 19.27.46.jpeg'
     };
+
     const method = paymentMethod.toLowerCase();
     if (method.includes('khalti')) return qrCodes.khalti;
     if (method.includes('esewa') || method.includes('bank')) return qrCodes.esewa;
+    
     return null;
   }
 
+  // Process user message and return response
   async processMessage(userId, message) {
     const lowerMessage = message.toLowerCase();
+    
+    // Get or create conversation state
     let state = this.conversationState.get(userId) || {
       step: 'initial',
       product: null,
@@ -155,6 +237,7 @@ class OrderAssistantService {
       price: null,
       paymentMethod: null
     };
+
     let response = {
       message: '',
       showPriceList: false,
@@ -163,10 +246,14 @@ class OrderAssistantService {
       showReceiptUpload: false,
       suggestions: []
     };
+
+    // Step 1: Detect product intent
     if (state.step === 'initial' || !state.product) {
       const productIntent = this.detectProductIntent(message);
+      
       if (productIntent) {
         const priceList = await this.formatPriceList(productIntent);
+        
         if (priceList) {
           state.product = productIntent;
           state.step = 'profile_selection';
@@ -180,7 +267,9 @@ class OrderAssistantService {
         response.message = "Hi! I'm here to help you purchase OTT subscriptions. Which product are you interested in? (Netflix, Prime Video, Disney+, Spotify, YouTube Premium)";
         response.suggestions = ['Netflix', 'Prime Video', 'Disney+'];
       }
-    } else if (state.step === 'profile_selection') {
+    }
+    // Step 2: Handle profile type selection
+    else if (state.step === 'profile_selection') {
       if (lowerMessage.includes('difference') || lowerMessage.includes('compare')) {
         response.message = this.explainProfileDifference(state.product);
         response.suggestions = ['Shared', 'Private'];
@@ -188,12 +277,17 @@ class OrderAssistantService {
         state.profileType = lowerMessage.includes('private') ? 'Private' : 'Shared';
         state.step = 'duration_selection';
         response.message = `Great! You've selected **${state.profileType} Profile**.\n\n**Which duration would you like?**`;
-        response.suggestions = state.profileType === 'Private' ? ['1.5 Months', '3 Months', '6 Months', '12 Months'] : ['1 Month', '3 Months', '6 Months'];
+        response.suggestions = state.profileType === 'Private' 
+          ? ['1.5 Months', '3 Months', '6 Months', '12 Months']
+          : ['1 Month', '3 Months', '6 Months'];
       } else {
         response.message = "Please select either **Shared** or **Private** profile.";
         response.suggestions = ['Shared', 'Private'];
       }
-    } else if (state.step === 'duration_selection') {
+    }
+    // Step 3: Handle duration selection
+    else if (state.step === 'duration_selection') {
+      // Validate Private profile 1 month restriction
       if (state.profileType === 'Private') {
         const validation = this.validatePrivateDuration(message);
         if (!validation.valid) {
@@ -203,13 +297,19 @@ class OrderAssistantService {
           return response;
         }
       }
+
+      // Extract duration
       const durationMatch = message.match(/(\d+\.?\d*)\s*(month|months|days)/i);
       if (durationMatch) {
         state.duration = durationMatch[0];
+        
+        // Get price
         const priceItem = await this.getPrice(state.product, state.profileType, state.duration);
+        
         if (priceItem) {
           state.price = priceItem.price;
           state.step = 'payment_method';
+          
           response.message = `✅ The price for **${state.duration} ${state.product} ${state.profileType} Profile** is **Rs ${state.price}**\n\n**Which payment method would you like to use?**\n• Khalti\n• eSewa to Bank Transfer\n• Bank Transfer`;
           response.suggestions = ['Khalti', 'eSewa to Bank Transfer', 'Bank Transfer'];
         } else {
@@ -218,9 +318,12 @@ class OrderAssistantService {
       } else {
         response.message = "Please specify a duration (e.g., 1 month, 3 months, 6 months).";
       }
-    } else if (state.step === 'payment_method') {
+    }
+    // Step 4: Handle payment method
+    else if (state.step === 'payment_method') {
       state.paymentMethod = message;
       const qrPath = this.getPaymentQR(message);
+      
       if (qrPath) {
         state.step = 'receipt_upload';
         response.message = `Please complete the payment and **upload the payment receipt below**.\n\n📎 **Upload Payment Receipt**\n*(Please upload a clear screenshot or photo of your payment receipt)*`;
@@ -232,18 +335,30 @@ class OrderAssistantService {
         response.suggestions = ['Khalti', 'eSewa to Bank Transfer', 'Bank Transfer'];
       }
     }
+
+    // Save state
     this.conversationState.set(userId, state);
+    
     return response;
   }
 
+  // Handle receipt upload and confirm order
   async confirmOrder(userId, receiptData) {
     const state = this.conversationState.get(userId);
+    
+    console.log('confirmOrder called with userId:', userId);
+    console.log('Current state:', state);
+    console.log('All conversation states:', Array.from(this.conversationState.keys()));
+    
     if (!state || state.step !== 'receipt_upload') {
+      console.log('State check failed:', { hasState: !!state, currentStep: state?.step });
       return {
         success: false,
         message: `Please complete the order process first. Current step: ${state?.step || 'no state found'}`
       };
     }
+
+    // Create order data
     const orderData = {
       product: state.product,
       profileType: state.profileType,
@@ -253,7 +368,10 @@ class OrderAssistantService {
       receipt: receiptData,
       status: 'pending'
     };
+
+    // Reset conversation state
     this.conversationState.delete(userId);
+
     return {
       success: true,
       message: `✅ **Payment received successfully!**\n\nYour ${state.product} order has been **confirmed**.\n\nOur team will deliver your subscription details shortly.\n\nThank you for choosing **Digital Dudes** ❤️`,
@@ -261,6 +379,7 @@ class OrderAssistantService {
     };
   }
 
+  // Clear conversation state
   clearState(userId) {
     this.conversationState.delete(userId);
   }

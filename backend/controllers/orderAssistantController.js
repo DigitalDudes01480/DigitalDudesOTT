@@ -1,13 +1,10 @@
 import orderAssistantService from '../services/orderAssistantService.js';
 import Order from '../models/Order.js';
-import Product from '../models/Product.js';
-import connectDB from '../config/database.js';
 import upload from '../middleware/upload.js';
 
 // Chat with order assistant
 export const chat = async (req, res) => {
   try {
-    await connectDB();
     const { message, conversationHistory } = req.body;
     const userId = req.user?._id?.toString() || req.sessionID || 'guest';
 
