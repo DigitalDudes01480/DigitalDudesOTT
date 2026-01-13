@@ -226,6 +226,7 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
     if (product) {
       console.log('Loading product for edit:', product);
       console.log('Product profile types:', product.profileTypes);
+      console.log('Detailed profile types:', JSON.stringify(product.profileTypes, null, 2));
       
       // Ensure all profile types have accountType and requiresOwnAccount fields
       const profileTypesWithDefaults = product.profileTypes?.map(profile => ({
