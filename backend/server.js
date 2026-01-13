@@ -205,51 +205,38 @@ app.use('/api/shared-profile', sharedProfileRoutes);
 
 app.use(errorHandler);
 
-if (!isVercel) {
-  const PORT = process.env.PORT || 5000;
-
-  // Start server immediately - don't wait for anything
-  const server = app.listen(PORT, () => {
-    console.log(`✅ Server running on port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  });
-
-  // Handle server errors
-  server.on('error', (error) => {
-    console.error('Server error:', error);
-    if (error.code === 'EADDRINUSE') {
-      console.error(`Port ${PORT} is already in use`);
-      process.exit(1);
-    }
-  });
-
-  // Set up background tasks after server starts
-  setTimeout(() => {
-    // Wrap in try-catch to prevent crashes
-    const safeCheckExpiredSubscriptions = async () => {
-      try {
-        await checkExpiredSubscriptions();
-      } catch (error) {
-        console.error('Error in checkExpiredSubscriptions:', error);
-      }
-    };
-
-    // Run once on startup (after delay)
-    safeCheckExpiredSubscriptions();
-
-    // Then run daily
-    setInterval(() => {
-      safeCheckExpiredSubscriptions();
-    }, 24 * 60 * 60 * 1000);
-  }, 5000); // Wait 5 seconds after server starts
-}
-
+// Always start server for Railway and other platforms
 const PORT = process.env.PORT || 5001;
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV}`);
+// Start server immediately - don't wait for anything
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+  console.log(`🚀 API ready at: http://localhost:${PORT}/api`);
+  console.log(`📱 Health check at: http://localhost:${PORT}/health`);
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  console.error('❌ Server error:', error);
+  if (error.code === 'EADDRINUSE') {
+    console.log(`⚠️  Port ${PORT} is already in use`);
+  }
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('🔄 SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('✅ Process terminated');
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('🔄 SIGINT received, shutting down gracefully');
+  server.close(() => {
+    console.log('✅ Process terminated');
+  });
 });
 
 export default app;
