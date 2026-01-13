@@ -233,11 +233,8 @@ export const updateProduct = async (req, res) => {
     // Clean up imageUrl field if it exists
     delete updateData.imageUrl;
 
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    // Use find + save instead of findByIdAndUpdate to ensure nested arrays update properly
+    const product = await Product.findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({
@@ -245,6 +242,18 @@ export const updateProduct = async (req, res) => {
         message: 'Product not found'
       });
     }
+
+    // Update all fields
+    Object.keys(updateData).forEach(key => {
+      product[key] = updateData[key];
+    });
+
+    console.log('Product before save:', JSON.stringify(product.profileTypes, null, 2));
+    
+    // Save to database
+    await product.save();
+    
+    console.log('Product after save:', JSON.stringify(product.profileTypes, null, 2));
 
     res.status(200).json({
       success: true,
