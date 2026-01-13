@@ -64,12 +64,17 @@ const ProductCard = ({ product, hideProfileTypes = false, hideDetails = false })
                 className={`text-xs px-2 py-1 rounded ${
                   profile.accountType === 'shared' 
                     ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800' 
+                    : profile.accountType === 'private'
+                    ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                 }`}
               >
                 {profile.name}
                 {profile.accountType === 'shared' && (
                   <span className="ml-1 text-blue-600 dark:text-blue-400">🔗</span>
+                )}
+                {profile.accountType === 'private' && (
+                  <span className="ml-1 text-purple-600 dark:text-purple-400">🔐</span>
                 )}
               </span>
             ))}

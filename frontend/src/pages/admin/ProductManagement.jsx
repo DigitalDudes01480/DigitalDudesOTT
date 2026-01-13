@@ -569,6 +569,21 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
                         <input
                           type="radio"
                           name={`account-type-${profileIndex}`}
+                          checked={profile.accountType === 'private'}
+                          onChange={() => updateProfileType(profileIndex, 'accountType', 'private')}
+                          className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                        />
+                        <span className="text-sm font-medium dark:text-gray-300">
+                          Private Profile
+                          {profile.accountType === 'private' && (
+                            <span className="ml-2 text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded">✓ Selected</span>
+                          )}
+                        </span>
+                      </label>
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name={`account-type-${profileIndex}`}
                           checked={profile.accountType === 'shared'}
                           onChange={() => updateProfileType(profileIndex, 'accountType', 'shared')}
                           className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
@@ -581,6 +596,11 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
                         </span>
                       </label>
                     </div>
+                    {profile.accountType === 'private' && (
+                      <div className="mt-2 p-2 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded text-xs text-purple-700 dark:text-purple-300">
+                        <strong>Private Profile:</strong> Customers will receive direct password access for this profile type.
+                      </div>
+                    )}
                     {profile.accountType === 'shared' && (
                       <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-700 dark:text-blue-300">
                         <strong>Shared Profile:</strong> Customers will receive access codes instead of passwords for this profile type.
