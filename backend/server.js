@@ -25,6 +25,8 @@ import tutorialRoutes from './routes/tutorialRoutes.js';
 import orderAssistantRoutes from './routes/orderAssistantRoutes.js';
 import couponRoutes from './routes/couponRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
+import testRoutes from './routes/testRoutes.js';
+import sharedProfileRoutes from './routes/sharedProfile.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -184,6 +186,8 @@ app.use('/api/tutorials', tutorialRoutes);
 app.use('/api/order-assistant', orderAssistantRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/test', testRoutes);
+app.use('/api/shared-profile', sharedProfileRoutes);
 
 app.use(errorHandler);
 

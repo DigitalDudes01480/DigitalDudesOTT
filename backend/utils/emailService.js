@@ -98,49 +98,78 @@ export const sendEmail = async (options) => {
     const recipientEmail = options.to || options.email;
     
     if (!recipientEmail) {
-      console.error('No recipient email provided');
+      console.error('❌ Email Error: No recipient email provided');
       return { success: false, error: 'No recipient email provided' };
     }
 
+    console.log(`📧 Sending email to: ${recipientEmail}, subject: ${options.subject}`);
+
+    // Check email configuration
+    const hasSES = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY;
+    const hasResend = process.env.RESEND_API_KEY;
+    const hasSMTP = process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASSWORD;
+
+    if (!hasSES && !hasResend && !hasSMTP) {
+      console.error('❌ Email Error: No email service configured (SES, Resend, or SMTP)');
+      return { success: false, error: 'No email service configured' };
+    }
+
+    let result = { success: false, error: 'No email service available' };
+
     // Try SES first (preferred if domain is verified in SES)
-    if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
-      const result = await sendViaSES({
+    if (hasSES) {
+      console.log('📧 Trying SES email service...');
+      result = await sendViaSES({
         to: recipientEmail,
         subject: options.subject,
         html: options.html
       });
-      if (!result.success) {
-        console.error('SES send error:', result.error);
+      if (result.success) {
+        console.log('✅ Email sent via SES');
+        return result;
       }
-      return result;
+      console.error('❌ SES send error:', result.error);
     }
 
     // Try Resend next
-    if (process.env.RESEND_API_KEY) {
-      const result = await sendViaResend({
+    if (hasResend) {
+      console.log('📧 Trying Resend email service...');
+      result = await sendViaResend({
         to: recipientEmail,
         subject: options.subject,
         html: options.html
       });
-      if (!result.success) {
-        console.error('Resend send error:', result.error);
+      if (result.success) {
+        console.log('✅ Email sent via Resend');
+        return result;
       }
-      return result;
+      console.error('❌ Resend send error:', result.error);
     }
 
     // Fallback to SMTP
-    const mailOptions = {
-      from: process.env.EMAIL_FROM,
-      to: recipientEmail,
-      subject: options.subject,
-      html: options.html
-    };
+    if (hasSMTP) {
+      console.log('📧 Trying SMTP email service...');
+      try {
+        const mailOptions = {
+          from: process.env.EMAIL_FROM,
+          to: recipientEmail,
+          subject: options.subject,
+          html: options.html
+        };
 
-    const transporter = createSmtpTransporter();
-    await transporter.sendMail(mailOptions);
-    return { success: true };
+        const transporter = createSmtpTransporter();
+        await transporter.sendMail(mailOptions);
+        console.log('✅ Email sent via SMTP');
+        return { success: true };
+      } catch (smtpError) {
+        console.error('❌ SMTP send error:', smtpError.message);
+        return { success: false, error: smtpError.message };
+      }
+    }
+
+    return result;
   } catch (error) {
-    console.error('Email send error:', error);
+    console.error('❌ Email send error:', error);
     return { success: false, error: error.message };
   }
 };
@@ -167,7 +196,7 @@ export const sendOrderConfirmation = async (user, order) => {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="text-align: center; margin-bottom: 24px;">
-        <img src="https://frontend-virid-nu-28.vercel.app/images/Untitled%20design-5.png" alt="Digital Dudes" style="max-width: 200px; height: auto;" />
+        <img src="https://digitaldudesott.shop/images/Untitled%20design-5.png" alt="Digital Dudes" style="max-width: 200px; height: auto;" />
       </div>
       <h2 style="color: #4F46E5;">Order Confirmation - Digital Dudes</h2>
       <p>Hi ${user.name},</p>
@@ -243,30 +272,79 @@ export const sendOrderStatusUpdate = async (user, order, previousStatus) => {
 };
 
 export const sendSubscriptionDelivery = async (user, subscription, deliveryDetails) => {
+  const isSharedProfile = subscription.credentials?.isSharedProfile || deliveryDetails.credentials?.isSharedProfile;
+  
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #4F46E5;">Your Subscription is Ready!</h2>
       <p>Hi ${user.name},</p>
       <p>Your ${subscription.ottType} subscription has been activated!</p>
-      ${deliveryDetails.credentials ? `
-        <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-          <h3>Login Credentials:</h3>
-          <p><strong>Email:</strong> ${deliveryDetails.credentials.email}</p>
-          <p><strong>Password:</strong> ${deliveryDetails.credentials.password}</p>
+      
+      ${isSharedProfile ? `
+        <div style="background: #fef3c7; border: 2px solid #f59e0b; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #92400e; margin: 0 0 10px 0;">🔗 Shared Profile Access</h3>
+          <p style="color: #92400e; margin: 0;">This is a shared profile subscription. You'll receive an access code separately.</p>
         </div>
-      ` : ''}
-      ${deliveryDetails.activationKey ? `
+        
+        ${deliveryDetails.credentials?.accessCode ? `
+          <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+            <h3 style="margin: 0 0 10px 0;">Your Access Code:</h3>
+            <div style="font-size: 24px; font-weight: bold; color: #4F46E5; letter-spacing: 2px; background: white; padding: 15px; border-radius: 4px; border: 2px solid #4F46E5;">
+              ${deliveryDetails.credentials.accessCode}
+            </div>
+            <p style="margin: 10px 0 0 0; font-size: 14px; color: #6b7280;">Keep this code secure and do not share it</p>
+          </div>
+        ` : `
+          <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3>Access Code Information:</h3>
+            <p>Your access code will be sent separately. Please check your email or contact support if you don't receive it within 24 hours.</p>
+            <p>You can also request a new access code from your dashboard.</p>
+          </div>
+        `}
+        
+        ${deliveryDetails.credentials?.email ? `
+          <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3>Profile Information:</h3>
+            <p><strong>Email:</strong> ${deliveryDetails.credentials.email}</p>
+            ${deliveryDetails.credentials.profile ? `<p><strong>Profile:</strong> ${deliveryDetails.credentials.profile}</p>` : ''}
+            ${deliveryDetails.credentials.profilePin ? `<p><strong>Profile PIN:</strong> ${deliveryDetails.credentials.profilePin}</p>` : ''}
+          </div>
+        ` : ''}
+      ` : `
+        ${deliveryDetails.credentials ? `
+          <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3>Login Credentials:</h3>
+            <p><strong>Email:</strong> ${deliveryDetails.credentials.email}</p>
+            <p><strong>Password:</strong> ${deliveryDetails.credentials.password}</p>
+          </div>
+        ` : ''}
+      `}
+      
+      ${deliveryDetails.activationKey && !isSharedProfile ? `
         <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
           <h3>Activation Key:</h3>
           <p><strong>${deliveryDetails.activationKey}</strong></p>
         </div>
       ` : ''}
+      
       ${deliveryDetails.instructions ? `
         <div style="margin: 20px 0;">
           <h3>Instructions:</h3>
           <p>${deliveryDetails.instructions}</p>
         </div>
       ` : ''}
+      
+      ${isSharedProfile ? `
+        <div style="background: #eff6ff; border: 1px solid #3b82f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h4 style="color: #1e40af; margin: 0 0 10px 0;">📱 How to Use Your Shared Profile:</h4>
+          <ol style="color: #1e40af; margin: 0; padding-left: 20px;">
+            <li>Use the access code to unlock your shared profile credentials</li>
+            <li>Keep your access code secure</li>
+            <li>Request new codes from your dashboard when needed</li>
+          </ol>
+        </div>
+      ` : ''}
+      
       <p>Subscription valid until: <strong>${new Date(subscription.expiryDate).toLocaleDateString()}</strong></p>
       <p>Best regards,<br>Digital Dudes Team</p>
     </div>
@@ -306,7 +384,7 @@ export const emailTemplates = {
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="text-align: center; margin-bottom: 24px;">
-          <img src="https://frontend-virid-nu-28.vercel.app/images/Untitled%20design-5.png" alt="Digital Dudes" style="max-width: 200px; height: auto;" />
+          <img src="https://digitaldudesott.shop/images/Untitled%20design-5.png" alt="Digital Dudes" style="max-width: 200px; height: auto;" />
         </div>
         <h2 style="color: #EF4444;">Subscription Expiring Soon</h2>
         <p>Hi ${user.name},</p>
@@ -324,7 +402,7 @@ export const emailTemplates = {
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="text-align: center; margin-bottom: 24px;">
-          <img src="https://frontend-virid-nu-28.vercel.app/images/Untitled%20design-5.png" alt="Digital Dudes" style="max-width: 200px; height: auto;" />
+          <img src="https://digitaldudesott.shop/images/Untitled%20design-5.png" alt="Digital Dudes" style="max-width: 200px; height: auto;" />
         </div>
         <h2 style="color: #4F46E5;">Welcome to Digital Dudes!</h2>
         <p>Hi ${user.name},</p>

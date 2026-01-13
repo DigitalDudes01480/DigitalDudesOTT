@@ -215,8 +215,32 @@ export const createOrder = async (req, res, next) => {
 
     await order.populate('user', 'name email');
 
-    sendOrderConfirmation(order.user, order).then(() => {}).catch(() => {});
-    sendAdminNewOrderNotification(process.env.ADMIN_EMAIL, order).then(() => {}).catch(() => {});
+    // Send emails with proper error handling
+    try {
+      const confirmationResult = await sendOrderConfirmation(order.user, order);
+      if (confirmationResult.success) {
+        console.log('✅ Order confirmation email sent to:', order.user.email);
+      } else {
+        console.error('❌ Failed to send order confirmation email:', confirmationResult.error);
+      }
+    } catch (emailError) {
+      console.error('❌ Order confirmation email error:', emailError);
+    }
+
+    try {
+      if (process.env.ADMIN_EMAIL) {
+        const adminResult = await sendAdminNewOrderNotification(process.env.ADMIN_EMAIL, order);
+        if (adminResult.success) {
+          console.log('✅ Admin notification email sent to:', process.env.ADMIN_EMAIL);
+        } else {
+          console.error('❌ Failed to send admin notification email:', adminResult.error);
+        }
+      } else {
+        console.log('⚠️ No ADMIN_EMAIL configured, skipping admin notification');
+      }
+    } catch (adminEmailError) {
+      console.error('❌ Admin notification email error:', adminEmailError);
+    }
 
     res.status(201).json({
       success: true,
@@ -349,7 +373,16 @@ export const updateOrderStatus = async (req, res) => {
     await order.save();
 
     if (orderStatus && previousStatus !== order.orderStatus) {
-      sendOrderStatusUpdate(order.user, order, previousStatus).then(() => {}).catch(() => {});
+      try {
+        const statusResult = await sendOrderStatusUpdate(order.user, order, previousStatus);
+        if (statusResult.success) {
+          console.log('✅ Order status update email sent to:', order.user.email);
+        } else {
+          console.error('❌ Failed to send order status update email:', statusResult.error);
+        }
+      } catch (statusEmailError) {
+        console.error('❌ Order status update email error:', statusEmailError);
+      }
     }
 
     res.status(200).json({
@@ -398,21 +431,38 @@ export const deliverOrder = async (req, res) => {
     // Update existing subscriptions with new credentials if already delivered
     if (isAlreadyDelivered) {
       const Subscription = (await import('../models/Subscription.js')).default;
-      await Subscription.updateMany(
-        { order: order._id },
-        {
-          $set: {
-            'credentials.email': credentials?.email || '',
-            'credentials.password': credentials?.password || '',
-            'credentials.profile': credentials?.profile || '',
-            'credentials.profilePin': credentials?.profilePin || '',
-            'credentials.additionalNote': credentials?.additionalNote || '',
-            activationKey: activationKey || ''
+      
+      // Get all subscriptions for this order to check profile types
+      const existingSubs = await Subscription.find({ order: order._id }).populate('product');
+      
+      for (const subscription of existingSubs) {
+        // Find the corresponding order item
+        const matchingItem = order.orderItems.find(item => {
+          const itemProductId = item.product?._id ? item.product._id.toString() : item.product?.toString();
+          return itemProductId && itemProductId === subscription.product.toString() && item.ottType === subscription.ottType;
+        });
+        
+        // Check if this is a shared profile type
+        const profileType = matchingItem?.product?.profileTypes?.find(pt => pt.name === matchingItem?.selectedProfile);
+        const isSharedProfile = profileType?.accountType === 'shared';
+        
+        await Subscription.updateOne(
+          { _id: subscription._id },
+          {
+            $set: {
+              'credentials.email': credentials?.email || '',
+              'credentials.password': isSharedProfile ? undefined : (credentials?.password || ''),
+              'credentials.profile': credentials?.profile || '',
+              'credentials.profilePin': credentials?.profilePin || '',
+              'credentials.additionalNote': credentials?.additionalNote || '',
+              'credentials.isSharedProfile': isSharedProfile,
+              'credentials.accessCode': isSharedProfile ? null : undefined,
+              activationKey: activationKey || ''
+            }
           }
-        }
-      );
+        );
+      }
 
-      const existingSubs = await Subscription.find({ order: order._id });
       for (const subscription of existingSubs) {
         const matchingItem = order.orderItems.find((item) => {
           const itemProductId = item.product?._id ? item.product._id.toString() : item.product?.toString();
@@ -421,7 +471,16 @@ export const deliverOrder = async (req, res) => {
 
         const recipientEmail = matchingItem?.customerEmail || order.user.email;
         const recipientUser = { name: order.user.name, email: recipientEmail };
-        sendSubscriptionDelivery(recipientUser, subscription, order.deliveryDetails).then(() => {}).catch(() => {});
+        try {
+          const deliveryResult = await sendSubscriptionDelivery(recipientUser, subscription, order.deliveryDetails);
+          if (deliveryResult.success) {
+            console.log('✅ Subscription delivery email sent to:', recipientEmail);
+          } else {
+            console.error('❌ Failed to send subscription delivery email:', deliveryResult.error);
+          }
+        } catch (deliveryEmailError) {
+          console.error('❌ Subscription delivery email error:', deliveryEmailError);
+        }
       }
     }
 
@@ -443,6 +502,10 @@ export const deliverOrder = async (req, res) => {
         expiryDate = addDays(expiryDate, durationValue * 30);
       }
 
+      // Check if this is a shared profile type
+      const profileType = item.product.profileTypes?.find(pt => pt.name === item.selectedProfile);
+      const isSharedProfile = profileType?.accountType === 'shared';
+
       const subscription = await Subscription.create({
         user: order.user._id,
         order: order._id,
@@ -454,17 +517,28 @@ export const deliverOrder = async (req, res) => {
         status: 'active',
         credentials: {
           email: credentials?.email || '',
-          password: credentials?.password || '',
+          password: isSharedProfile ? undefined : (credentials?.password || ''),
           profile: credentials?.profile || '',
           profilePin: credentials?.profilePin || '',
-          additionalNote: credentials?.additionalNote || ''
+          additionalNote: credentials?.additionalNote || '',
+          isSharedProfile,
+          accessCode: isSharedProfile ? null : undefined
         },
         activationKey
       });
 
       const recipientEmail = item.customerEmail || order.user.email;
       const recipientUser = { name: order.user.name, email: recipientEmail };
-      sendSubscriptionDelivery(recipientUser, subscription, order.deliveryDetails).then(() => {}).catch(() => {});
+      try {
+        const deliveryResult = await sendSubscriptionDelivery(recipientUser, subscription, order.deliveryDetails);
+        if (deliveryResult.success) {
+          console.log('✅ Subscription delivery email sent to:', recipientEmail);
+        } else {
+          console.error('❌ Failed to send subscription delivery email:', deliveryResult.error);
+        }
+      } catch (deliveryEmailError) {
+        console.error('❌ Subscription delivery email error:', deliveryEmailError);
+      }
       }
     }
 
@@ -508,7 +582,16 @@ export const updatePaymentStatus = async (req, res) => {
     await order.save();
 
     if (previousStatus !== order.orderStatus) {
-      sendOrderStatusUpdate(order.user, order, previousStatus).then(() => {}).catch(() => {});
+      try {
+        const statusResult = await sendOrderStatusUpdate(order.user, order, previousStatus);
+        if (statusResult.success) {
+          console.log('✅ Payment status update email sent to:', order.user.email);
+        } else {
+          console.error('❌ Failed to send payment status update email:', statusResult.error);
+        }
+      } catch (statusEmailError) {
+        console.error('❌ Payment status update email error:', statusEmailError);
+      }
     }
 
     res.status(200).json({

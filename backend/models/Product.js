@@ -38,6 +38,11 @@ const profileTypeSchema = new mongoose.Schema({
     enum: ['SD', 'HD', 'FHD', '4K', 'UHD'],
     default: 'HD'
   },
+  accountType: {
+    type: String,
+    enum: ['own', 'shared'],
+    default: 'own'
+  },
   requiresOwnAccount: {
     type: Boolean,
     default: false

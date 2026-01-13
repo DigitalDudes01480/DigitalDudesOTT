@@ -42,7 +42,12 @@ const subscriptionSchema = new mongoose.Schema({
     password: String,
     profile: String,
     profilePin: String,
-    additionalNote: String
+    additionalNote: String,
+    accessCode: String,
+    isSharedProfile: {
+      type: Boolean,
+      default: false
+    }
   },
   activationKey: String,
   autoRenew: {
@@ -50,7 +55,25 @@ const subscriptionSchema = new mongoose.Schema({
     default: false
   },
   renewalDate: Date,
-  notes: String
+  notes: String,
+  sharedProfileRequests: [{
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    requestDate: {
+      type: Date,
+      default: Date.now
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    },
+    code: String,
+    approvedDate: Date,
+    expiresAt: Date
+  }]
 }, {
   timestamps: true
 });
