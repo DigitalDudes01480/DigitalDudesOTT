@@ -47,6 +47,10 @@ const subscriptionSchema = new mongoose.Schema({
     isSharedProfile: {
       type: Boolean,
       default: false
+    },
+    isPrivateProfile: {
+      type: Boolean,
+      default: false
     }
   },
   activationKey: String,

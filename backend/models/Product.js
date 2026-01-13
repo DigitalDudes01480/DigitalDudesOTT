@@ -40,7 +40,7 @@ const profileTypeSchema = new mongoose.Schema({
   },
   accountType: {
     type: String,
-    enum: ['own', 'shared'],
+    enum: ['own', 'shared', 'private'],
     default: 'own'
   },
   requiresOwnAccount: {

@@ -442,9 +442,10 @@ export const deliverOrder = async (req, res) => {
           return itemProductId && itemProductId === subscription.product.toString() && item.ottType === subscription.ottType;
         });
         
-        // Check if this is a shared profile type
+        // Check if this is a shared or private profile type
         const profileType = matchingItem?.product?.profileTypes?.find(pt => pt.name === matchingItem?.selectedProfile);
         const isSharedProfile = profileType?.accountType === 'shared';
+        const isPrivateProfile = profileType?.accountType === 'private';
         
         await Subscription.updateOne(
           { _id: subscription._id },
@@ -456,6 +457,7 @@ export const deliverOrder = async (req, res) => {
               'credentials.profilePin': credentials?.profilePin || '',
               'credentials.additionalNote': credentials?.additionalNote || '',
               'credentials.isSharedProfile': isSharedProfile,
+              'credentials.isPrivateProfile': isPrivateProfile,
               'credentials.accessCode': isSharedProfile ? null : undefined,
               activationKey: activationKey || ''
             }
@@ -502,9 +504,10 @@ export const deliverOrder = async (req, res) => {
         expiryDate = addDays(expiryDate, durationValue * 30);
       }
 
-      // Check if this is a shared profile type
+      // Check if this is a shared or private profile type
       const profileType = item.product.profileTypes?.find(pt => pt.name === item.selectedProfile);
       const isSharedProfile = profileType?.accountType === 'shared';
+      const isPrivateProfile = profileType?.accountType === 'private';
 
       const subscription = await Subscription.create({
         user: order.user._id,
@@ -522,6 +525,7 @@ export const deliverOrder = async (req, res) => {
           profilePin: credentials?.profilePin || '',
           additionalNote: credentials?.additionalNote || '',
           isSharedProfile,
+          isPrivateProfile,
           accessCode: isSharedProfile ? null : undefined
         },
         activationKey

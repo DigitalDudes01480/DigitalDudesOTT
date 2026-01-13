@@ -273,6 +273,7 @@ export const sendOrderStatusUpdate = async (user, order, previousStatus) => {
 
 export const sendSubscriptionDelivery = async (user, subscription, deliveryDetails) => {
   const isSharedProfile = subscription.credentials?.isSharedProfile || deliveryDetails.credentials?.isSharedProfile;
+  const isPrivateProfile = subscription.credentials?.isPrivateProfile || deliveryDetails.credentials?.isPrivateProfile;
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -310,12 +311,44 @@ export const sendSubscriptionDelivery = async (user, subscription, deliveryDetai
             ${deliveryDetails.credentials.profilePin ? `<p><strong>Profile PIN:</strong> ${deliveryDetails.credentials.profilePin}</p>` : ''}
           </div>
         ` : ''}
+      ` : isPrivateProfile ? `
+        <div style="background: #f3e8ff; border: 2px solid #8b5cf6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #6b21a8; margin: 0 0 10px 0;">🔐 Private Profile Access</h3>
+          <p style="color: #6b21a8; margin: 0;">This is a private profile subscription with direct password access.</p>
+        </div>
+        
+        ${deliveryDetails.credentials?.accessCode ? `
+          <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+            <h3 style="margin: 0 0 10px 0;">Your Access Code:</h3>
+            <div style="font-size: 24px; font-weight: bold; color: #4F46E5; letter-spacing: 2px; background: white; padding: 15px; border-radius: 4px; border: 2px solid #4F46E5;">
+              ${deliveryDetails.credentials.accessCode}
+            </div>
+            <p style="margin: 10px 0 0 0; font-size: 14px; color: #6b7280;">Keep this code secure and do not share it</p>
+          </div>
+        ` : `
+          <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3>Access Code Information:</h3>
+            <p>Your access code will be sent separately. Please check your email or contact support if you don't receive it within 24 hours.</p>
+            <p>You can also request a new access code from your dashboard.</p>
+          </div>
+        `}
+        
+        ${deliveryDetails.credentials?.email ? `
+          <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3>Profile Information:</h3>
+            <p><strong>Email:</strong> ${deliveryDetails.credentials.email}</p>
+            ${deliveryDetails.credentials.profile ? `<p><strong>Profile:</strong> ${deliveryDetails.credentials.profile}</p>` : ''}
+            ${deliveryDetails.credentials.profilePin ? `<p><strong>Profile PIN:</strong> ${deliveryDetails.credentials.profilePin}</p>` : ''}
+          </div>
+        ` : ''}
       ` : `
         ${deliveryDetails.credentials ? `
           <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <h3>Login Credentials:</h3>
             <p><strong>Email:</strong> ${deliveryDetails.credentials.email}</p>
-            <p><strong>Password:</strong> ${deliveryDetails.credentials.password}</p>
+            ${deliveryDetails.credentials.password ? `<p><strong>Password:</strong> ${deliveryDetails.credentials.password}</p>` : ''}
+            ${deliveryDetails.credentials.profile ? `<p><strong>Profile:</strong> ${deliveryDetails.credentials.profile}</p>` : ''}
+            ${deliveryDetails.credentials.profilePin ? `<p><strong>Profile PIN:</strong> ${deliveryDetails.credentials.profilePin}</p>` : ''}
           </div>
         ` : ''}
       `}
@@ -341,6 +374,15 @@ export const sendSubscriptionDelivery = async (user, subscription, deliveryDetai
             <li>Use the access code to unlock your shared profile credentials</li>
             <li>Keep your access code secure</li>
             <li>Request new codes from your dashboard when needed</li>
+          </ol>
+        </div>
+      ` : isPrivateProfile ? `
+        <div style="background: #f3e8ff; border: 1px solid #8b5cf6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h4 style="color: #6b21a8; margin: 0 0 10px 0;">🔐 How to Use Your Private Profile:</h4>
+          <ol style="color: #6b21a8; margin: 0; padding-left: 20px;">
+            <li>Use the provided credentials to access your private profile</li>
+            <li>Keep your login details secure</li>
+            <li>Enjoy unrestricted access to your profile</li>
           </ol>
         </div>
       ` : ''}
