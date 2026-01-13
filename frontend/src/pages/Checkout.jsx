@@ -20,7 +20,8 @@ const CheckoutForm = () => {
   const [discount, setDiscount] = useState(0);
   const [itemEmails, setItemEmails] = useState({});
 
-  const total = getTotal();
+  const subtotal = getTotal();
+  const total = subtotal - discount;
 
   // Get items that require own account email
   const ownAccountItems = items.filter(item => 
