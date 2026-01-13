@@ -56,6 +56,7 @@ function App() {
           <Route path="subscriptions" element={<SubscriptionManagement />} />
           <Route path="transactions" element={<TransactionManagement />} />
           <Route path="customers" element={<CustomerManagement />} />
+          <Route path="coupons" element={<CouponManagement />} />
           <Route path="tickets" element={<TicketManagement />} />
           <Route path="faqs" element={<FAQManagement />} />
           <Route path="tutorials" element={<TutorialManagement />} />
