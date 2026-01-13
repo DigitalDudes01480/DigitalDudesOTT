@@ -153,7 +153,8 @@ export const updateProduct = async (req, res) => {
       updateData.profileTypes = updateData.profileTypes.map(profile => ({
         ...profile,
         requiresOwnAccount: profile.requiresOwnAccount === true || profile.requiresOwnAccount === 'true',
-        accountType: profile.accountType || 'own'
+        // Preserve accountType exactly as sent, don't apply default
+        accountType: profile.accountType
       }));
     }
     

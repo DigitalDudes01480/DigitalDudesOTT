@@ -228,14 +228,15 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
       console.log('Product profile types:', product.profileTypes);
       console.log('Detailed profile types:', JSON.stringify(product.profileTypes, null, 2));
       
-      // Ensure all profile types have accountType and requiresOwnAccount fields
+      // Preserve all profile type fields exactly as they are in the database
       const profileTypesWithDefaults = product.profileTypes?.map(profile => ({
         ...profile,
-        accountType: profile.accountType || 'own',
+        // Only set defaults if the field is actually undefined/null, not for empty strings
+        accountType: profile.accountType !== undefined && profile.accountType !== null ? profile.accountType : 'own',
         requiresOwnAccount: profile.requiresOwnAccount ?? false
       })) || [];
 
-      console.log('Profile types with defaults:', profileTypesWithDefaults);
+      console.log('Profile types loaded:', profileTypesWithDefaults);
 
       const newFormData = {
         ...product,
@@ -335,6 +336,10 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
     setLoading(true);
 
     try {
+      console.log('=== SUBMITTING PRODUCT ===');
+      console.log('Form data profileTypes:', formData.profileTypes);
+      console.log('ProfileTypes JSON:', JSON.stringify(formData.profileTypes, null, 2));
+      
       const submitData = new FormData();
       
       // Add all form fields
