@@ -9,15 +9,10 @@ const connectDB = async () => {
   const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
 
   if (!process.env.MONGODB_URI) {
-    const err = new Error('MONGODB_URI is not set');
-    console.error(err.message);
-    if (!isVercel) process.exit(1);
-    throw err;
+    throw new Error('MONGODB_URI is not defined');
   }
 
-  // Return existing connection if available
   if (cached.conn) {
-    console.log('Using cached database connection');
     return cached.conn;
   }
 
