@@ -108,13 +108,16 @@ const Shop = () => {
   const uncategorizedProducts = filteredProducts.filter(p => !p.category);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-4 sm:py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 py-4 sm:py-8">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="mb-4 sm:mb-8">
-          <h1 className="text-xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4 dark:text-white">
+        <div className="mb-4 sm:mb-8 text-center sm:text-left">
+          <div className="inline-block mb-3 px-4 py-2 bg-gradient-to-r from-primary-100 to-secondary-100 dark:from-primary-900/30 dark:to-secondary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs sm:text-sm font-semibold animate-fade-in">
+            🎬 Premium Streaming Services
+          </div>
+          <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mb-2 sm:mb-4 bg-gradient-to-r from-primary-600 via-secondary-600 to-primary-600 text-transparent bg-clip-text animate-slide-up">
             Browse OTT Subscriptions
           </h1>
-          <p className="text-xs sm:text-base text-gray-600 dark:text-gray-400">
+          <p className="text-xs sm:text-base md:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto sm:mx-0">
             Find the perfect subscription plan for your entertainment needs
           </p>
         </div>
@@ -123,20 +126,22 @@ const Shop = () => {
           <div className="lg:col-span-1">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="lg:hidden w-full btn-primary mb-3 py-2.5 text-sm flex items-center justify-center"
+              className="lg:hidden w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 mb-3 flex items-center justify-center"
             >
               <Filter className="w-4 h-4 mr-2" />
               {showFilters ? 'Hide Filters' : 'Show Filters'}
             </button>
-            <div className={`card p-4 sm:p-6 sticky top-20 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+            <div className={`card p-4 sm:p-6 sticky top-20 border-2 border-primary-100 dark:border-primary-900/30 ${showFilters ? 'block animate-slide-down' : 'hidden lg:block'}`}>
               <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <h2 className="text-base sm:text-xl font-bold dark:text-white flex items-center">
-                  <Filter className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center mr-2 sm:mr-3 shadow-lg">
+                    <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
                   Filters
                 </h2>
                 <button
                   onClick={clearFilters}
-                  className="text-sm text-primary-600 hover:text-primary-700"
+                  className="text-sm font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 px-3 py-1.5 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all"
                 >
                   Clear All
                 </button>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Check, Clock, Monitor } from 'lucide-react';
+import { ShoppingCart, Check, Clock, Monitor, Star, Shield, Zap } from 'lucide-react';
 import { productAPI } from '../utils/api';
 import { formatCurrency } from '../utils/formatters';
 import useCartStore from '../store/useCartStore';
@@ -130,7 +130,7 @@ const ProductDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center py-20">
         <LoadingSpinner size="lg" />
       </div>
     );

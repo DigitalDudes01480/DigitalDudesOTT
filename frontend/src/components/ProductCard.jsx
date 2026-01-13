@@ -21,8 +21,11 @@ const ProductCard = ({ product, hideProfileTypes = false, hideDetails = false })
 
   return (
     <Link to={`/product/${product._id}`} className="group h-full">
-      <div className={`card hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col ${isApp ? 'p-3' : 'md:p-6'}`}>
-        <div className={`relative overflow-hidden rounded-lg ${isApp ? 'mb-2' : 'mb-2 md:mb-4'}`}>
+      <div className={`card hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.02] h-full flex flex-col relative overflow-hidden ${isApp ? 'p-3' : 'md:p-6'}`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-500/0 via-primary-500/0 to-primary-500/0 group-hover:from-primary-500/5 group-hover:via-transparent group-hover:to-secondary-500/5 transition-all duration-500 pointer-events-none"></div>
+        <div className="relative z-10 flex flex-col h-full">
+        <div className={`relative overflow-hidden rounded-xl ${isApp ? 'mb-2' : 'mb-2 md:mb-4'} shadow-lg group-hover:shadow-2xl transition-shadow duration-500`}>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
           <img
             src={
               product.imageData?.data 
@@ -32,14 +35,17 @@ const ProductCard = ({ product, hideProfileTypes = false, hideDetails = false })
                   : (product.image || 'https://via.placeholder.com/400x250')
             }
             alt={product.name}
-            className={`w-full object-cover group-hover:scale-110 transition-transform duration-300 ${isApp ? 'h-24' : 'h-32 md:h-64'}`}
+            className={`w-full object-cover group-hover:scale-110 transition-transform duration-700 ${isApp ? 'h-24' : 'h-32 md:h-64'}`}
           />
-          <div className={`absolute top-2 left-2 bg-primary-600 text-white rounded-lg font-semibold ${isApp ? 'px-2 py-0.5 text-[10px]' : 'px-2 py-0.5 text-[10px] md:px-3 md:py-1 md:text-xs'}`}>
+          <div className={`absolute top-2 left-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg font-bold shadow-lg backdrop-blur-sm z-20 ${isApp ? 'px-2 py-0.5 text-[10px]' : 'px-2 py-0.5 text-[10px] md:px-3 md:py-1 md:text-xs'}`}>
             {product.ottType}
+          </div>
+          <div className="absolute bottom-2 right-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm text-primary-600 dark:text-primary-400 rounded-lg font-bold px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20">
+            View Details
           </div>
         </div>
 
-        <h3 className={`font-bold text-gray-900 dark:text-white group-hover:text-primary-600 transition ${isApp ? 'text-sm mb-1' : 'text-sm mb-1 md:text-lg md:mb-2'}`}>
+        <h3 className={`font-bold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-300 ${isApp ? 'text-sm mb-1' : 'text-sm mb-1 md:text-lg md:mb-2'}`}>
           {product.name}
         </h3>
 
@@ -85,11 +91,12 @@ const ProductCard = ({ product, hideProfileTypes = false, hideDetails = false })
 
           <Link
             to={`/product/${product._id}`}
-            className={`bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors duration-200 flex items-center justify-center ${isApp ? 'w-9 h-9' : 'w-9 h-9 md:w-10 md:h-10'}`}
+            className={`bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-110 active:scale-95 ${isApp ? 'w-9 h-9' : 'w-9 h-9 md:w-10 md:h-10'}`}
             onClick={(e) => e.stopPropagation()}
           >
             <ShoppingCart className={isApp ? 'w-4 h-4' : 'w-4 h-4 md:w-5 md:h-5'} />
           </Link>
+        </div>
         </div>
       </div>
     </Link>
