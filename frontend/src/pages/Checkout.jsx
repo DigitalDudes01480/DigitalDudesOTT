@@ -14,6 +14,10 @@ const CheckoutForm = () => {
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('khalti');
   const [receiptFile, setReceiptFile] = useState(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [discount, setDiscount] = useState(0);
   const [itemEmails, setItemEmails] = useState({});
 
   const total = getTotal();
@@ -74,6 +78,11 @@ const CheckoutForm = () => {
       formData.append('orderItems', JSON.stringify(orderItems));
       formData.append('paymentMethod', paymentMethod);
       formData.append('totalAmount', total);
+      formData.append('originalAmount', subtotal);
+      if (appliedCoupon) {
+        formData.append('couponCode', appliedCoupon.code);
+        formData.append('couponDiscount', discount);
+      }
       formData.append('receipt', receiptFile);
 
       const response = await orderAPI.create(formData);
