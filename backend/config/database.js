@@ -45,6 +45,19 @@ const connectDB = async () => {
     
     console.log(`✅ MongoDB Connected: ${cached.conn.connection.host}`);
     
+    // Add connection event handlers
+    mongoose.connection.on('error', (err) => {
+      console.error('MongoDB connection error:', err);
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      console.warn('MongoDB disconnected. Attempting to reconnect...');
+    });
+    
+    mongoose.connection.on('reconnected', () => {
+      console.log('MongoDB reconnected');
+    });
+    
     return cached.conn;
   } catch (e) {
     console.error('❌ MongoDB connection failed:', {

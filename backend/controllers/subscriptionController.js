@@ -214,42 +214,61 @@ export const checkExpiredSubscriptions = async () => {
     const expiredSubscriptions = await Subscription.find({
       expiryDate: { $lt: now },
       status: 'active'
-    }).populate('user');
+    }).populate('user').catch(err => {
+      console.error('Error finding expired subscriptions:', err);
+      return [];
+    });
 
     for (const subscription of expiredSubscriptions) {
-      subscription.status = 'expired';
-      await subscription.save();
+      try {
+        subscription.status = 'expired';
+        await subscription.save();
+      } catch (saveError) {
+        console.error(`Failed to update subscription ${subscription._id}:`, saveError);
+      }
     }
 
     // Find subscriptions expiring in 3 days
     const expiringSubscriptions = await Subscription.find({
       expiryDate: { $gte: now, $lte: threeDaysFromNow },
       status: 'active'
-    }).populate('user');
+    }).populate('user').catch(err => {
+      console.error('Error finding expiring subscriptions:', err);
+      return [];
+    });
 
     // Send expiry warning emails
     for (const subscription of expiringSubscriptions) {
       try {
-        if (subscription.user && subscription.user.email) {
-          const daysRemaining = Math.ceil((new Date(subscription.expiryDate) - now) / (1000 * 60 * 60 * 24));
-          const emailData = emailTemplates.subscriptionExpiring({
-            ...subscription.toObject(),
-            daysRemaining
-          }, subscription.user);
-          
-          await sendEmail({
-            to: subscription.user.email,
-            subject: emailData.subject,
-            html: emailData.html
-          });
+        if (!subscription) continue;
+        if (!subscription.user) {
+          console.warn(`Subscription ${subscription._id} has no user`);
+          continue;
         }
+        if (!subscription.user.email) {
+          console.warn(`User ${subscription.user._id} has no email`);
+          continue;
+        }
+        
+        const daysRemaining = Math.ceil((new Date(subscription.expiryDate) - now) / (1000 * 60 * 60 * 24));
+        const emailData = emailTemplates.subscriptionExpiring({
+          ...subscription.toObject(),
+          daysRemaining
+        }, subscription.user);
+        
+        await sendEmail({
+          to: subscription.user.email,
+          subject: emailData.subject,
+          html: emailData.html
+        });
       } catch (emailError) {
-        console.error(`Failed to send expiry email for subscription ${subscription._id}:`, emailError);
+        console.error(`Failed to send expiry email for subscription ${subscription?._id}:`, emailError);
       }
     }
 
     console.log(`Checked subscriptions: ${expiredSubscriptions.length} expired, ${expiringSubscriptions.length} expiring soon`);
   } catch (error) {
     console.error('Error checking expired subscriptions:', error);
+    // Don't throw - let the function complete gracefully
   }
 };

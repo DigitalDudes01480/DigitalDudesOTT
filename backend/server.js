@@ -33,6 +33,18 @@ dotenv.config();
 
 const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
 
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit in production, just log
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  // Don't exit in production, just log
+});
+
 const app = express();
 
 // Connect to database at startup and ensure connection before handling requests
@@ -175,15 +187,25 @@ app.use('/api/analytics', analyticsRoutes);
 app.use(errorHandler);
 
 if (!isVercel) {
+  // Wrap in try-catch to prevent crashes
+  const safeCheckExpiredSubscriptions = async () => {
+    try {
+      await checkExpiredSubscriptions();
+    } catch (error) {
+      console.error('Error in checkExpiredSubscriptions:', error);
+      // Don't crash the server, just log the error
+    }
+  };
+
   setInterval(() => {
-    checkExpiredSubscriptions();
+    safeCheckExpiredSubscriptions();
   }, 24 * 60 * 60 * 1000);
 
   const PORT = process.env.PORT || 5000;
 
   app.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-    checkExpiredSubscriptions();
+    safeCheckExpiredSubscriptions();
   });
 }
 
