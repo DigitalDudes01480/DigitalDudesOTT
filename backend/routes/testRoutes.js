@@ -1,5 +1,6 @@
 import express from 'express';
 import orderAssistantService from '../services/orderAssistantService.js';
+import Product from '../models/Product.js';
 
 const router = express.Router();
 
@@ -36,6 +37,24 @@ router.get('/format/:product', async (req, res) => {
     res.json({ success: true, result });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.get('/db-direct', async (req, res) => {
+  try {
+    const products = await Product.find({ status: 'active' }).lean();
+    res.json({
+      success: true,
+      count: products.length,
+      mongoUri: process.env.MONGODB_URI ? 'SET' : 'NOT SET',
+      products: products.map(p => ({
+        name: p.name,
+        ottType: p.ottType,
+        profileTypesCount: p.profileTypes?.length
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message, stack: error.stack });
   }
 });
 
