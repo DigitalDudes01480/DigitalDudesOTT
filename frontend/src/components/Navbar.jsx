@@ -152,59 +152,6 @@ const Navbar = () => {
             )}
 
             {isAuthenticated && user?.role === 'admin' && (
-              <div className="relative">
-                <button
-                  onClick={() => setShowAdminNotifications(!showAdminNotifications)}
-                  className="relative p-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all"
-                  aria-label="Admin Notifications"
-                >
-                  <Bell className="w-6 h-6" />
-                  {adminNotificationCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse">
-                      {adminNotificationCount}
-                    </span>
-                  )}
-                </button>
-
-                {showAdminNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl border dark:border-gray-700 z-50">
-                    <div className="p-4 border-b dark:border-gray-700">
-                      <h3 className="font-bold dark:text-white">Admin Notifications</h3>
-                    </div>
-                    <div className="p-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowAdminNotifications(false);
-                          navigate('/admin/orders');
-                        }}
-                        className="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                      >
-                        <span className="text-sm font-medium dark:text-white">New Orders (Pending)</span>
-                        <span className="text-sm font-bold text-primary-600 dark:text-primary-400">{adminPendingOrders}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowAdminNotifications(false);
-                          navigate('/admin/tickets');
-                        }}
-                        className="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                      >
-                        <span className="text-sm font-medium dark:text-white">Open Support Tickets</span>
-                        <span className="text-sm font-bold text-primary-600 dark:text-primary-400">{adminOpenTickets}</span>
-                      </button>
-                      {adminNotificationCount === 0 && (
-                        <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                          No new notifications
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            {isAuthenticated && user?.role === 'admin' && (
               <Link to="/admin" className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all font-medium">
                 Admin Panel
               </Link>
