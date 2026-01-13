@@ -186,7 +186,21 @@ app.use('/api/tutorials', tutorialRoutes);
 app.use('/api/order-assistant', orderAssistantRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/analytics', analyticsRoutes);
+
+// Health check route
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    port: process.env.PORT
+  });
+});
+
+// Test routes
 app.use('/api/test', testRoutes);
+
+// Shared profile routes
 app.use('/api/shared-profile', sharedProfileRoutes);
 
 app.use(errorHandler);
