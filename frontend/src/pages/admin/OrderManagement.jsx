@@ -581,7 +581,8 @@ const OrderDetailsModal = ({ order, onClose }) => {
 
 const DeliveryModal = ({ order, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
-    credentials: { email: '', password: '' },
+    credentials: { email: '', password: '', loginPin: '' },
+    credentialType: 'password',
     activationKey: '',
     instructions: '',
     startDate: new Date().toISOString().split('T')[0]
@@ -612,6 +613,23 @@ const DeliveryModal = ({ order, onClose, onSuccess }) => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <h3 className="font-bold mb-3 dark:text-white">Login Credentials (Optional)</h3>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2 dark:text-gray-300">Credential Type</label>
+                <select
+                  value={formData.credentialType}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    credentialType: e.target.value,
+                    credentials: { ...formData.credentials, password: '', loginPin: '' }
+                  })}
+                  className="input-field"
+                >
+                  <option value="password">Password</option>
+                  <option value="loginPin">Login PIN</option>
+                </select>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2 dark:text-gray-300">Email</label>
@@ -627,16 +645,21 @@ const DeliveryModal = ({ order, onClose, onSuccess }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Password</label>
+                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+                    {formData.credentialType === 'password' ? 'Password' : 'Login PIN'}
+                  </label>
                   <input
                     type="text"
-                    value={formData.credentials.password}
+                    value={formData.credentialType === 'password' ? formData.credentials.password : formData.credentials.loginPin}
                     onChange={(e) => setFormData({
                       ...formData,
-                      credentials: { ...formData.credentials, password: e.target.value }
+                      credentials: {
+                        ...formData.credentials,
+                        [formData.credentialType === 'password' ? 'password' : 'loginPin']: e.target.value
+                      }
                     })}
                     className="input-field"
-                    placeholder="password123"
+                    placeholder={formData.credentialType === 'password' ? 'password123' : '1234'}
                   />
                 </div>
               </div>

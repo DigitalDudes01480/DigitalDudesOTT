@@ -400,7 +400,7 @@ export const updateOrderStatus = async (req, res) => {
 
 export const deliverOrder = async (req, res) => {
   try {
-    const { credentials, activationKey, instructions, startDate } = req.body;
+    const { credentials, credentialType, activationKey, instructions, startDate } = req.body;
 
     const order = await Order.findById(req.params.id)
       .populate('user', 'name email')
@@ -416,7 +416,10 @@ export const deliverOrder = async (req, res) => {
     const isAlreadyDelivered = order.orderStatus === 'delivered';
 
     order.deliveryDetails = {
-      credentials,
+      credentials: {
+        ...credentials,
+        credentialType: credentialType || 'password'
+      },
       activationKey,
       instructions,
       deliveredAt: order.deliveryDetails?.deliveredAt || new Date()
@@ -520,7 +523,9 @@ export const deliverOrder = async (req, res) => {
         status: 'active',
         credentials: {
           email: credentials?.email || '',
-          password: isSharedProfile ? undefined : (credentials?.password || ''),
+          password: credentialType === 'password' ? (credentials?.password || '') : undefined,
+          loginPin: credentialType === 'loginPin' ? (credentials?.loginPin || '') : undefined,
+          credentialType: credentialType || 'password',
           profile: credentials?.profile || '',
           profilePin: credentials?.profilePin || '',
           additionalNote: credentials?.additionalNote || '',

@@ -40,6 +40,12 @@ const subscriptionSchema = new mongoose.Schema({
   credentials: {
     email: String,
     password: String,
+    loginPin: String,
+    credentialType: {
+      type: String,
+      enum: ['password', 'loginPin'],
+      default: 'password'
+    },
     profile: String,
     profilePin: String,
     additionalNote: String,
@@ -53,6 +59,19 @@ const subscriptionSchema = new mongoose.Schema({
       default: false
     }
   },
+  signInCodeRequests: [{
+    requestedAt: {
+      type: Date,
+      default: Date.now
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'sent'],
+      default: 'pending'
+    },
+    code: String,
+    sentAt: Date
+  }],
   activationKey: String,
   autoRenew: {
     type: Boolean,
