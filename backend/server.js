@@ -92,8 +92,9 @@ app.use(cors({
       'http://localhost:3000',
       'https://www.digitaldudesott.shop',
       'https://digitaldudesott.shop',
-      'https://frontend-virid-nu-28.vercel.app'
-    ];
+      'https://frontend-virid-nu-28.vercel.app',
+      process.env.FRONTEND_URL
+    ].filter(Boolean);
     
     // Allow requests from Capacitor app and mobile schemes
     if (!origin || origin.startsWith('capacitor://') || origin.startsWith('ionic://') || origin.startsWith('http://localhost') || allowedOrigins.includes(origin)) {
