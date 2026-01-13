@@ -37,6 +37,11 @@ const connectDB = async () => {
   try {
     cached.conn = await cached.promise;
   } catch (e) {
+    console.error('MongoDB connection error details:', {
+      message: e.message,
+      code: e.code,
+      name: e.name
+    });
     cached.promise = null;
     throw e;
   }
