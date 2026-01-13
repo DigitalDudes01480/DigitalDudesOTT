@@ -22,6 +22,9 @@ const CheckoutForm = () => {
 
   const subtotal = getTotal();
   const total = subtotal - discount;
+  
+  // Debug: Log to verify this version is running
+  console.log('🛒 Checkout loaded - subtotal:', subtotal, 'discount:', discount, 'total:', total);
 
   // Get items that require own account email
   const ownAccountItems = items.filter(item => 
