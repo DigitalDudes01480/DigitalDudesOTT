@@ -49,6 +49,22 @@ const initializeDatabase = async () => {
 // Initialize database connection
 initializeDatabase();
 
+// For Vercel serverless, ensure connection before each request
+if (isVercel) {
+  app.use(async (req, res, next) => {
+    try {
+      await connectDB();
+      next();
+    } catch (err) {
+      console.error('Request DB connection error:', err.message);
+      return res.status(503).json({ 
+        success: false, 
+        message: 'Database temporarily unavailable. Please try again.' 
+      });
+    }
+  });
+}
+
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
