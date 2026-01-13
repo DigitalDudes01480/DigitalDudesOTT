@@ -190,6 +190,15 @@ export const updateProduct = async (req, res) => {
     
     console.log('Final profileTypes to save:', JSON.stringify(updateData.profileTypes, null, 2));
     
+    // Remove _id from profileTypes to ensure proper update (Mongoose subdocument issue)
+    if (updateData.profileTypes && Array.isArray(updateData.profileTypes)) {
+      updateData.profileTypes = updateData.profileTypes.map(profile => {
+        const { _id, ...profileWithoutId } = profile;
+        return profileWithoutId;
+      });
+      console.log('ProfileTypes after removing _id:', JSON.stringify(updateData.profileTypes, null, 2));
+    }
+    
     // Handle image upload
     if (req.file) {
       if (req.file.size > 5 * 1024 * 1024) {
