@@ -197,6 +197,7 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
       description: '',
       screenCount: 1,
       quality: 'HD',
+      accountType: 'shared',
       requiresOwnAccount: false,
       pricingOptions: [{
         duration: { value: 1, unit: 'month' },
@@ -223,9 +224,10 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
   // Initialize form data when product changes
   useEffect(() => {
     if (product) {
-      // Ensure all profile types have requiresOwnAccount field
+      // Ensure all profile types have accountType and requiresOwnAccount fields
       const profileTypesWithDefaults = product.profileTypes?.map(profile => ({
         ...profile,
+        accountType: profile.accountType ?? 'own',
         requiresOwnAccount: profile.requiresOwnAccount ?? false
       })) || [];
 
@@ -257,6 +259,7 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
           description: '',
           screenCount: 1,
           quality: 'HD',
+          accountType: 'own',
           requiresOwnAccount: false,
           pricingOptions: [{
             duration: { value: 1, unit: 'month' },
@@ -543,23 +546,46 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
                   </div>
 
                   <div className="mb-4">
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(profile.requiresOwnAccount)}
-                        onChange={(e) => updateProfileType(profileIndex, 'requiresOwnAccount', e.target.checked)}
-                        className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                      />
-                      <span className="text-sm font-medium dark:text-gray-300">
-                        Own Account
-                        {profile.requiresOwnAccount && (
-                          <span className="ml-2 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">✓ Enabled</span>
-                        )}
-                      </span>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Account Type
                     </label>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
-                      Customer will provide their own email address for account activation
-                    </p>
+                    <div className="space-y-2">
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name={`account-type-${profileIndex}`}
+                          checked={profile.accountType === 'own'}
+                          onChange={() => updateProfileType(profileIndex, 'accountType', 'own')}
+                          className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                        />
+                        <span className="text-sm font-medium dark:text-gray-300">
+                          Own Account
+                          {profile.accountType === 'own' && (
+                            <span className="ml-2 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">✓ Selected</span>
+                          )}
+                        </span>
+                      </label>
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name={`account-type-${profileIndex}`}
+                          checked={profile.accountType === 'shared'}
+                          onChange={() => updateProfileType(profileIndex, 'accountType', 'shared')}
+                          className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                        />
+                        <span className="text-sm font-medium dark:text-gray-300">
+                          Shared Profile
+                          {profile.accountType === 'shared' && (
+                            <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded">✓ Selected</span>
+                          )}
+                        </span>
+                      </label>
+                    </div>
+                    {profile.accountType === 'shared' && (
+                      <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-700 dark:text-blue-300">
+                        <strong>Shared Profile:</strong> Customers will receive access codes instead of passwords for this profile type.
+                      </div>
+                    )}
                   </div>
 
                   <div className="border-t dark:border-gray-600 pt-3 mt-3">
