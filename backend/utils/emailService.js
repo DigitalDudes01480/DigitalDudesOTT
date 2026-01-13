@@ -284,12 +284,10 @@ export const sendPasswordResetEmail = async (user, resetUrl) => {
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #4F46E5;">Reset Your Password - Digital Dudes</h2>
       <p>Hi ${user.name},</p>
-      <p>We received a request to reset your password. Click the button below to set a new password.</p>
-      <div style="margin: 24px 0;">
-        <a href="${resetUrl}" style="display: inline-block; padding: 12px 18px; background: #4F46E5; color: #ffffff; text-decoration: none; border-radius: 8px;">Reset Password</a>
-      </div>
-      <p>If you did not request this, you can safely ignore this email.</p>
-      <p>This link will expire soon for security reasons.</p>
+      <p>You requested to reset your password. Click the button below to reset it:</p>
+      <a href="${resetUrl}" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0;">Reset Password</a>
+      <p>If you didn't request this, please ignore this email.</p>
+      <p>This link will expire in 1 hour.</p>
       <p>Best regards,<br>Digital Dudes Team</p>
     </div>
   `;
@@ -299,4 +297,43 @@ export const sendPasswordResetEmail = async (user, resetUrl) => {
     subject: 'Reset Your Password - Digital Dudes',
     html
   });
+};
+
+// Email templates object for use in controllers
+export const emailTemplates = {
+  subscriptionExpiring: (subscription, user) => ({
+    subject: `Your ${subscription.ottType || 'subscription'} is expiring soon - Digital Dudes`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <img src="https://frontend-virid-nu-28.vercel.app/images/Untitled%20design-5.png" alt="Digital Dudes" style="max-width: 200px; height: auto;" />
+        </div>
+        <h2 style="color: #EF4444;">Subscription Expiring Soon</h2>
+        <p>Hi ${user.name},</p>
+        <p>Your <strong>${subscription.ottType || 'subscription'}</strong> will expire in <strong>${subscription.daysRemaining} day${subscription.daysRemaining > 1 ? 's' : ''}</strong>.</p>
+        <p><strong>Expiry Date:</strong> ${new Date(subscription.expiryDate).toLocaleDateString()}</p>
+        <p>To continue enjoying uninterrupted service, please renew your subscription before it expires.</p>
+        <a href="https://www.digitaldudesott.shop/shop" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0;">Renew Now</a>
+        <p>Best regards,<br>Digital Dudes Team</p>
+      </div>
+    `
+  }),
+  
+  welcomeEmail: (user) => ({
+    subject: 'Welcome to Digital Dudes - Your OTT Subscription Partner',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <img src="https://frontend-virid-nu-28.vercel.app/images/Untitled%20design-5.png" alt="Digital Dudes" style="max-width: 200px; height: auto;" />
+        </div>
+        <h2 style="color: #4F46E5;">Welcome to Digital Dudes!</h2>
+        <p>Hi ${user.name},</p>
+        <p>Thank you for joining Digital Dudes - your trusted partner for premium OTT subscriptions!</p>
+        <p>We're excited to have you on board. Browse our collection of Netflix, Prime Video, Disney+, Spotify, and more at unbeatable prices.</p>
+        <a href="https://www.digitaldudesott.shop/shop" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0;">Start Shopping</a>
+        <p>If you have any questions, our support team is here to help 24/7.</p>
+        <p>Best regards,<br>Digital Dudes Team</p>
+      </div>
+    `
+  })
 };
