@@ -272,90 +272,14 @@ const OrderManagement = () => {
       )}
 
       {showDeliveryModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold dark:text-white">Deliver Order</h2>
-                <button onClick={() => setShowDeliveryModal(false)} className="text-gray-500 hover:text-gray-700">
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Email</label>
-                  <input
-                    type="email"
-                    value={deliveryForm.email}
-                    onChange={(e) => setDeliveryForm({ ...deliveryForm, email: e.target.value })}
-                    className="input-field"
-                    placeholder="account@email.com"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Password</label>
-                  <input
-                    type="text"
-                    value={deliveryForm.password}
-                    onChange={(e) => setDeliveryForm({ ...deliveryForm, password: e.target.value })}
-                    className="input-field"
-                    placeholder="Account password"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Profile</label>
-                  <input
-                    type="text"
-                    value={deliveryForm.profile}
-                    onChange={(e) => setDeliveryForm({ ...deliveryForm, profile: e.target.value })}
-                    className="input-field"
-                    placeholder="Profile name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Profile PIN</label>
-                  <input
-                    type="text"
-                    value={deliveryForm.profilePin}
-                    onChange={(e) => setDeliveryForm({ ...deliveryForm, profilePin: e.target.value })}
-                    className="input-field"
-                    placeholder="Profile PIN (if any)"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Additional Note</label>
-                  <textarea
-                    value={deliveryForm.additionalNote}
-                    onChange={(e) => setDeliveryForm({ ...deliveryForm, additionalNote: e.target.value })}
-                    className="input-field"
-                    rows="3"
-                    placeholder="Any additional instructions for the customer..."
-                  />
-                </div>
-
-                <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={handleDeliverOrder}
-                    className="flex-1 btn-primary"
-                  >
-                    Deliver & Send to Customer
-                  </button>
-                  <button
-                    onClick={() => handleMarkAsDone(selectedOrder._id)}
-                    className="flex-1 btn-secondary"
-                  >
-                    Mark as Done
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <DeliveryModal 
+          order={selectedOrder}
+          onClose={() => setShowDeliveryModal(false)}
+          onSuccess={() => {
+            setShowDeliveryModal(false);
+            fetchOrders();
+          }}
+        />
       )}
 
       {showReceiptModal && selectedOrder && (
