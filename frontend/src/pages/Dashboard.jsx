@@ -188,14 +188,16 @@ const SubscriptionsTab = ({ subscriptions }) => {
                       {subscription.credentials.email || 'Not provided'}
                     </p>
                   </div>
-                  {subscription.credentials.credentialType === 'loginPin' ? (
+                  {subscription.credentials.credentialType === 'loginPin' || subscription.credentials.loginPin ? (
                     <>
-                      <div className="bg-white dark:bg-gray-800 p-2 rounded">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Login PIN</p>
-                        <p className="text-sm font-mono font-semibold dark:text-white break-all">
-                          {subscription.credentials.loginPin || 'Not provided'}
-                        </p>
-                      </div>
+                      {subscription.credentials.loginPin && (
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Login PIN</p>
+                          <p className="text-sm font-mono font-semibold dark:text-white break-all">
+                            {subscription.credentials.loginPin}
+                          </p>
+                        </div>
+                      )}
                       {(() => {
                         const latestRequest = subscription.signInCodeRequests?.slice(-1)[0];
                         const hasCode = latestRequest?.status === 'sent' && latestRequest?.code;
@@ -229,14 +231,14 @@ const SubscriptionsTab = ({ subscriptions }) => {
                         );
                       })()}
                     </>
-                  ) : (
+                  ) : subscription.credentials.password ? (
                     <div className="bg-white dark:bg-gray-800 p-2 rounded">
                       <p className="text-xs text-gray-500 dark:text-gray-400">Password</p>
                       <p className="text-sm font-mono font-semibold dark:text-white break-all">
-                        {subscription.credentials.password || 'Not provided'}
+                        {subscription.credentials.password}
                       </p>
                     </div>
-                  )}
+                  ) : null}
                   <div className="bg-white dark:bg-gray-800 p-2 rounded">
                     <p className="text-xs text-gray-500 dark:text-gray-400">Profile</p>
                     <p className="text-sm font-mono font-semibold dark:text-white break-all">
