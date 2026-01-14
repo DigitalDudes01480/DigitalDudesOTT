@@ -505,9 +505,8 @@ const OrderDetailsModal = ({ order, onClose }) => {
 
 const DeliveryModal = ({ order, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
-    credentials: { email: '', password: '', loginPin: '' },
+    credentials: { email: '', password: '', loginPin: '', profile: '', profilePin: '' },
     credentialType: 'password',
-    activationKey: '',
     instructions: '',
     startDate: new Date().toISOString().split('T')[0]
   });
@@ -587,19 +586,35 @@ const DeliveryModal = ({ order, onClose, onSuccess }) => {
                   />
                 </div>
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2 dark:text-gray-300">
-                Activation Key (Optional)
-              </label>
-              <input
-                type="text"
-                value={formData.activationKey}
-                onChange={(e) => setFormData({ ...formData, activationKey: e.target.value })}
-                className="input-field"
-                placeholder="XXXX-XXXX-XXXX-XXXX"
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Profile</label>
+                  <input
+                    type="text"
+                    value={formData.credentials.profile}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      credentials: { ...formData.credentials, profile: e.target.value }
+                    })}
+                    className="input-field"
+                    placeholder="Profile name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Profile PIN</label>
+                  <input
+                    type="text"
+                    value={formData.credentials.profilePin}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      credentials: { ...formData.credentials, profilePin: e.target.value }
+                    })}
+                    className="input-field"
+                    placeholder="Profile PIN (if any)"
+                  />
+                </div>
+              </div>
             </div>
 
             <div>
