@@ -420,15 +420,25 @@ export const deliverOrder = async (req, res) => {
 
     const isAlreadyDelivered = order.orderStatus === 'delivered';
 
+    // Explicitly set deliveryDetails with all fields
     order.deliveryDetails = {
       credentials: {
-        ...credentials,
-        credentialType: credentialType || 'password'
+        email: credentials?.email || '',
+        password: credentialType === 'password' ? (credentials?.password || '') : '',
+        loginPin: credentialType === 'loginPin' ? (credentials?.loginPin || '') : '',
+        credentialType: credentialType || 'password',
+        profile: credentials?.profile || '',
+        profilePin: credentials?.profilePin || '',
+        additionalNote: credentials?.additionalNote || ''
       },
-      activationKey,
-      instructions,
+      activationKey: activationKey || '',
+      instructions: instructions || '',
       deliveredAt: order.deliveryDetails?.deliveredAt || new Date()
     };
+
+    // Mark the nested object as modified to ensure Mongoose saves it
+    order.markModified('deliveryDetails');
+    order.markModified('deliveryDetails.credentials');
 
     console.log('Order deliveryDetails before save:', JSON.stringify(order.deliveryDetails, null, 2));
     
@@ -438,7 +448,9 @@ export const deliverOrder = async (req, res) => {
 
     await order.save();
     
-    console.log('Order deliveryDetails after save:', JSON.stringify(order.deliveryDetails, null, 2));
+    // Fetch the order again to verify it was saved
+    const savedOrder = await Order.findById(order._id);
+    console.log('Order deliveryDetails after save (refetched):', JSON.stringify(savedOrder.deliveryDetails, null, 2));
 
     // Update existing subscriptions with new credentials if already delivered
     if (isAlreadyDelivered) {
