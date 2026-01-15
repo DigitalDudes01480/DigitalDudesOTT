@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Search, Eye, Truck, X, Image as ImageIcon, Plus, Filter, Pencil, Trash2 } from 'lucide-react';
+import { Search, Eye, Truck, X, Image as ImageIcon, Plus, Filter, Pencil, Trash2, EyeOff } from 'lucide-react';
 import { orderAPI } from '../../utils/api';
 import { formatCurrency, formatDate, getStatusColor } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import LocalOrderModal from './LocalOrderModal';
-import { DeliveryModal } from './OrderManagement';
+import { DeliveryModal, EditCredentialsModal } from './OrderManagement';
 import toast from 'react-hot-toast';
 import Pagination from '../../components/Pagination';
 
@@ -22,7 +22,17 @@ const LocalOrders = () => {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showLocalOrderModal, setShowLocalOrderModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showEditCredentialsModal, setShowEditCredentialsModal] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
+  const [deliveryForm, setDeliveryForm] = useState({
+    email: '',
+    password: '',
+    profile: '',
+    profilePin: '',
+    additionalNote: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPin, setShowPin] = useState(false);
 
   const pageSize = 10;
 
@@ -84,6 +94,35 @@ const LocalOrders = () => {
     } catch (error) {
       console.error('Error updating order:', error);
       toast.error('Failed to update order status');
+    }
+  };
+
+  const handleUpdateCredentials = (order) => {
+    setSelectedOrder(order);
+    setDeliveryForm({
+      email: order.deliveryDetails?.credentials?.email || '',
+      password: order.deliveryDetails?.credentials?.password || '',
+      profile: order.deliveryDetails?.credentials?.profile || '',
+      profilePin: order.deliveryDetails?.credentials?.profilePin || '',
+      additionalNote: order.deliveryDetails?.credentials?.additionalNote || ''
+    });
+    setShowPassword(false);
+    setShowPin(false);
+    setShowEditCredentialsModal(true);
+  };
+
+  const handleSubmitCredentials = async (e) => {
+    e.preventDefault();
+    try {
+      await orderAPI.updateCredentials(selectedOrder._id, {
+        credentials: deliveryForm
+      });
+      toast.success('Credentials updated successfully');
+      setShowEditCredentialsModal(false);
+      fetchOrders();
+    } catch (error) {
+      console.error('Error updating credentials:', error);
+      toast.error(error.response?.data?.message || 'Failed to update credentials');
     }
   };
 
@@ -366,6 +405,15 @@ const LocalOrders = () => {
                           <Truck className="w-4 h-4" />
                         </button>
                       )}
+                      {order.orderStatus === 'delivered' && order.deliveryDetails?.credentials && (
+                        <button
+                          onClick={() => handleUpdateCredentials(order)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                          title="Edit Credentials"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                      )}
                       <button
                         onClick={() => handleEditOrder(order)}
                         className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition dark:text-gray-300 dark:hover:bg-gray-700"
@@ -611,6 +659,21 @@ const LocalOrders = () => {
             setShowDeliveryModal(false);
             fetchOrders();
           }}
+        />
+      )}
+
+      {/* Edit Credentials Modal */}
+      {showEditCredentialsModal && selectedOrder && (
+        <EditCredentialsModal
+          order={selectedOrder}
+          deliveryForm={deliveryForm}
+          setDeliveryForm={setDeliveryForm}
+          onClose={() => setShowEditCredentialsModal(false)}
+          onSubmit={handleSubmitCredentials}
+          showPassword={showPassword}
+          setShowPassword={setShowPassword}
+          showPin={showPin}
+          setShowPin={setShowPin}
         />
       )}
 
