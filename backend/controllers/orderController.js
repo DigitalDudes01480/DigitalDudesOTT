@@ -502,6 +502,7 @@ export const updateOrderStatus = async (req, res) => {
 export const deliverOrder = async (req, res) => {
   try {
     const { credentials, instructions, startDate, expiryDate, credentialType } = req.body;
+    console.log('📅 DeliverOrder - Received expiryDate:', expiryDate);
 
     const order = await Order.findById(req.params.id)
       .populate('user', 'name email')
@@ -594,7 +595,8 @@ export const deliverOrder = async (req, res) => {
             }
           }
 
-          await Subscription.create({
+          console.log('📅 Creating subscription with expiryDate:', subscriptionExpiryDate);
+          const newSubscription = await Subscription.create({
             user: null,
             order: order._id,
             product: item.product._id,
@@ -603,11 +605,15 @@ export const deliverOrder = async (req, res) => {
             expiryDate: subscriptionExpiryDate,
             duration: item.duration,
             status: 'active',
-            email: credentials?.email || '',
-            password: credentials?.password || '',
-            profile: credentials?.profile || '',
-            profilePin: credentials?.profilePin || ''
+            credentials: {
+              email: credentials?.email || '',
+              password: credentials?.password || '',
+              profile: credentials?.profile || '',
+              profilePin: credentials?.profilePin || '',
+              additionalNote: credentials?.additionalNote || ''
+            }
           });
+          console.log('✅ Subscription created with expiryDate:', newSubscription.expiryDate);
         }
       }
 
