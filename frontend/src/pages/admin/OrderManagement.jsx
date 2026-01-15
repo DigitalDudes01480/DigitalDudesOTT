@@ -516,6 +516,20 @@ const DeliveryModal = ({ order, onClose, onSuccess }) => {
   useEffect(() => {
     if (order.deliveryDetails) {
       const existingCreds = order.deliveryDetails.credentials || {};
+      
+      // Determine credential type - check both credentialType field and presence of loginPin
+      let detectedCredentialType = 'password';
+      if (existingCreds.credentialType === 'loginPin' || (existingCreds.loginPin && !existingCreds.password)) {
+        detectedCredentialType = 'loginPin';
+      }
+      
+      console.log('Pre-filling delivery modal with:', {
+        credentialType: detectedCredentialType,
+        hasLoginPin: !!existingCreds.loginPin,
+        hasPassword: !!existingCreds.password,
+        storedCredentialType: existingCreds.credentialType
+      });
+      
       setFormData({
         credentials: {
           email: existingCreds.email || '',
@@ -524,7 +538,7 @@ const DeliveryModal = ({ order, onClose, onSuccess }) => {
           profile: existingCreds.profile || '',
           profilePin: existingCreds.profilePin || ''
         },
-        credentialType: existingCreds.credentialType || 'password',
+        credentialType: detectedCredentialType,
         instructions: order.deliveryDetails.instructions || '',
         startDate: order.deliveryDetails.deliveredAt 
           ? new Date(order.deliveryDetails.deliveredAt).toISOString().split('T')[0]
