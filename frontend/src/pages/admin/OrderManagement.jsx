@@ -3,7 +3,7 @@ import { Search, Eye, Truck, X, Image as ImageIcon } from 'lucide-react';
 import { orderAPI } from '../../utils/api';
 import { formatCurrency, formatDate, getStatusColor } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 
 const OrderManagement = () => {

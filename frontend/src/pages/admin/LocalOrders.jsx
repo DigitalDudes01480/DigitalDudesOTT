@@ -5,7 +5,7 @@ import { formatCurrency, formatDate, getStatusColor } from '../../utils/formatte
 import LoadingSpinner from '../../components/LoadingSpinner';
 import LocalOrderModal from './LocalOrderModal';
 import DeliveryModal from './OrderManagement';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 
 const LocalOrders = () => {
