@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Hardcoded production API URL to ensure it works in Capacitor app
 // Updated to use Railway backend instead of Vercel
-const API_URL = 'https://your-railway-backend-url.railway.app/api';
+const API_URL = 'https://digitaldudesott-production.up.railway.app/api';
 
 const api = axios.create({
   baseURL: API_URL,
