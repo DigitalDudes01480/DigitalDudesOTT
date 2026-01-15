@@ -86,19 +86,7 @@ const orderSchema = new mongoose.Schema({
     email_address: String
   },
   deliveryDetails: {
-    credentials: {
-      email: String,
-      password: String,
-      loginPin: String,
-      credentialType: {
-        type: String,
-        enum: ['password', 'loginPin'],
-        default: 'password'
-      },
-      profile: String,
-      profilePin: String,
-      additionalNote: String
-    },
+    credentials: mongoose.Schema.Types.Mixed,
     activationKey: String,
     instructions: String,
     deliveredAt: Date
