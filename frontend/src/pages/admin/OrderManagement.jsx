@@ -31,14 +31,34 @@ const OrderManagement = () => {
     try {
       setError(null);
       const params = statusFilter ? { status: statusFilter } : {};
+      console.log('Fetching website orders with params:', params);
+      console.log('API URL:', 'https://backend-tau-blush-82.vercel.app/api/orders/all');
+      
       const response = await orderAPI.getAll(params);
-      // Filter only website orders
-      const websiteOrders = response.data.orders.filter(order => order.orderSource === 'website' || !order.orderSource);
-      setOrders(websiteOrders || []);
+      console.log('Orders API response:', response.data);
+      
+      if (!response.data) {
+        throw new Error('No data received from API');
+      }
+      
+      const allOrders = response.data.orders || [];
+      console.log('Total orders received:', allOrders.length);
+      
+      // Filter only website orders (orders without orderSource or with orderSource = 'website')
+      const websiteOrders = allOrders.filter(order => {
+        // Handle cases where orderSource might not exist yet
+        const orderSource = order.orderSource || 'website'; // Default to website for backward compatibility
+        const isWebsite = orderSource === 'website';
+        console.log(`Order ${order._id}: orderSource=${orderSource}, isWebsite=${isWebsite}`);
+        return isWebsite;
+      });
+      
+      console.log('Website orders after filtering:', websiteOrders.length);
+      setOrders(websiteOrders);
     } catch (error) {
-      console.error('Error fetching orders:', error);
-      toast.error('Failed to fetch orders');
-      setError(error.message || 'Failed to fetch orders');
+      console.error('Error fetching website orders:', error);
+      toast.error('Failed to fetch website orders');
+      setError(error.response?.data?.message || error.message || 'Failed to fetch website orders');
       setOrders([]); // Ensure orders is always an array
     } finally {
       setLoading(false);

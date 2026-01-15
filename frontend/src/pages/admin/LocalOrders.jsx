@@ -31,14 +31,34 @@ const LocalOrders = () => {
       if (statusFilter) params.status = statusFilter;
       if (sourceFilter) params.source = sourceFilter;
       
+      console.log('Fetching local orders with params:', params);
+      console.log('API URL:', 'https://backend-tau-blush-82.vercel.app/api/orders/all');
+      
       const response = await orderAPI.getAll(params);
+      console.log('Orders API response:', response.data);
+      
+      if (!response.data) {
+        throw new Error('No data received from API');
+      }
+      
+      const allOrders = response.data.orders || [];
+      console.log('Total orders received:', allOrders.length);
+      
       // Filter only local orders (not from website)
-      const localOrders = response.data.orders.filter(order => order.orderSource !== 'website');
-      setOrders(localOrders || []);
+      const localOrders = allOrders.filter(order => {
+        // Handle cases where orderSource might not exist yet
+        const orderSource = order.orderSource || 'website'; // Default to website for backward compatibility
+        const isLocal = orderSource !== 'website';
+        console.log(`Order ${order._id}: orderSource=${orderSource}, isLocal=${isLocal}`);
+        return isLocal;
+      });
+      
+      console.log('Local orders after filtering:', localOrders.length);
+      setOrders(localOrders);
     } catch (error) {
       console.error('Error fetching local orders:', error);
       toast.error('Failed to fetch local orders');
-      setError(error.message || 'Failed to fetch local orders');
+      setError(error.response?.data?.message || error.message || 'Failed to fetch local orders');
       setOrders([]);
     } finally {
       setLoading(false);
