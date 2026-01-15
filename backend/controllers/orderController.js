@@ -1,6 +1,7 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Subscription from '../models/Subscription.js';
+import Transaction from '../models/Transaction.js';
 import User from '../models/User.js';
 import { sendEmail, emailTemplates, sendAdminNewOrderNotification, sendOrderConfirmation, sendOrderStatusUpdate, sendSubscriptionDelivery } from '../utils/emailService.js';
 
@@ -255,6 +256,104 @@ export const createOrder = async (req, res, next) => {
       body: req.body
     });
     return next(error);
+  }
+};
+
+export const updateOrderAdmin = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate('user', 'name email phone')
+      .populate('orderItems.product');
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    const {
+      orderStatus,
+      paymentStatus,
+      paymentMethod,
+      totalAmount,
+      originalAmount,
+      couponCode,
+      couponDiscount,
+      adminNotes,
+      customerNotes,
+      orderSource,
+      customerInfo,
+      localOrderDetails
+    } = req.body;
+
+    if (orderStatus !== undefined) order.orderStatus = orderStatus;
+    if (paymentStatus !== undefined) order.paymentStatus = paymentStatus;
+    if (paymentMethod !== undefined) order.paymentMethod = paymentMethod;
+
+    if (totalAmount !== undefined) order.totalAmount = Number(totalAmount);
+    if (originalAmount !== undefined) order.originalAmount = Number(originalAmount);
+    if (couponCode !== undefined) order.couponCode = couponCode;
+    if (couponDiscount !== undefined) order.couponDiscount = Number(couponDiscount);
+
+    if (adminNotes !== undefined) order.adminNotes = adminNotes;
+    if (customerNotes !== undefined) order.customerNotes = customerNotes;
+
+    if (orderSource !== undefined) order.orderSource = orderSource;
+
+    if (customerInfo && typeof customerInfo === 'object') {
+      order.customerInfo = {
+        ...(order.customerInfo || {}),
+        ...(customerInfo || {})
+      };
+    }
+
+    if (localOrderDetails && typeof localOrderDetails === 'object') {
+      order.localOrderDetails = {
+        ...(order.localOrderDetails || {}),
+        ...(localOrderDetails || {})
+      };
+    }
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Order updated successfully',
+      order
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+export const deleteOrderAdmin = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    await Subscription.deleteMany({ order: order._id });
+    await Transaction.deleteMany({ order: order._id });
+    await Order.deleteOne({ _id: order._id });
+
+    res.status(200).json({
+      success: true,
+      message: 'Order deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Eye, Truck, X, Image as ImageIcon } from 'lucide-react';
+import { Search, Eye, Truck, X, Image as ImageIcon, Pencil, Trash2 } from 'lucide-react';
 import { orderAPI } from '../../utils/api';
 import { formatCurrency, formatDate, getStatusColor } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -15,6 +15,8 @@ const OrderManagement = () => {
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(null);
   const [deliveryForm, setDeliveryForm] = useState({
     email: '',
     password: '',
@@ -31,7 +33,6 @@ const OrderManagement = () => {
     try {
       setError(null);
       const params = statusFilter ? { status: statusFilter } : {};
-      
       const response = await orderAPI.getAll(params);
       
       const allOrders = response.data.orders || [];
@@ -126,6 +127,25 @@ const OrderManagement = () => {
       additionalNote: order.deliveryDetails?.credentials?.additionalNote || ''
     });
     setShowDeliveryModal(true);
+  };
+
+  const handleEditOrder = (order) => {
+    setEditingOrder(order);
+    setShowEditModal(true);
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    const confirmed = window.confirm('Are you sure you want to delete this order? This action cannot be undone.');
+    if (!confirmed) return;
+
+    try {
+      await orderAPI.deleteAdmin(orderId);
+      toast.success('Order deleted successfully');
+      fetchOrders();
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      toast.error(error.response?.data?.message || 'Failed to delete order');
+    }
   };
 
   const filteredOrders = (orders || []).filter(order =>
@@ -292,6 +312,20 @@ const OrderManagement = () => {
                           </svg>
                         </button>
                       )}
+                      <button
+                        onClick={() => handleEditOrder(order)}
+                        className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition dark:text-gray-300 dark:hover:bg-gray-700"
+                        title="Edit Order"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteOrder(order._id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                        title="Delete Order"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -321,6 +355,21 @@ const OrderManagement = () => {
           onClose={() => setShowDeliveryModal(false)}
           onSuccess={() => {
             setShowDeliveryModal(false);
+            fetchOrders();
+          }}
+        />
+      )}
+
+      {showEditModal && editingOrder && (
+        <EditOrderModal
+          order={editingOrder}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingOrder(null);
+          }}
+          onSuccess={() => {
+            setShowEditModal(false);
+            setEditingOrder(null);
             fetchOrders();
           }}
         />
@@ -688,6 +737,108 @@ export const DeliveryModal = ({ order, onClose, onSuccess }) => {
             <div className="flex space-x-4 pt-4">
               <button type="submit" disabled={loading} className="btn-primary flex-1">
                 {loading ? 'Delivering...' : 'Deliver Order'}
+              </button>
+              <button type="button" onClick={onClose} className="btn-secondary flex-1">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const EditOrderModal = ({ order, onClose, onSuccess }) => {
+  const [formData, setFormData] = useState({
+    orderStatus: order.orderStatus || 'pending',
+    paymentStatus: order.paymentStatus || 'pending',
+    totalAmount: order.totalAmount ?? 0,
+    adminNotes: order.adminNotes || ''
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await orderAPI.updateAdmin(order._id, formData);
+      toast.success('Order updated successfully');
+      onSuccess();
+    } catch (error) {
+      console.error('Error updating order:', error);
+      toast.error(error.response?.data?.message || 'Failed to update order');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl max-w-lg w-full">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold dark:text-white">Edit Order</h2>
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Order Status</label>
+              <select
+                value={formData.orderStatus}
+                onChange={(e) => setFormData((p) => ({ ...p, orderStatus: e.target.value }))}
+                className="input-field"
+              >
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="processing">Processing</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="refunded">Refunded</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Payment Status</label>
+              <select
+                value={formData.paymentStatus}
+                onChange={(e) => setFormData((p) => ({ ...p, paymentStatus: e.target.value }))}
+                className="input-field"
+              >
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="failed">Failed</option>
+                <option value="refunded">Refunded</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Total Amount</label>
+              <input
+                type="number"
+                value={formData.totalAmount}
+                onChange={(e) => setFormData((p) => ({ ...p, totalAmount: e.target.value }))}
+                className="input-field"
+                min="0"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Admin Notes</label>
+              <textarea
+                value={formData.adminNotes}
+                onChange={(e) => setFormData((p) => ({ ...p, adminNotes: e.target.value }))}
+                className="input-field"
+                rows="3"
+              />
+            </div>
+
+            <div className="flex space-x-4 pt-4">
+              <button type="submit" disabled={saving} className="btn-primary flex-1">
+                {saving ? 'Saving...' : 'Save Changes'}
               </button>
               <button type="button" onClick={onClose} className="btn-secondary flex-1">
                 Cancel
