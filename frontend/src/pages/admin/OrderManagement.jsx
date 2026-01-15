@@ -551,6 +551,11 @@ const DeliveryModal = ({ order, onClose, onSuccess }) => {
     e.preventDefault();
     setLoading(true);
 
+    console.log('=== SUBMITTING DELIVERY ===');
+    console.log('FormData being sent:', JSON.stringify(formData, null, 2));
+    console.log('Credential Type:', formData.credentialType);
+    console.log('Credentials:', formData.credentials);
+
     try {
       await orderAPI.deliver(order._id, formData);
       toast.success('Order delivered successfully');
