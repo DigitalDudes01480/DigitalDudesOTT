@@ -42,7 +42,7 @@ const AdminLayout = () => {
           <div className="flex items-center justify-between h-16 px-6 border-b dark:border-gray-700">
             <div className="flex items-center space-x-2">
               <img 
-                src="/images/Untitled design-5.png" 
+                src="/images/logo.png" 
                 alt="Digital Dudes Logo" 
                 className="h-10 w-auto"
               />

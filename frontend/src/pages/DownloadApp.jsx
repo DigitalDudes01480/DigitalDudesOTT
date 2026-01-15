@@ -48,7 +48,7 @@ const DownloadApp = () => {
         <div className="card mb-8 text-center">
           <div className="mb-6">
             <img 
-              src="/images/Untitled design-5.png" 
+              src="/images/logo.png" 
               alt="Digital Dudes Logo" 
               className="h-24 w-auto mx-auto mb-4"
             />

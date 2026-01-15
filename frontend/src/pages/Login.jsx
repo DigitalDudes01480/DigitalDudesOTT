@@ -69,7 +69,7 @@ const Login = () => {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <img 
-              src="/images/Untitled design-5.png" 
+              src="/images/logo.png" 
               alt="Digital Dudes Logo" 
               className="h-20 w-auto"
             />

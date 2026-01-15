@@ -1,10 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, LogOut, LayoutDashboard, Bell, Headphones } from 'lucide-react';
+import { ShoppingCart, User, LogOut, LayoutDashboard, Bell, Headphones, Menu, X, Star, Shield, Zap } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import useAuthStore from '../store/useAuthStore';
 import useCartStore from '../store/useCartStore';
 import { subscriptionAPI, orderAPI, ticketAPI } from '../utils/api';
 import Logo from './Logo';
+import './NavbarAnimations.css';
 
 const Navbar = () => {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -117,60 +118,84 @@ const Navbar = () => {
   const adminNotificationCount = adminPendingOrders + adminOpenTickets;
 
   return (
-    <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-lg sticky top-0 z-50 border-b border-gray-200/50 dark:border-gray-700/50">
+    <nav className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl shadow-2xl sticky top-0 z-50 border-b border-gray-200/50 dark:border-gray-700/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <Link to="/" className="flex items-center group">
-            <img 
-              src="/images/Untitled design-5.png" 
-              alt="Digital Dudes Logo" 
-              className="h-16 w-auto object-contain transition-all transform group-hover:scale-105"
-            />
+            <div className="relative">
+              <img 
+                src="/images/logo.png" 
+                alt="Digital Dudes Logo" 
+                className="h-16 w-auto object-contain transition-all duration-300 transform group-hover:scale-105 group-hover:drop-shadow-2xl"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 to-purple-500/0 group-hover:from-primary-500/10 group-hover:to-purple-500/10 rounded-lg transition-all duration-300 blur-xl"></div>
+            </div>
+            <div className="ml-3 hidden lg:block">
+              <div className="text-xs font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">Digital Dudes</div>
+              <div className="text-[10px] text-gray-500 dark:text-gray-400">Premium OTT Subscriptions</div>
+            </div>
           </Link>
 
-          <div className="hidden md:flex items-center space-x-1">
-            <Link to="/" className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all font-medium">
-              Home
+          <div className="hidden lg:flex items-center space-x-1">
+            <Link to="/" className="relative px-4 py-2.5 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-300 font-medium group overflow-hidden">
+              <span className="relative z-10">Home</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 to-purple-500/0 group-hover:from-primary-500/10 group-hover:to-purple-500/10 transition-all duration-300"></div>
             </Link>
-            <Link to="/shop" className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all font-medium">
-              Shop
+            <Link to="/shop" className="relative px-4 py-2.5 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-300 font-medium group overflow-hidden">
+              <span className="relative z-10 flex items-center gap-2">
+                <ShoppingCart className="w-4 h-4" />
+                Shop
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 to-purple-500/0 group-hover:from-primary-500/10 group-hover:to-purple-500/10 transition-all duration-300"></div>
             </Link>
             {isAuthenticated && user?.role === 'customer' && (
               <>
-                <Link to="/dashboard" className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all font-medium">
-                  My Dashboard
+                <Link to="/dashboard" className="relative px-4 py-2.5 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-300 font-medium group overflow-hidden">
+                  <span className="relative z-10 flex items-center gap-2">
+                    <LayoutDashboard className="w-4 h-4" />
+                    My Dashboard
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 to-purple-500/0 group-hover:from-primary-500/10 group-hover:to-purple-500/10 transition-all duration-300"></div>
                 </Link>
-                <Link to="/support" className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all font-medium relative">
-                  Support
+                <Link to="/support" className="relative px-4 py-2.5 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-300 font-medium group overflow-hidden">
+                  <span className="relative z-10 flex items-center gap-2">
+                    <Headphones className="w-4 h-4" />
+                    Support
+                  </span>
                   {unreadTicketCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse border-2 border-white dark:border-gray-800">
                       {unreadTicketCount}
                     </span>
                   )}
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 to-purple-500/0 group-hover:from-primary-500/10 group-hover:to-purple-500/10 transition-all duration-300"></div>
                 </Link>
               </>
             )}
 
             {isAuthenticated && user?.role === 'admin' && (
-              <Link to="/admin" className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all font-medium">
-                Admin Panel
+              <Link to="/admin" className="relative px-4 py-2.5 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-300 font-medium group overflow-hidden">
+                <span className="relative z-10 flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  Admin Panel
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 to-purple-500/0 group-hover:from-primary-500/10 group-hover:to-purple-500/10 transition-all duration-300"></div>
               </Link>
             )}
           </div>
 
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden lg:flex items-center space-x-3">
             {isAuthenticated ? (
               <>
                 {user?.role === 'admin' && (
                   <div className="relative">
                     <button
                       onClick={() => setShowAdminNotifications(!showAdminNotifications)}
-                      className="relative p-3 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all"
+                      className="relative p-3 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-300 group"
                       aria-label="Admin Notifications"
                     >
-                      <Bell className="w-6 h-6" />
+                      <Bell className="w-5 h-5 group-hover:animate-bell-ring" />
                       {adminNotificationCount > 0 && (
-                        <span className="absolute top-1 right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse">
+                        <span className="absolute top-1 right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse border-2 border-white dark:border-gray-800">
                           {adminNotificationCount}
                         </span>
                       )}
@@ -216,10 +241,10 @@ const Navbar = () => {
                 )}
                 {user?.role === 'customer' && (
                   <>
-                    <Link to="/cart" className="relative p-3 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all">
-                      <ShoppingCart className="w-6 h-6" />
+                    <Link to="/cart" className="relative p-3 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-300 group">
+                      <ShoppingCart className="w-5 h-5 group-hover:animate-cart-bounce" />
                       {cartItemCount > 0 && (
-                        <span className="absolute top-1 right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg">
+                        <span className="absolute top-1 right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg border-2 border-white dark:border-gray-800">
                           {cartItemCount}
                         </span>
                       )}
@@ -237,11 +262,11 @@ const Navbar = () => {
                             localStorage.setItem('readNotifications', JSON.stringify(updated));
                           }
                         }}
-                        className="relative p-3 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all"
+                        className="relative p-3 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-300 group"
                       >
-                        <Bell className="w-6 h-6" />
+                        <Bell className="w-5 h-5 group-hover:animate-bell-ring" />
                         {notifications.filter(n => !readNotifications.includes(n.id)).length > 0 && (
-                          <span className="absolute top-1 right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse">
+                          <span className="absolute top-1 right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse border-2 border-white dark:border-gray-800">
                             {notifications.filter(n => !readNotifications.includes(n.id)).length}
                           </span>
                         )}
@@ -284,11 +309,16 @@ const Navbar = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
-                    className="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                    className="flex items-center space-x-3 px-4 py-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300 group border border-gray-200 dark:border-gray-700"
                   >
-                    <User className="w-5 h-5" />
-                    <span className="text-sm font-medium">{user?.name}</span>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:shadow-xl transition-all duration-300">
+                      {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                    <div className="hidden sm:block">
+                      <div className="text-sm font-semibold text-gray-900 dark:text-white">{user?.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{user?.role}</div>
+                    </div>
+                    <svg className="w-4 h-4 text-gray-500 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
@@ -321,11 +351,16 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Link to="/login" className="px-5 py-2.5 text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-lg transition-all font-medium">
-                  Login
+                <Link to="/login" className="px-5 py-2.5 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-300 font-medium group">
+                  <span className="relative z-10">Login</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 to-purple-500/0 group-hover:from-primary-500/10 group-hover:to-purple-500/10 rounded-xl transition-all duration-300"></div>
                 </Link>
-                <Link to="/register" className="px-5 py-2.5 bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white rounded-lg transition-all transform hover:scale-105 shadow-md hover:shadow-lg font-medium">
-                  Sign Up
+                <Link to="/register" className="px-6 py-2.5 bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 hover:from-primary-700 hover:via-purple-700 hover:to-pink-700 text-white rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl font-medium group overflow-hidden">
+                  <span className="relative z-10 flex items-center gap-2">
+                    <Zap className="w-4 h-4" />
+                    Sign Up
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 to-white/20 group-hover:from-white/10 group-hover:to-white/30 rounded-xl transition-all duration-300"></div>
                 </Link>
               </>
             )}
