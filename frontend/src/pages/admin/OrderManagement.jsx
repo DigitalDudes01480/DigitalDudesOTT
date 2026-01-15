@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Eye, Truck, X, Image as ImageIcon, Pencil, Trash2, EyeOff } from 'lucide-react';
+import { Search, Eye, Truck, X, Image as ImageIcon, Pencil, Trash2, EyeOff, Key } from 'lucide-react';
 import { orderAPI } from '../../utils/api';
 import { formatCurrency, formatDate, getStatusColor } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -25,7 +25,8 @@ const OrderManagement = () => {
     password: '',
     profile: '',
     profilePin: '',
-    additionalNote: ''
+    additionalNote: '',
+    expiryDate: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showPin, setShowPin] = useState(false);
@@ -130,12 +131,17 @@ const OrderManagement = () => {
 
   const handleUpdateCredentials = (order) => {
     setSelectedOrder(order);
+    // Get expiry date from first subscription if available
+    const expiryDate = order.subscriptions?.[0]?.expiryDate 
+      ? new Date(order.subscriptions[0].expiryDate).toISOString().split('T')[0]
+      : '';
     setDeliveryForm({
       email: order.deliveryDetails?.credentials?.email || '',
       password: order.deliveryDetails?.credentials?.password || '',
       profile: order.deliveryDetails?.credentials?.profile || '',
       profilePin: order.deliveryDetails?.credentials?.profilePin || '',
-      additionalNote: order.deliveryDetails?.credentials?.additionalNote || ''
+      additionalNote: order.deliveryDetails?.credentials?.additionalNote || '',
+      expiryDate: expiryDate
     });
     setShowPassword(false);
     setShowPin(false);
@@ -340,9 +346,7 @@ const OrderManagement = () => {
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
                           title="Update Credentials"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
+                          <Key className="w-4 h-4" />
                         </button>
                       )}
                       <button
@@ -970,6 +974,16 @@ export const EditCredentialsModal = ({ order, deliveryForm, setDeliveryForm, onC
                   {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Expiry Date</label>
+              <input
+                type="date"
+                value={deliveryForm.expiryDate}
+                onChange={(e) => setDeliveryForm(prev => ({ ...prev, expiryDate: e.target.value }))}
+                className="input-field"
+              />
             </div>
 
             <div>

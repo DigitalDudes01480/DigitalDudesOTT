@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Eye, Truck, X, Image as ImageIcon, Plus, Filter, Pencil, Trash2, EyeOff } from 'lucide-react';
+import { Search, Eye, Truck, X, Image as ImageIcon, Plus, Filter, Pencil, Trash2, EyeOff, Key } from 'lucide-react';
 import { orderAPI } from '../../utils/api';
 import { formatCurrency, formatDate, getStatusColor } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -29,7 +29,8 @@ const LocalOrders = () => {
     password: '',
     profile: '',
     profilePin: '',
-    additionalNote: ''
+    additionalNote: '',
+    expiryDate: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showPin, setShowPin] = useState(false);
@@ -97,14 +98,25 @@ const LocalOrders = () => {
     }
   };
 
-  const handleUpdateCredentials = (order) => {
+  const handleUpdateCredentials = async (order) => {
     setSelectedOrder(order);
+    // Fetch subscriptions to get expiry date
+    let expiryDate = '';
+    try {
+      const response = await orderAPI.getById(order._id);
+      if (response.data.order.subscriptions?.[0]?.expiryDate) {
+        expiryDate = new Date(response.data.order.subscriptions[0].expiryDate).toISOString().split('T')[0];
+      }
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+    }
     setDeliveryForm({
       email: order.deliveryDetails?.credentials?.email || '',
       password: order.deliveryDetails?.credentials?.password || '',
       profile: order.deliveryDetails?.credentials?.profile || '',
       profilePin: order.deliveryDetails?.credentials?.profilePin || '',
-      additionalNote: order.deliveryDetails?.credentials?.additionalNote || ''
+      additionalNote: order.deliveryDetails?.credentials?.additionalNote || '',
+      expiryDate: expiryDate
     });
     setShowPassword(false);
     setShowPin(false);
@@ -411,7 +423,7 @@ const LocalOrders = () => {
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
                           title="Edit Credentials"
                         >
-                          <Pencil className="w-4 h-4" />
+                          <Key className="w-4 h-4" />
                         </button>
                       )}
                       <button

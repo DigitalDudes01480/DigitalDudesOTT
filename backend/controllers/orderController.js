@@ -927,17 +927,23 @@ export const updateOrderCredentials = async (req, res) => {
 
     await order.save();
 
+    // Prepare subscription update object
+    const subscriptionUpdate = {
+      email: credentials?.email || '',
+      password: credentials?.password || '',
+      profile: credentials?.profile || '',
+      profilePin: credentials?.profilePin || ''
+    };
+
+    // Add expiry date if provided
+    if (credentials?.expiryDate) {
+      subscriptionUpdate.expiryDate = new Date(credentials.expiryDate);
+    }
+
     // Update all subscriptions for this order
     await Subscription.updateMany(
       { order: order._id },
-      {
-        $set: {
-          email: credentials?.email || '',
-          password: credentials?.password || '',
-          profile: credentials?.profile || '',
-          profilePin: credentials?.profilePin || ''
-        }
-      }
+      { $set: subscriptionUpdate }
     );
 
     const updatedOrder = await Order.findById(order._id)
