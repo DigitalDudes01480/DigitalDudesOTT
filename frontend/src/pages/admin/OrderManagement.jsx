@@ -567,7 +567,9 @@ const OrderDetailsModal = ({ order, onClose }) => {
                     <div className="mb-2">
                       <p className="text-sm font-medium">Credentials:</p>
                       <p className="text-sm">Email: {order.deliveryDetails.credentials.email}</p>
-                      <p className="text-sm">Password: {order.deliveryDetails.credentials.password}</p>
+                      {order.deliveryDetails.credentials.password ? (
+                        <p className="text-sm">Password: {order.deliveryDetails.credentials.password}</p>
+                      ) : null}
                       {order.deliveryDetails.credentials.profile && (
                         <p className="text-sm">Profile: {order.deliveryDetails.credentials.profile}</p>
                       )}
@@ -580,12 +582,6 @@ const OrderDetailsModal = ({ order, onClose }) => {
                           <p className="text-sm">{order.deliveryDetails.credentials.additionalNote}</p>
                         </div>
                       )}
-                    </div>
-                  )}
-                  {order.deliveryDetails.activationKey && (
-                    <div className="mb-2">
-                      <p className="text-sm font-medium">Activation Key:</p>
-                      <p className="text-sm font-mono">{order.deliveryDetails.activationKey}</p>
                     </div>
                   )}
                   {order.deliveryDetails.instructions && (

@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
-import { productAPI, orderAPI, accountAPI } from '../../utils/api';
+import { productAPI, orderAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 
 const LocalOrderModal = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
-  const [accounts, setAccounts] = useState([]);
-  const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [formData, setFormData] = useState({
     customerInfo: {
       name: '',
@@ -21,12 +19,7 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
       contactPerson: '',
       notes: '',
       paymentMethod: 'cash',
-      paymentReference: '',
-      accountId: '',
-      accountEmail: '',
-      accountPassword: '',
-      profile: '',
-      profilePin: ''
+      paymentReference: ''
     },
     orderItems: [],
     adminNotes: '',
@@ -38,7 +31,6 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
 
   useEffect(() => {
     fetchProducts();
-    fetchAccounts();
   }, []);
 
   const fetchProducts = async () => {
@@ -53,28 +45,17 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
     }
   };
 
-  const fetchAccounts = async () => {
-    try {
-      const response = await accountAPI.getAll();
-      setAccounts(response.data.accounts || []);
-    } catch (error) {
-      console.error('Error fetching accounts:', error);
-      toast.error('Failed to fetch accounts');
-    } finally {
-      setLoadingAccounts(false);
-    }
-  };
 
   const addOrderItem = () => {
     const newItem = {
       product: '',
       name: '',
       ottType: '',
+      selectedProfileType: '',
+      selectedDuration: '',
       duration: { value: 30, unit: 'days' },
       price: 0,
-      quantity: 1,
-      selectedProfile: null,
-      selectedPricing: null
+      quantity: 1
     };
     setFormData(prev => ({
       ...prev,
@@ -94,7 +75,7 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
       const updatedItems = [...prev.orderItems];
       updatedItems[index] = { ...updatedItems[index], [field]: value };
       
-      // If product is selected, auto-fill details
+      // If product is selected, auto-fill details and reset profile/duration
       if (field === 'product' && value) {
         const product = products.find(p => p._id === value);
         if (product) {
@@ -102,9 +83,37 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
             ...updatedItems[index],
             name: product.name,
             ottType: product.ottType,
-            price: product.pricing?.monthly?.price || 0,
-            selectedPricing: product.pricing?.monthly || null
+            selectedProfileType: '',
+            selectedDuration: '',
+            price: 0
           };
+        }
+      }
+      
+      // If profile type is selected, reset duration and price
+      if (field === 'selectedProfileType' && value) {
+        updatedItems[index] = {
+          ...updatedItems[index],
+          selectedProfileType: value,
+          selectedDuration: '',
+          price: 0
+        };
+      }
+      
+      // If duration is selected, update price
+      if (field === 'selectedDuration' && value) {
+        const product = products.find(p => p._id === updatedItems[index].product);
+        if (product) {
+          const profileType = product.profileTypes?.find(pt => pt._id === updatedItems[index].selectedProfileType);
+          const pricingOption = profileType?.pricingOptions?.find(po => po._id === value);
+          if (pricingOption) {
+            updatedItems[index] = {
+              ...updatedItems[index],
+              selectedDuration: value,
+              duration: pricingOption.duration,
+              price: pricingOption.price
+            };
+          }
         }
       }
       
@@ -213,76 +222,6 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
               </div>
             </div>
 
-            <div>
-              <h3 className="font-bold mb-3 dark:text-white">Account Info</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Account Email *</label>
-                  <select
-                    value={formData.localOrderDetails.accountId}
-                    onChange={(e) => {
-                      const accountId = e.target.value;
-                      const account = accounts.find(a => a._id === accountId);
-                      setFormData(prev => ({
-                        ...prev,
-                        localOrderDetails: {
-                          ...prev.localOrderDetails,
-                          accountId,
-                          accountEmail: account?.email || '',
-                          accountPassword: account?.password || ''
-                        }
-                      }));
-                    }}
-                    className="input-field"
-                    required
-                    disabled={loadingAccounts}
-                  >
-                    <option value="">{loadingAccounts ? 'Loading accounts...' : 'Select Account Email'}</option>
-                    {accounts.map(account => (
-                      <option key={account._id} value={account._id}>
-                        {account.email} ({account.platform})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Password</label>
-                  <input
-                    type="text"
-                    value={formData.localOrderDetails.accountPassword}
-                    className="input-field"
-                    readOnly
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Profile *</label>
-                  <input
-                    type="text"
-                    value={formData.localOrderDetails.profile}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      localOrderDetails: { ...prev.localOrderDetails, profile: e.target.value }
-                    }))}
-                    className="input-field"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Profile PIN *</label>
-                  <input
-                    type="text"
-                    value={formData.localOrderDetails.profilePin}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      localOrderDetails: { ...prev.localOrderDetails, profilePin: e.target.value }
-                    }))}
-                    className="input-field"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* Order Source */}
             <div>
               <h3 className="font-bold mb-3 dark:text-white">Order Source</h3>
@@ -353,58 +292,98 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
                 </p>
               ) : (
                 <div className="space-y-4">
-                  {formData.orderItems.map((item, index) => (
-                    <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-2 dark:text-gray-300">Product *</label>
-                          <select
-                            value={item.product}
-                            onChange={(e) => updateOrderItem(index, 'product', e.target.value)}
-                            className="input-field"
-                            required
-                          >
-                            <option value="">Select Product</option>
-                            {products.map(product => (
-                              <option key={product._id} value={product._id}>
-                                {product.name} ({product.ottType})
-                              </option>
-                            ))}
-                          </select>
+                  {formData.orderItems.map((item, index) => {
+                    const selectedProduct = products.find(p => p._id === item.product);
+                    const selectedProfileType = selectedProduct?.profileTypes?.find(pt => pt._id === item.selectedProfileType);
+                    
+                    return (
+                      <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium mb-2 dark:text-gray-300">Product *</label>
+                            <select
+                              value={item.product}
+                              onChange={(e) => updateOrderItem(index, 'product', e.target.value)}
+                              className="input-field"
+                              required
+                            >
+                              <option value="">Select Product</option>
+                              {products.map(product => (
+                                <option key={product._id} value={product._id}>
+                                  {product.name} ({product.ottType})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium mb-2 dark:text-gray-300">Profile Type *</label>
+                            <select
+                              value={item.selectedProfileType}
+                              onChange={(e) => updateOrderItem(index, 'selectedProfileType', e.target.value)}
+                              className="input-field"
+                              required
+                              disabled={!item.product}
+                            >
+                              <option value="">Select Profile Type</option>
+                              {selectedProduct?.profileTypes?.map(profileType => (
+                                <option key={profileType._id} value={profileType._id}>
+                                  {profileType.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium mb-2 dark:text-gray-300">Duration *</label>
+                            <select
+                              value={item.selectedDuration}
+                              onChange={(e) => updateOrderItem(index, 'selectedDuration', e.target.value)}
+                              className="input-field"
+                              required
+                              disabled={!item.selectedProfileType}
+                            >
+                              <option value="">Select Duration</option>
+                              {selectedProfileType?.pricingOptions?.map(pricingOption => (
+                                <option key={pricingOption._id} value={pricingOption._id}>
+                                  {pricingOption.duration.value} {pricingOption.duration.unit} - NPR {pricingOption.price}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium mb-2 dark:text-gray-300">Quantity</label>
+                            <input
+                              type="number"
+                              value={item.quantity}
+                              onChange={(e) => updateOrderItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                              className="input-field"
+                              min="1"
+                            />
+                          </div>
+                          
+                          <div className="flex items-end">
+                            <button
+                              type="button"
+                              onClick={() => removeOrderItem(index)}
+                              className="btn-secondary text-red-600 hover:text-red-700 w-full"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2 dark:text-gray-300">Price</label>
-                          <input
-                            type="number"
-                            value={item.price}
-                            onChange={(e) => updateOrderItem(index, 'price', parseFloat(e.target.value) || 0)}
-                            className="input-field"
-                            min="0"
-                            step="0.01"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2 dark:text-gray-300">Quantity</label>
-                          <input
-                            type="number"
-                            value={item.quantity}
-                            onChange={(e) => updateOrderItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                            className="input-field"
-                            min="1"
-                          />
-                        </div>
-                        <div className="flex items-end">
-                          <button
-                            type="button"
-                            onClick={() => removeOrderItem(index)}
-                            className="btn-secondary text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
+                        
+                        {item.price > 0 && (
+                          <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <p className="text-sm dark:text-white">
+                              <span className="font-medium">Subtotal:</span> NPR {(item.price * item.quantity).toFixed(2)}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

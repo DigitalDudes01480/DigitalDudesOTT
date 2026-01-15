@@ -501,7 +501,7 @@ export const updateOrderStatus = async (req, res) => {
 
 export const deliverOrder = async (req, res) => {
   try {
-    const { credentials, activationKey, instructions, startDate, credentialType } = req.body;
+    const { credentials, instructions, startDate, credentialType } = req.body;
 
     const order = await Order.findById(req.params.id)
       .populate('user', 'name email')
@@ -516,16 +516,19 @@ export const deliverOrder = async (req, res) => {
 
     const isAlreadyDelivered = order.orderStatus === 'delivered';
 
-    // Create deliveryDetails object with password credentials only
+    const normalizedCredentials = {
+      email: credentials?.email || '',
+      profile: credentials?.profile || '',
+      profilePin: credentials?.profilePin || '',
+      additionalNote: credentials?.additionalNote || ''
+    };
+
+    if (credentials?.password) {
+      normalizedCredentials.password = credentials.password;
+    }
+
     const deliveryDetails = {
-      credentials: {
-        email: credentials?.email || '',
-        password: credentials?.password || '',
-        profile: credentials?.profile || '',
-        profilePin: credentials?.profilePin || '',
-        additionalNote: credentials?.additionalNote || ''
-      },
-      activationKey: activationKey || '',
+      credentials: normalizedCredentials,
       instructions: instructions || '',
       deliveredAt: order.deliveryDetails?.deliveredAt || new Date()
     };
@@ -573,8 +576,8 @@ export const deliverOrder = async (req, res) => {
           {
             $set: {
               'credentials.email': credentials?.email || '',
-              'credentials.password': credentialType === 'password' ? (credentials?.password || '') : undefined,
-              'credentials.loginPin': credentialType === 'loginPin' ? (credentials?.loginPin || '') : undefined,
+              'credentials.password': credentialType === 'password' && credentials?.password ? credentials.password : undefined,
+              'credentials.loginPin': credentialType === 'loginPin' && credentials?.loginPin ? credentials.loginPin : undefined,
               'credentials.credentialType': credentialType || 'password',
               'credentials.profile': credentials?.profile || '',
               'credentials.profilePin': credentials?.profilePin || '',
@@ -582,7 +585,7 @@ export const deliverOrder = async (req, res) => {
               'credentials.isSharedProfile': isSharedProfile,
               'credentials.isPrivateProfile': isPrivateProfile,
               'credentials.accessCode': isSharedProfile ? null : undefined,
-              activationKey: activationKey || ''
+              activationKey: undefined
             }
           }
         );
@@ -643,8 +646,8 @@ export const deliverOrder = async (req, res) => {
         status: 'active',
         credentials: {
           email: credentials?.email || '',
-          password: credentialType === 'password' ? (credentials?.password || '') : undefined,
-          loginPin: credentialType === 'loginPin' ? (credentials?.loginPin || '') : undefined,
+          password: credentialType === 'password' && credentials?.password ? credentials.password : undefined,
+          loginPin: credentialType === 'loginPin' && credentials?.loginPin ? credentials.loginPin : undefined,
           credentialType: credentialType || 'password',
           profile: credentials?.profile || '',
           profilePin: credentials?.profilePin || '',
@@ -653,7 +656,7 @@ export const deliverOrder = async (req, res) => {
           isPrivateProfile,
           accessCode: isSharedProfile ? null : undefined
         },
-        activationKey
+        activationKey: undefined
       });
 
       const recipientEmail = item.customerEmail || order.user.email;
@@ -759,21 +762,6 @@ export const createLocalOrder = async (req, res) => {
       });
     }
 
-    if (!localOrderDetails?.accountId || !localOrderDetails?.profile || !localOrderDetails?.profilePin) {
-      return res.status(400).json({
-        success: false,
-        message: 'Account, profile, and profile PIN are required'
-      });
-    }
-
-    const account = await Account.findById(localOrderDetails.accountId);
-    if (!account) {
-      return res.status(400).json({
-        success: false,
-        message: 'Selected account not found'
-      });
-    }
-
     if (!orderItems || orderItems.length === 0) {
       return res.status(400).json({
         success: false,
@@ -807,9 +795,7 @@ export const createLocalOrder = async (req, res) => {
 
     // Create the local order
     const normalizedLocalOrderDetails = {
-      ...(localOrderDetails || {}),
-      accountEmail: account.email,
-      accountPassword: account.password
+      ...(localOrderDetails || {})
     };
 
     const order = await Order.create({

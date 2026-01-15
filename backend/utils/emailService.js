@@ -353,13 +353,6 @@ export const sendSubscriptionDelivery = async (user, subscription, deliveryDetai
         ` : ''}
       `}
       
-      ${deliveryDetails.activationKey && !isSharedProfile ? `
-        <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-          <h3>Activation Key:</h3>
-          <p><strong>${deliveryDetails.activationKey}</strong></p>
-        </div>
-      ` : ''}
-      
       ${deliveryDetails.instructions ? `
         <div style="margin: 20px 0;">
           <h3>Instructions:</h3>

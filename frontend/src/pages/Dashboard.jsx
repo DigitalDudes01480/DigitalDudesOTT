@@ -217,12 +217,6 @@ const SubscriptionsTab = ({ subscriptions }) => {
                 </div>
               </div>
             )}
-            {subscription.activationKey && (
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">Activation Key</p>
-                <p className="text-sm font-mono dark:text-white">{subscription.activationKey}</p>
-              </div>
-            )}
           </div>
         </div>
       ))}

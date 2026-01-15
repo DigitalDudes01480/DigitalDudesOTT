@@ -523,12 +523,6 @@ const Home = () => {
                             {lookupResult.order.deliveryDetails.credentials?.profilePin ? '****' : 'N/A'}
                           </p>
                         </div>
-                        <div className="flex items-center justify-between gap-4">
-                          <p className="text-sm text-gray-600 dark:text-gray-400">Activation Key</p>
-                          <p className="text-sm font-mono dark:text-white">
-                            {lookupResult.order.deliveryDetails.activationKey || 'N/A'}
-                          </p>
-                        </div>
                         <div className="pt-2">
                           <p className="text-sm text-gray-600 dark:text-gray-400">Instructions</p>
                           <p className="text-sm dark:text-white whitespace-pre-wrap">
@@ -546,16 +540,21 @@ const Home = () => {
                     ) : (
                       <div className="space-y-2">
                         {lookupResult.subscriptions.map((sub) => (
-                          <div key={sub._id} className="flex items-start justify-between gap-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                            <div>
+                          <div key={sub._id} className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                            <div className="flex items-start justify-between gap-4 mb-2">
                               <p className="font-semibold text-sm dark:text-white">{sub.product?.name || sub.ottType || 'Subscription'}</p>
+                              <span className="text-xs font-semibold px-2 py-1 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
+                                {sub.status || 'unknown'}
+                              </span>
+                            </div>
+                            <div className="space-y-1">
                               <p className="text-xs text-gray-600 dark:text-gray-400">
-                                Expiry: {sub.expiryDate ? new Date(sub.expiryDate).toLocaleDateString() : 'N/A'}
+                                <span className="font-medium">Start Date:</span> {sub.startDate ? new Date(sub.startDate).toLocaleDateString() : 'N/A'}
+                              </p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
+                                <span className="font-medium">Expiry Date:</span> {sub.expiryDate ? new Date(sub.expiryDate).toLocaleDateString() : 'N/A'}
                               </p>
                             </div>
-                            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
-                              {sub.status || 'unknown'}
-                            </span>
                           </div>
                         ))}
                       </div>
