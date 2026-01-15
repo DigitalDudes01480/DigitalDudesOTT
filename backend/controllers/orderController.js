@@ -543,8 +543,74 @@ export const deliverOrder = async (req, res) => {
       { new: true, upsert: false }
     );
 
-    // Local orders don't have a user, so skip subscription creation + email delivery logic.
+    // Import Subscription model
+    const Subscription = (await import('../models/Subscription.js')).default;
+
+    // For local orders without a user, handle subscriptions differently
     if (!order.user) {
+      // Update existing subscriptions if already delivered
+      if (isAlreadyDelivered) {
+        const existingSubs = await Subscription.find({ order: order._id });
+        
+        for (const subscription of existingSubs) {
+          const updateFields = {
+            'credentials.email': credentials?.email || '',
+            'credentials.password': credentials?.password || '',
+            'credentials.profile': credentials?.profile || '',
+            'credentials.profilePin': credentials?.profilePin || '',
+            'credentials.additionalNote': credentials?.additionalNote || ''
+          };
+
+          // Add expiryDate if provided
+          if (expiryDate) {
+            updateFields.expiryDate = new Date(expiryDate);
+          }
+
+          await Subscription.updateOne(
+            { _id: subscription._id },
+            { $set: updateFields }
+          );
+        }
+      } else {
+        // Create subscriptions for local orders
+        for (const item of order.orderItems) {
+          const subscriptionStartDate = startDate ? new Date(startDate) : new Date();
+          let subscriptionExpiryDate;
+
+          // Use expiryDate from request if provided, otherwise calculate from duration
+          if (expiryDate) {
+            subscriptionExpiryDate = new Date(expiryDate);
+          } else {
+            subscriptionExpiryDate = new Date(subscriptionStartDate);
+            const durationValue = Number(item?.duration?.value || 0);
+            const durationUnit = String(item?.duration?.unit || 'month');
+
+            if (durationUnit === 'days') {
+              subscriptionExpiryDate = addDays(subscriptionExpiryDate, durationValue);
+            } else if (durationUnit === 'year') {
+              subscriptionExpiryDate = addDays(subscriptionExpiryDate, durationValue * 365);
+            } else {
+              subscriptionExpiryDate = addDays(subscriptionExpiryDate, durationValue * 30);
+            }
+          }
+
+          await Subscription.create({
+            user: null,
+            order: order._id,
+            product: item.product._id,
+            ottType: item.ottType,
+            startDate: subscriptionStartDate,
+            expiryDate: subscriptionExpiryDate,
+            duration: item.duration,
+            status: 'active',
+            email: credentials?.email || '',
+            password: credentials?.password || '',
+            profile: credentials?.profile || '',
+            profilePin: credentials?.profilePin || ''
+          });
+        }
+      }
+
       return res.status(200).json({
         success: true,
         message: isAlreadyDelivered ? 'Credentials updated successfully' : 'Order delivered successfully',
@@ -554,8 +620,6 @@ export const deliverOrder = async (req, res) => {
 
     // Update existing subscriptions with new credentials if already delivered
     if (isAlreadyDelivered) {
-      const Subscription = (await import('../models/Subscription.js')).default;
-      
       // Get all subscriptions for this order to check profile types
       const existingSubs = await Subscription.find({ order: order._id }).populate('product');
       
