@@ -90,6 +90,7 @@ export const orderAPI = {
   getMyOrders: () => api.get('/orders/my-orders'),
   getAll: (params) => api.get('/orders/all', { params }),
   getById: (id) => api.get(`/orders/${id}`),
+  lookupByCustomerCode: (customerCode) => api.get(`/orders/lookup/${customerCode}`),
   updateAdmin: (id, data) => api.put(`/orders/${id}`, data),
   deleteAdmin: (id) => api.delete(`/orders/${id}`),
   updateStatus: (id, data) => api.put(`/orders/${id}/status`, data),

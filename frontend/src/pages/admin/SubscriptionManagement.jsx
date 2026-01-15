@@ -3,6 +3,7 @@ import { Search, Edit, XCircle } from 'lucide-react';
 import { subscriptionAPI } from '../../utils/api';
 import { formatDate, getDaysRemaining, getStatusColor } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Pagination from '../../components/Pagination';
 import toast from 'react-hot-toast';
 
 const SubscriptionManagement = () => {
@@ -10,16 +11,23 @@ const SubscriptionManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const pageSize = 10;
 
   useEffect(() => {
     fetchSubscriptions();
   }, [statusFilter]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
   const fetchSubscriptions = async () => {
     try {
       const params = statusFilter ? { status: statusFilter } : {};
       const response = await subscriptionAPI.getAll(params);
-      setSubscriptions(response.data.subscriptions);
+      setSubscriptions(response.data.subscriptions || []);
     } catch (error) {
       console.error('Error fetching subscriptions:', error);
       toast.error('Failed to fetch subscriptions');
@@ -29,10 +37,15 @@ const SubscriptionManagement = () => {
   };
 
   const filteredSubscriptions = subscriptions.filter(sub =>
-    sub.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sub.user?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sub.ottType.toLowerCase().includes(searchTerm.toLowerCase())
+    (sub.user?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (sub.user?.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (sub.ottType || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredSubscriptions.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedSubscriptions = filteredSubscriptions.slice(startIndex, startIndex + pageSize);
 
   if (loading) {
     return (
@@ -89,27 +102,32 @@ const SubscriptionManagement = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredSubscriptions.map((subscription) => (
+              {paginatedSubscriptions.map((subscription) => {
+                const daysRemaining = Number.isFinite(subscription.daysRemaining)
+                  ? subscription.daysRemaining
+                  : getDaysRemaining(subscription.expiryDate);
+
+                return (
                 <tr key={subscription._id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <p className="font-medium dark:text-white">{subscription.user?.name}</p>
-                      <p className="text-sm text-gray-500">{subscription.user?.email}</p>
+                      <p className="font-medium dark:text-white">{subscription.user?.name || 'N/A'}</p>
+                      <p className="text-sm text-gray-500">{subscription.user?.email || 'N/A'}</p>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap dark:text-gray-300">
-                    {subscription.ottType}
+                    {subscription.ottType || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-300">
-                    {formatDate(subscription.startDate)}
+                    {subscription.startDate ? formatDate(subscription.startDate) : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-300">
-                    {formatDate(subscription.expiryDate)}
+                    {subscription.expiryDate ? formatDate(subscription.expiryDate) : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {subscription.status === 'active' ? (
-                      <span className={`font-medium ${subscription.daysRemaining < 7 ? 'text-red-600' : 'text-green-600'}`}>
-                        {subscription.daysRemaining} days
+                      <span className={`font-medium ${daysRemaining < 7 ? 'text-red-600' : 'text-green-600'}`}>
+                        {daysRemaining} days
                       </span>
                     ) : (
                       <span className="text-gray-400">-</span>
@@ -117,7 +135,7 @@ const SubscriptionManagement = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(subscription.status)}`}>
-                      {subscription.status}
+                      {subscription.status || 'unknown'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -139,10 +157,17 @@ const SubscriptionManagement = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          currentPage={safePage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
     </div>
   );

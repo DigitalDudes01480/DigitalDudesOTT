@@ -6,6 +6,7 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import LocalOrderModal from './LocalOrderModal';
 import { DeliveryModal } from './OrderManagement';
 import toast from 'react-hot-toast';
+import Pagination from '../../components/Pagination';
 
 const LocalOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -14,6 +15,7 @@ const LocalOrders = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
@@ -22,9 +24,15 @@ const LocalOrders = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
 
+  const pageSize = 10;
+
   useEffect(() => {
     fetchOrders();
   }, [statusFilter, sourceFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, sourceFilter]);
 
   const fetchOrders = async () => {
     try {
@@ -100,9 +108,15 @@ const LocalOrders = () => {
 
   const filteredOrders = (orders || []).filter(order =>
     order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (order.customerCode || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.customerInfo?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.customerInfo?.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedOrders = filteredOrders.slice(startIndex, startIndex + pageSize);
 
   if (error) {
     return (
@@ -250,6 +264,7 @@ const LocalOrders = () => {
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Order ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Customer Code</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Customer</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Source</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</th>
@@ -260,10 +275,13 @@ const LocalOrders = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredOrders.map((order) => (
+              {paginatedOrders.map((order) => (
                 <tr key={order._id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-mono dark:text-gray-300">
                     {order._id.substring(0, 10)}...
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-mono dark:text-gray-300">
+                    {order.customerCode || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
@@ -384,6 +402,12 @@ const LocalOrders = () => {
             </div>
           )}
         </div>
+
+        <Pagination
+          currentPage={safePage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Order Details Modal */}
@@ -403,6 +427,10 @@ const LocalOrders = () => {
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Order ID</p>
                     <p className="font-mono dark:text-white">{selectedOrder._id}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Customer Code</p>
+                    <p className="font-mono dark:text-white">{selectedOrder.customerCode || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Order Source</p>

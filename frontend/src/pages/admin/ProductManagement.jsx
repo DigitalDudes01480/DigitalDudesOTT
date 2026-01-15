@@ -3,6 +3,7 @@ import { Plus, Edit, Trash2, Search } from 'lucide-react';
 import { productAPI, categoryAPI } from '../../utils/api';
 import { formatCurrency } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Pagination from '../../components/Pagination';
 import toast from 'react-hot-toast';
 
 const ProductManagement = () => {
@@ -11,10 +12,17 @@ const ProductManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const pageSize = 10;
 
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const fetchProducts = async () => {
     try {
@@ -54,6 +62,11 @@ const ProductManagement = () => {
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.ottType.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + pageSize);
 
   if (loading) {
     return (
@@ -103,7 +116,7 @@ const ProductManagement = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredProducts.map((product) => (
+              {paginatedProducts.map((product) => (
                 <tr key={product._id}>
                   <td className="px-6 py-4">
                     <div className="flex items-center">
@@ -166,6 +179,12 @@ const ProductManagement = () => {
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          currentPage={safePage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {showModal && (

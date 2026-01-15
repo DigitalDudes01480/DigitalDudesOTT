@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Plus, Search, Pencil, Trash2, RefreshCcw, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Pagination from '../../components/Pagination';
 import { accountAPI, productAPI } from '../../utils/api';
 import { formatDate, getDaysRemaining } from '../../utils/formatters';
 
@@ -196,11 +197,14 @@ const AccountManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [platformFilter, setPlatformFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
   const [renewingAccount, setRenewingAccount] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const pageSize = 10;
 
   const fetchAccounts = async () => {
     try {
@@ -234,6 +238,10 @@ const AccountManagement = () => {
     fetchAccounts();
   }, [platformFilter]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, platformFilter]);
+
   const filteredAccounts = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     if (!q) return accounts;
@@ -244,6 +252,11 @@ const AccountManagement = () => {
       );
     });
   }, [accounts, searchTerm]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredAccounts.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedAccounts = filteredAccounts.slice(startIndex, startIndex + pageSize);
 
   const handleCreate = async (data) => {
     setSubmitting(true);
@@ -389,7 +402,7 @@ const AccountManagement = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredAccounts.map((account) => {
+              {paginatedAccounts.map((account) => {
                 const daysLeft = getDaysRemaining(account.expiryDate);
                 const isExpiringSoon = daysLeft <= 3;
                 return (
@@ -451,6 +464,12 @@ const AccountManagement = () => {
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          currentPage={safePage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {showAddModal && (

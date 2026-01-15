@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
-import { productAPI, orderAPI } from '../../utils/api';
+import { productAPI, orderAPI, accountAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 
 const LocalOrderModal = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [accounts, setAccounts] = useState([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [formData, setFormData] = useState({
     customerInfo: {
       name: '',
-      email: '',
       phone: '',
       address: ''
     },
@@ -20,7 +21,12 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
       contactPerson: '',
       notes: '',
       paymentMethod: 'cash',
-      paymentReference: ''
+      paymentReference: '',
+      accountId: '',
+      accountEmail: '',
+      accountPassword: '',
+      profile: '',
+      profilePin: ''
     },
     orderItems: [],
     adminNotes: '',
@@ -32,6 +38,7 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
 
   useEffect(() => {
     fetchProducts();
+    fetchAccounts();
   }, []);
 
   const fetchProducts = async () => {
@@ -46,6 +53,18 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
     }
   };
 
+  const fetchAccounts = async () => {
+    try {
+      const response = await accountAPI.getAll();
+      setAccounts(response.data.accounts || []);
+    } catch (error) {
+      console.error('Error fetching accounts:', error);
+      toast.error('Failed to fetch accounts');
+    } finally {
+      setLoadingAccounts(false);
+    }
+  };
+
   const addOrderItem = () => {
     const newItem = {
       product: '',
@@ -55,8 +74,7 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
       price: 0,
       quantity: 1,
       selectedProfile: null,
-      selectedPricing: null,
-      customerEmail: formData.customerInfo.email
+      selectedPricing: null
     };
     setFormData(prev => ({
       ...prev,
@@ -169,19 +187,6 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Email *</label>
-                  <input
-                    type="email"
-                    value={formData.customerInfo.email}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      customerInfo: { ...prev.customerInfo, email: e.target.value }
-                    }))}
-                    className="input-field"
-                    required
-                  />
-                </div>
-                <div>
                   <label className="block text-sm font-medium mb-2 dark:text-gray-300">Phone</label>
                   <input
                     type="tel"
@@ -203,6 +208,76 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
                       customerInfo: { ...prev.customerInfo, address: e.target.value }
                     }))}
                     className="input-field"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-bold mb-3 dark:text-white">Account Info</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Account Email *</label>
+                  <select
+                    value={formData.localOrderDetails.accountId}
+                    onChange={(e) => {
+                      const accountId = e.target.value;
+                      const account = accounts.find(a => a._id === accountId);
+                      setFormData(prev => ({
+                        ...prev,
+                        localOrderDetails: {
+                          ...prev.localOrderDetails,
+                          accountId,
+                          accountEmail: account?.email || '',
+                          accountPassword: account?.password || ''
+                        }
+                      }));
+                    }}
+                    className="input-field"
+                    required
+                    disabled={loadingAccounts}
+                  >
+                    <option value="">{loadingAccounts ? 'Loading accounts...' : 'Select Account Email'}</option>
+                    {accounts.map(account => (
+                      <option key={account._id} value={account._id}>
+                        {account.email} ({account.platform})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Password</label>
+                  <input
+                    type="text"
+                    value={formData.localOrderDetails.accountPassword}
+                    className="input-field"
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Profile *</label>
+                  <input
+                    type="text"
+                    value={formData.localOrderDetails.profile}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      localOrderDetails: { ...prev.localOrderDetails, profile: e.target.value }
+                    }))}
+                    className="input-field"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Profile PIN *</label>
+                  <input
+                    type="text"
+                    value={formData.localOrderDetails.profilePin}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      localOrderDetails: { ...prev.localOrderDetails, profilePin: e.target.value }
+                    }))}
+                    className="input-field"
+                    required
                   />
                 </div>
               </div>

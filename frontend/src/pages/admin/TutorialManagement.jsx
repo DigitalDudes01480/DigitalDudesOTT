@@ -3,10 +3,12 @@ import toast from 'react-hot-toast';
 import { Plus, Edit, Trash2, X, Save, Video } from 'lucide-react';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { tutorialAPI } from '../../utils/api';
+import Pagination from '../../components/Pagination';
 
 const TutorialManagement = () => {
   const [tutorials, setTutorials] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [editingTutorial, setEditingTutorial] = useState(null);
   const [formData, setFormData] = useState({
@@ -16,6 +18,8 @@ const TutorialManagement = () => {
     order: 0,
     isActive: true
   });
+
+  const pageSize = 10;
 
   const sortedTutorials = useMemo(() => {
     return [...tutorials].sort((a, b) => {
@@ -29,6 +33,15 @@ const TutorialManagement = () => {
   useEffect(() => {
     fetchTutorials();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortedTutorials.length]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedTutorials.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedTutorials = sortedTutorials.slice(startIndex, startIndex + pageSize);
 
   const fetchTutorials = async () => {
     try {
@@ -132,7 +145,7 @@ const TutorialManagement = () => {
           <div className="py-10 text-center text-gray-600 dark:text-gray-400">No tutorials yet.</div>
         ) : (
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {sortedTutorials.map((tutorial) => (
+            {paginatedTutorials.map((tutorial) => (
               <div key={tutorial._id} className="py-4 flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -172,6 +185,12 @@ const TutorialManagement = () => {
           </div>
         )}
       </div>
+
+      <Pagination
+        currentPage={safePage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

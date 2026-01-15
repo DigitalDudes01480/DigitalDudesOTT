@@ -3,10 +3,12 @@ import toast from 'react-hot-toast';
 import { Plus, Edit, Trash2, X, Save, HelpCircle } from 'lucide-react';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { faqAPI } from '../../utils/api';
+import Pagination from '../../components/Pagination';
 
 const FAQManagement = () => {
   const [faqs, setFaqs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [editingFaq, setEditingFaq] = useState(null);
   const [formData, setFormData] = useState({
@@ -15,6 +17,8 @@ const FAQManagement = () => {
     order: 0,
     isActive: true
   });
+
+  const pageSize = 10;
 
   const sortedFaqs = useMemo(() => {
     return [...faqs].sort((a, b) => {
@@ -28,6 +32,15 @@ const FAQManagement = () => {
   useEffect(() => {
     fetchFaqs();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortedFaqs.length]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedFaqs.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedFaqs = sortedFaqs.slice(startIndex, startIndex + pageSize);
 
   const fetchFaqs = async () => {
     try {
@@ -132,7 +145,7 @@ const FAQManagement = () => {
           </div>
         ) : (
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {sortedFaqs.map((faq) => (
+            {paginatedFaqs.map((faq) => (
               <div key={faq._id} className="py-4 flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -173,6 +186,12 @@ const FAQManagement = () => {
           </div>
         )}
       </div>
+
+      <Pagination
+        currentPage={safePage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

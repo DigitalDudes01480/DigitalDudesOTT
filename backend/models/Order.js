@@ -7,6 +7,10 @@ const orderSchema = new mongoose.Schema({
     required: false,
     default: null
   },
+  customerCode: {
+    type: String,
+    required: false
+  },
   orderItems: [{
     product: {
       type: mongoose.Schema.Types.ObjectId,
@@ -111,7 +115,7 @@ const orderSchema = new mongoose.Schema({
     },
     email: {
       type: String,
-      required: function() { return this.orderSource !== 'website'; }
+      required: false
     },
     phone: {
       type: String,
@@ -126,6 +130,16 @@ const orderSchema = new mongoose.Schema({
     platform: String,
     contactPerson: String,
     notes: String,
+    accountId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Account',
+      required: false,
+      default: null
+    },
+    accountEmail: String,
+    accountPassword: String,
+    profile: String,
+    profilePin: String,
     paymentMethod: {
       type: String,
       enum: ['cash', 'bank-transfer', 'esewa', 'khalti', 'phonepay', 'other'],
@@ -139,6 +153,7 @@ const orderSchema = new mongoose.Schema({
 
 orderSchema.index({ user: 1, orderStatus: 1 });
 orderSchema.index({ createdAt: -1 });
+orderSchema.index({ customerCode: 1 }, { unique: true, sparse: true });
 
 const Order = mongoose.model('Order', orderSchema);
 

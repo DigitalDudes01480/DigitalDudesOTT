@@ -3,17 +3,25 @@ import { Users, ShoppingBag, Package, DollarSign, TrendingUp, Clock, Tag, Trendi
 import { adminAPI, analyticsAPI } from '../../utils/api';
 import { formatCurrency, formatDate, getStatusColor } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Pagination from '../../components/Pagination';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('30');
+  const [recentOrdersPage, setRecentOrdersPage] = useState(1);
+
+  const pageSize = 10;
 
   useEffect(() => {
     fetchDashboardStats();
     fetchAnalytics();
   }, [period]);
+
+  useEffect(() => {
+    setRecentOrdersPage(1);
+  }, [period, stats?.recentOrders?.length]);
 
   const fetchDashboardStats = async () => {
     try {
@@ -73,6 +81,12 @@ const AdminDashboard = () => {
       bgColor: 'bg-orange-100 dark:bg-orange-900/20'
     }
   ];
+
+  const recentOrders = stats?.recentOrders || [];
+  const totalRecentOrdersPages = Math.max(1, Math.ceil(recentOrders.length / pageSize));
+  const safeRecentOrdersPage = Math.min(recentOrdersPage, totalRecentOrdersPages);
+  const startIndex = (safeRecentOrdersPage - 1) * pageSize;
+  const paginatedRecentOrders = recentOrders.slice(startIndex, startIndex + pageSize);
 
   return (
     <div className="space-y-6">
@@ -155,7 +169,7 @@ const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {stats?.recentOrders?.map((order) => (
+              {paginatedRecentOrders.map((order) => (
                 <tr key={order._id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-mono dark:text-gray-300">
                     {order._id.substring(0, 8)}...
@@ -179,6 +193,12 @@ const AdminDashboard = () => {
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          currentPage={safeRecentOrdersPage}
+          totalPages={totalRecentOrdersPages}
+          onPageChange={setRecentOrdersPage}
+        />
       </div>
 
       {analytics && (

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import api from '../../utils/api';
+import Pagination from '../../components/Pagination';
 
 const CouponManagement = () => {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
@@ -22,6 +24,8 @@ const CouponManagement = () => {
     validUntil: '',
     isActive: true
   });
+
+  const pageSize = 10;
   const [formData, setFormData] = useState({
     code: '',
     description: '',
@@ -40,6 +44,15 @@ const CouponManagement = () => {
     fetchCoupons();
     fetchStats();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [coupons.length]);
+
+  const totalPages = Math.max(1, Math.ceil(coupons.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedCoupons = coupons.slice(startIndex, startIndex + pageSize);
 
   const fetchCoupons = async () => {
     try {
@@ -213,7 +226,7 @@ const CouponManagement = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {coupons.map((coupon) => (
+              {paginatedCoupons.map((coupon) => (
                 <tr key={coupon._id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="font-mono font-bold text-primary-600 dark:text-primary-400">
@@ -271,6 +284,12 @@ const CouponManagement = () => {
           </table>
         </div>
       </div>
+
+      <Pagination
+        currentPage={safePage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">

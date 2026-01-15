@@ -3,6 +3,7 @@ import { MessageCircle, Search, Eye, X } from 'lucide-react';
 import { ticketAPI } from '../../utils/api';
 import { formatDate, getStatusColor } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Pagination from '../../components/Pagination';
 import toast from 'react-hot-toast';
 
 const TicketManagement = () => {
@@ -12,9 +13,16 @@ const TicketManagement = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedTicket, setSelectedTicket] = useState(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
   useEffect(() => {
     fetchTickets();
   }, [statusFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
 
   const fetchTickets = async () => {
     try {
@@ -34,6 +42,11 @@ const TicketManagement = () => {
     ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ticket.user?.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredTickets.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedTickets = filteredTickets.slice(startIndex, startIndex + pageSize);
 
   if (loading) {
     return (
@@ -90,7 +103,7 @@ const TicketManagement = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredTickets.map((ticket) => (
+              {paginatedTickets.map((ticket) => (
                 <tr key={ticket._id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-mono dark:text-gray-300">
                     {ticket.ticketNumber}
@@ -137,6 +150,12 @@ const TicketManagement = () => {
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          currentPage={safePage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {selectedTicket && (

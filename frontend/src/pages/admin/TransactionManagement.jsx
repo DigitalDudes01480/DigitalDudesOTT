@@ -3,6 +3,7 @@ import { Search, DollarSign } from 'lucide-react';
 import { transactionAPI } from '../../utils/api';
 import { formatCurrency, formatDate, getStatusColor } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Pagination from '../../components/Pagination';
 import toast from 'react-hot-toast';
 
 const TransactionManagement = () => {
@@ -10,16 +11,23 @@ const TransactionManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const pageSize = 10;
 
   useEffect(() => {
     fetchTransactions();
   }, [statusFilter]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
   const fetchTransactions = async () => {
     try {
       const params = statusFilter ? { status: statusFilter } : {};
       const response = await transactionAPI.getAll(params);
-      setTransactions(response.data.transactions);
+      setTransactions(response.data.transactions || []);
     } catch (error) {
       console.error('Error fetching transactions:', error);
       toast.error('Failed to fetch transactions');
@@ -30,13 +38,18 @@ const TransactionManagement = () => {
 
   const totalRevenue = transactions
     .filter(t => t.status === 'completed')
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
   const filteredTransactions = transactions.filter(trans =>
-    trans.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    trans.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    trans.user?.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (trans.transactionId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (trans.user?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (trans.user?.email || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedTransactions = filteredTransactions.slice(startIndex, startIndex + pageSize);
 
   if (loading) {
     return (
@@ -126,29 +139,29 @@ const TransactionManagement = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredTransactions.map((transaction) => (
+              {paginatedTransactions.map((transaction) => (
                 <tr key={transaction._id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-mono dark:text-gray-300">
-                    {transaction.transactionId.substring(0, 20)}...
+                    {transaction.transactionId ? `${transaction.transactionId.substring(0, 20)}...` : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <p className="font-medium dark:text-white">{transaction.user?.name}</p>
-                      <p className="text-sm text-gray-500">{transaction.user?.email}</p>
+                      <p className="font-medium dark:text-white">{transaction.user?.name || 'N/A'}</p>
+                      <p className="text-sm text-gray-500">{transaction.user?.email || 'N/A'}</p>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-300">
-                    {formatDate(transaction.createdAt)}
+                    {transaction.createdAt ? formatDate(transaction.createdAt) : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap font-medium dark:text-white">
-                    {formatCurrency(transaction.amount)}
+                    {formatCurrency(Number(transaction.amount) || 0)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-300 capitalize">
-                    {transaction.paymentMethod}
+                    {transaction.paymentMethod || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(transaction.status)}`}>
-                      {transaction.status}
+                      {transaction.status || 'unknown'}
                     </span>
                   </td>
                 </tr>
@@ -156,6 +169,12 @@ const TransactionManagement = () => {
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          currentPage={safePage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
     </div>
   );

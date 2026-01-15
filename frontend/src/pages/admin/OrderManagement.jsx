@@ -3,6 +3,7 @@ import { Search, Eye, Truck, X, Image as ImageIcon, Pencil, Trash2 } from 'lucid
 import { orderAPI } from '../../utils/api';
 import { formatCurrency, formatDate, getStatusColor } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Pagination from '../../components/Pagination';
 import toast from 'react-hot-toast';
 
 const OrderManagement = () => {
@@ -11,6 +12,7 @@ const OrderManagement = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
@@ -25,9 +27,15 @@ const OrderManagement = () => {
     additionalNote: ''
   });
 
+  const pageSize = 10;
+
   useEffect(() => {
     fetchOrders();
   }, [statusFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
 
   const fetchOrders = async () => {
     try {
@@ -154,6 +162,11 @@ const OrderManagement = () => {
     order.user?.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedOrders = filteredOrders.slice(startIndex, startIndex + pageSize);
+
   if (error) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -227,7 +240,7 @@ const OrderManagement = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredOrders.map((order) => (
+              {paginatedOrders.map((order) => (
                 <tr key={order._id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-mono dark:text-gray-300">
                     {order._id.substring(0, 10)}...
@@ -340,6 +353,12 @@ const OrderManagement = () => {
             </div>
           )}
         </div>
+
+        <Pagination
+          currentPage={safePage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {selectedOrder && !showDeliveryModal && !showStatusModal && !showReceiptModal && (

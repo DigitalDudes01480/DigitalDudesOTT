@@ -3,10 +3,12 @@ import { Plus, Edit, Trash2, GripVertical, Save, X } from 'lucide-react';
 import { categoryAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Pagination from '../../components/Pagination';
 
 const CategoryManagement = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [formData, setFormData] = useState({
@@ -17,9 +19,15 @@ const CategoryManagement = () => {
     icon: ''
   });
 
+  const pageSize = 10;
+
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [categories.length]);
 
   const fetchCategories = async () => {
     try {
@@ -32,6 +40,11 @@ const CategoryManagement = () => {
       setLoading(false);
     }
   };
+
+  const totalPages = Math.max(1, Math.ceil(categories.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedCategories = categories.slice(startIndex, startIndex + pageSize);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -152,7 +165,7 @@ const CategoryManagement = () => {
         </div>
 
         <div className="space-y-2">
-          {categories.map((category) => (
+          {paginatedCategories.map((category) => (
             <div
               key={category._id}
               className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-md transition"
@@ -214,6 +227,12 @@ const CategoryManagement = () => {
             </div>
           )}
         </div>
+
+        <Pagination
+          currentPage={safePage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {showModal && (

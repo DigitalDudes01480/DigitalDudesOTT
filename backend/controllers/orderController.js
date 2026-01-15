@@ -3,6 +3,8 @@ import Product from '../models/Product.js';
 import Subscription from '../models/Subscription.js';
 import Transaction from '../models/Transaction.js';
 import User from '../models/User.js';
+import Account from '../models/Account.js';
+import crypto from 'crypto';
 import { sendEmail, emailTemplates, sendAdminNewOrderNotification, sendOrderConfirmation, sendOrderStatusUpdate, sendSubscriptionDelivery } from '../utils/emailService.js';
 
 const addDays = (date, days) => {
@@ -499,7 +501,7 @@ export const updateOrderStatus = async (req, res) => {
 
 export const deliverOrder = async (req, res) => {
   try {
-    const { credentials, activationKey, instructions, startDate } = req.body;
+    const { credentials, activationKey, instructions, startDate, credentialType } = req.body;
 
     const order = await Order.findById(req.params.id)
       .populate('user', 'name email')
@@ -537,6 +539,15 @@ export const deliverOrder = async (req, res) => {
       },
       { new: true, upsert: false }
     );
+
+    // Local orders don't have a user, so skip subscription creation + email delivery logic.
+    if (!order.user) {
+      return res.status(200).json({
+        success: true,
+        message: isAlreadyDelivered ? 'Credentials updated successfully' : 'Order delivered successfully',
+        order: updatedOrder
+      });
+    }
 
     // Update existing subscriptions with new credentials if already delivered
     if (isAlreadyDelivered) {
@@ -663,7 +674,7 @@ export const deliverOrder = async (req, res) => {
     res.status(200).json({
       success: true,
       message: isAlreadyDelivered ? 'Credentials updated successfully' : 'Order delivered successfully',
-      order
+      order: updatedOrder
     });
   } catch (error) {
     res.status(500).json({
@@ -741,10 +752,25 @@ export const createLocalOrder = async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!customerInfo?.name || !customerInfo?.email) {
+    if (!customerInfo?.name) {
       return res.status(400).json({
         success: false,
-        message: 'Customer name and email are required'
+        message: 'Customer name is required'
+      });
+    }
+
+    if (!localOrderDetails?.accountId || !localOrderDetails?.profile || !localOrderDetails?.profilePin) {
+      return res.status(400).json({
+        success: false,
+        message: 'Account, profile, and profile PIN are required'
+      });
+    }
+
+    const account = await Account.findById(localOrderDetails.accountId);
+    if (!account) {
+      return res.status(400).json({
+        success: false,
+        message: 'Selected account not found'
       });
     }
 
@@ -762,9 +788,33 @@ export const createLocalOrder = async (req, res) => {
       });
     }
 
+    let customerCode;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const candidate = `DD-${crypto.randomBytes(12).toString('hex').toUpperCase()}`;
+      const exists = await Order.findOne({ customerCode: candidate }).select('_id');
+      if (!exists) {
+        customerCode = candidate;
+        break;
+      }
+    }
+
+    if (!customerCode) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to generate customer code'
+      });
+    }
+
     // Create the local order
+    const normalizedLocalOrderDetails = {
+      ...(localOrderDetails || {}),
+      accountEmail: account.email,
+      accountPassword: account.password
+    };
+
     const order = await Order.create({
       user: null, // Local orders don't have a user account
+      customerCode,
       orderItems,
       totalAmount,
       couponCode,
@@ -772,12 +822,12 @@ export const createLocalOrder = async (req, res) => {
       originalAmount: originalAmount || totalAmount,
       orderStatus: 'confirmed',
       paymentStatus: 'completed',
-      paymentMethod: localOrderDetails?.paymentMethod || 'other',
+      paymentMethod: normalizedLocalOrderDetails?.paymentMethod || 'other',
       orderSource: orderSource || 'other',
       customerInfo,
-      localOrderDetails,
+      localOrderDetails: normalizedLocalOrderDetails,
       adminNotes,
-      customerNotes: localOrderDetails?.notes || ''
+      customerNotes: normalizedLocalOrderDetails?.notes || ''
     });
 
     // Populate product information for response
@@ -819,6 +869,44 @@ export const createLocalOrder = async (req, res) => {
     });
   } catch (error) {
     console.error('Create local order error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+export const getOrderByCustomerCode = async (req, res) => {
+  try {
+    const customerCode = String(req.params.customerCode || '').trim();
+    if (!customerCode) {
+      return res.status(400).json({
+        success: false,
+        message: 'Customer code is required'
+      });
+    }
+
+    const order = await Order.findOne({ customerCode })
+      .populate('orderItems.product', 'name ottType image')
+      .select('-adminNotes -receiptData -receiptImage');
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    const subscriptions = await Subscription.find({ order: order._id })
+      .populate('product', 'name ottType image')
+      .sort('-createdAt');
+
+    res.status(200).json({
+      success: true,
+      order,
+      subscriptions
+    });
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: error.message

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Zap, CreditCard, Headphones, ArrowRight, Users, Target, Award, Heart, ChevronDown } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { faqAPI, productAPI, tutorialAPI } from '../utils/api';
+import { faqAPI, productAPI, tutorialAPI, orderAPI } from '../utils/api';
 import ProductCard from '../components/ProductCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { isAndroidWebView } from '../utils/appMode';
@@ -13,6 +13,11 @@ const Home = () => {
   const [openFaqId, setOpenFaqId] = useState(null);
   const [tutorials, setTutorials] = useState([]);
   const [openTutorialId, setOpenTutorialId] = useState(null);
+  const [showSubscriptionLookup, setShowSubscriptionLookup] = useState(false);
+  const [customerCode, setCustomerCode] = useState('');
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState('');
+  const [lookupResult, setLookupResult] = useState(null);
   const isApp = isAndroidWebView();
 
   const getYouTubeEmbedUrl = (value) => {
@@ -126,6 +131,17 @@ const Home = () => {
                 Browse Subscriptions
                 <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSubscriptionLookup(true);
+                  setLookupError('');
+                  setLookupResult(null);
+                }}
+                className="bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white hover:bg-white/20 font-bold py-2.5 sm:py-3 px-5 sm:px-8 rounded-xl transition-all transform active:scale-95 hover:scale-105 inline-flex items-center justify-center group text-sm"
+              >
+                Search Your Subscription
+              </button>
             </div>
           </div>
         </div>
@@ -385,6 +401,172 @@ const Home = () => {
           )}
         </div>
       </section>
+
+      {showSubscriptionLookup && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-xl w-full overflow-hidden shadow-2xl">
+            <div className="p-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-lg font-bold dark:text-white">Search Your Subscription</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSubscriptionLookup(false);
+                  setLookupError('');
+                  setLookupResult(null);
+                  setCustomerCode('');
+                }}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+              >
+                <span className="sr-only">Close</span>
+                <ChevronDown className="w-5 h-5 rotate-180 text-gray-600 dark:text-gray-300" />
+              </button>
+            </div>
+
+            <form
+              className="p-5 space-y-4"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const code = customerCode.trim();
+                if (!code) {
+                  setLookupError('Please enter your customer code');
+                  return;
+                }
+                setLookupLoading(true);
+                setLookupError('');
+                setLookupResult(null);
+                try {
+                  const res = await orderAPI.lookupByCustomerCode(code);
+                  setLookupResult(res.data);
+                } catch (err) {
+                  setLookupError(err.response?.data?.message || 'Failed to lookup subscription');
+                } finally {
+                  setLookupLoading(false);
+                }
+              }}
+            >
+              <div>
+                <label className="block text-sm font-medium mb-2 dark:text-gray-300">Customer Code</label>
+                <input
+                  type="text"
+                  value={customerCode}
+                  onChange={(e) => setCustomerCode(e.target.value)}
+                  className="input-field"
+                  placeholder="e.g., DD-XXXXXXXXXXXX..."
+                  autoFocus
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn-primary w-full"
+                disabled={lookupLoading}
+              >
+                {lookupLoading ? 'Searching...' : 'Search'}
+              </button>
+
+              {lookupError && (
+                <div className="p-3 rounded-lg bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300 text-sm">
+                  {lookupError}
+                </div>
+              )}
+
+              {lookupResult?.order && (
+                <div className="space-y-3">
+                  <div className="p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Order Status</p>
+                      <p className="font-semibold dark:text-white">{lookupResult.order.orderStatus}</p>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Customer Code</p>
+                      <p className="font-mono text-sm dark:text-white">{lookupResult.order.customerCode}</p>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Created At</p>
+                      <p className="text-sm dark:text-white">{lookupResult.order.createdAt ? new Date(lookupResult.order.createdAt).toLocaleString() : 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  {lookupResult.order.deliveryDetails && (
+                    <div className="p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                      <p className="text-sm font-semibold mb-3 dark:text-white">Delivery Details</p>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between gap-4">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Delivered At</p>
+                          <p className="text-sm dark:text-white">
+                            {lookupResult.order.deliveryDetails.deliveredAt
+                              ? new Date(lookupResult.order.deliveryDetails.deliveredAt).toLocaleString()
+                              : 'N/A'}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Email</p>
+                          <p className="text-sm font-mono dark:text-white">
+                            {lookupResult.order.deliveryDetails.credentials?.email || 'N/A'}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Password</p>
+                          <p className="text-sm font-mono dark:text-white">
+                            {lookupResult.order.deliveryDetails.credentials?.password ? '********' : 'N/A'}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Profile</p>
+                          <p className="text-sm font-mono dark:text-white">
+                            {lookupResult.order.deliveryDetails.credentials?.profile || 'N/A'}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Profile PIN</p>
+                          <p className="text-sm font-mono dark:text-white">
+                            {lookupResult.order.deliveryDetails.credentials?.profilePin ? '****' : 'N/A'}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Activation Key</p>
+                          <p className="text-sm font-mono dark:text-white">
+                            {lookupResult.order.deliveryDetails.activationKey || 'N/A'}
+                          </p>
+                        </div>
+                        <div className="pt-2">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Instructions</p>
+                          <p className="text-sm dark:text-white whitespace-pre-wrap">
+                            {lookupResult.order.deliveryDetails.instructions || 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <p className="text-sm font-semibold mb-3 dark:text-white">Subscriptions</p>
+                    {(lookupResult.subscriptions || []).length === 0 ? (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">No subscriptions found yet. Please wait for delivery.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {lookupResult.subscriptions.map((sub) => (
+                          <div key={sub._id} className="flex items-start justify-between gap-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                            <div>
+                              <p className="font-semibold text-sm dark:text-white">{sub.product?.name || sub.ottType || 'Subscription'}</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
+                                Expiry: {sub.expiryDate ? new Date(sub.expiryDate).toLocaleDateString() : 'N/A'}
+                              </p>
+                            </div>
+                            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
+                              {sub.status || 'unknown'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
