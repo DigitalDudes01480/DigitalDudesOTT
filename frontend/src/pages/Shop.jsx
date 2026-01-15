@@ -334,7 +334,7 @@ const Shop = () => {
                         {categoryProducts.length} {categoryProducts.length === 1 ? 'item' : 'items'}
                       </span>
                     </div>
-                    <div className={`grid gap-4 sm:gap-6 ${viewMode === 'compact' ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' : 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
+                    <div className={`grid gap-4 sm:gap-6 ${viewMode === 'compact' ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' : 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'}`}>
                       {categoryProducts.map((product, idx) => (
                         <div key={product._id} className="animate-scale-in" style={{ animationDelay: `${idx * 50}ms` }}>
                           <ProductCard product={product} hideDetails />
@@ -356,7 +356,7 @@ const Shop = () => {
                         {uncategorizedProducts.length} {uncategorizedProducts.length === 1 ? 'product' : 'products'}
                       </span>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6">
                       {uncategorizedProducts.map((product) => (
                         <ProductCard key={product._id} product={product} hideDetails />
                       ))}
@@ -366,7 +366,7 @@ const Shop = () => {
 
                 {/* Show all products if no categories or all filtered out */}
                 {productsByCategory.length === 0 && uncategorizedProducts.length === 0 && filteredProducts.length > 0 && (
-                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6">
                     {filteredProducts.map((product) => (
                       <ProductCard key={product._id} product={product} hideDetails />
                     ))}

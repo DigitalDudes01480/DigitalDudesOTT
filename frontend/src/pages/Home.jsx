@@ -502,6 +502,14 @@ const Home = () => {
                           </p>
                         </div>
                         <div className="flex items-center justify-between gap-4">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Expiry Date</p>
+                          <p className="text-sm dark:text-white">
+                            {lookupResult.subscriptions && lookupResult.subscriptions.length > 0 && lookupResult.subscriptions[0].expiryDate
+                              ? new Date(lookupResult.subscriptions[0].expiryDate).toLocaleDateString()
+                              : 'N/A'}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
                           <p className="text-sm text-gray-600 dark:text-gray-400">Email</p>
                           <p className="text-sm font-mono dark:text-white">
                             {lookupResult.order.deliveryDetails.credentials?.email || 'N/A'}
