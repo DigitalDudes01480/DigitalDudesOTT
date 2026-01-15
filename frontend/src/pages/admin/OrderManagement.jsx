@@ -512,6 +512,27 @@ const DeliveryModal = ({ order, onClose, onSuccess }) => {
   });
   const [loading, setLoading] = useState(false);
 
+  // Pre-fill form with existing delivery details if order is already delivered
+  useEffect(() => {
+    if (order.deliveryDetails) {
+      const existingCreds = order.deliveryDetails.credentials || {};
+      setFormData({
+        credentials: {
+          email: existingCreds.email || '',
+          password: existingCreds.password || '',
+          loginPin: existingCreds.loginPin || '',
+          profile: existingCreds.profile || '',
+          profilePin: existingCreds.profilePin || ''
+        },
+        credentialType: existingCreds.credentialType || 'password',
+        instructions: order.deliveryDetails.instructions || '',
+        startDate: order.deliveryDetails.deliveredAt 
+          ? new Date(order.deliveryDetails.deliveredAt).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0]
+      });
+    }
+  }, [order]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);

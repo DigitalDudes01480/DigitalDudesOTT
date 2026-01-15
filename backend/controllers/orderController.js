@@ -455,7 +455,9 @@ export const deliverOrder = async (req, res) => {
           {
             $set: {
               'credentials.email': credentials?.email || '',
-              'credentials.password': isSharedProfile ? undefined : (credentials?.password || ''),
+              'credentials.password': credentialType === 'password' ? (credentials?.password || '') : undefined,
+              'credentials.loginPin': credentialType === 'loginPin' ? (credentials?.loginPin || '') : undefined,
+              'credentials.credentialType': credentialType || 'password',
               'credentials.profile': credentials?.profile || '',
               'credentials.profilePin': credentials?.profilePin || '',
               'credentials.additionalNote': credentials?.additionalNote || '',
