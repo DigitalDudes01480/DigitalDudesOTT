@@ -298,7 +298,7 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
                     
                     return (
                       <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                           <div>
                             <label className="block text-sm font-medium mb-2 dark:text-gray-300">Product *</label>
                             <select
@@ -350,6 +350,19 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
                                 </option>
                               ))}
                             </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium mb-2 dark:text-gray-300">Price (NPR) *</label>
+                            <input
+                              type="number"
+                              value={item.price}
+                              onChange={(e) => updateOrderItem(index, 'price', parseFloat(e.target.value) || 0)}
+                              className="input-field"
+                              min="0"
+                              step="0.01"
+                              required
+                            />
                           </div>
                           
                           <div>
