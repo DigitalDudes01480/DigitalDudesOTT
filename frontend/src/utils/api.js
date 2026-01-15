@@ -96,6 +96,7 @@ export const orderAPI = {
   updateStatus: (id, data) => api.put(`/orders/${id}/status`, data),
   deliver: (id, data) => api.put(`/orders/${id}/deliver`, data),
   updatePayment: (id, data) => api.put(`/orders/${id}/payment`, data),
+  updateCredentials: (id, data) => api.put(`/orders/${id}/credentials`, data),
   createLocal: (data) => api.post('/orders/local', data),
 };
 

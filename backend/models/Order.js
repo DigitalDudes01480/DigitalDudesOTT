@@ -39,6 +39,10 @@ const orderSchema = new mongoose.Schema({
       required: true,
       default: 1
     },
+    expiryDate: {
+      type: Date,
+      required: false
+    },
     selectedProfile: {
       type: mongoose.Schema.Types.Mixed,
       default: null

@@ -10,7 +10,8 @@ import {
   createLocalOrder,
   getOrderByCustomerCode,
   updateOrderAdmin,
-  deleteOrderAdmin
+  deleteOrderAdmin,
+  updateOrderCredentials
 } from '../controllers/orderController.js';
 import { protect, authorize } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
@@ -27,6 +28,7 @@ router.delete('/:id', protect, authorize('admin'), deleteOrderAdmin);
 router.put('/:id/status', protect, authorize('admin'), updateOrderStatus);
 router.put('/:id/deliver', protect, authorize('admin'), deliverOrder);
 router.put('/:id/payment', protect, authorize('admin'), updatePaymentStatus);
+router.put('/:id/credentials', protect, authorize('admin'), updateOrderCredentials);
 router.post('/local', protect, authorize('admin'), createLocalOrder);
 
 export default router;

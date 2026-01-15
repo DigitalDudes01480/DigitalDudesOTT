@@ -55,7 +55,8 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
       selectedDuration: '',
       duration: { value: 30, unit: 'days' },
       price: 0,
-      quantity: 1
+      quantity: 1,
+      expiryDate: ''
     };
     setFormData(prev => ({
       ...prev,
@@ -100,18 +101,33 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
         };
       }
       
-      // If duration is selected, update price
+      // If duration is selected, update price and calculate expiry date
       if (field === 'selectedDuration' && value) {
         const product = products.find(p => p._id === updatedItems[index].product);
         if (product) {
           const profileType = product.profileTypes?.find(pt => pt._id === updatedItems[index].selectedProfileType);
           const pricingOption = profileType?.pricingOptions?.find(po => po._id === value);
           if (pricingOption) {
+            // Calculate expiry date based on duration
+            const now = new Date();
+            const expiryDate = new Date(now);
+            const durationValue = pricingOption.duration.value;
+            const durationUnit = pricingOption.duration.unit;
+            
+            if (durationUnit === 'days') {
+              expiryDate.setDate(expiryDate.getDate() + durationValue);
+            } else if (durationUnit === 'month' || durationUnit === 'months') {
+              expiryDate.setMonth(expiryDate.getMonth() + durationValue);
+            } else if (durationUnit === 'year') {
+              expiryDate.setFullYear(expiryDate.getFullYear() + durationValue);
+            }
+            
             updatedItems[index] = {
               ...updatedItems[index],
               selectedDuration: value,
               duration: pricingOption.duration,
-              price: pricingOption.price
+              price: pricingOption.price,
+              expiryDate: expiryDate.toISOString().split('T')[0]
             };
           }
         }
@@ -298,7 +314,7 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
                     
                     return (
                       <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
                           <div>
                             <label className="block text-sm font-medium mb-2 dark:text-gray-300">Product *</label>
                             <select
@@ -361,6 +377,17 @@ const LocalOrderModal = ({ onClose, onSuccess }) => {
                               className="input-field"
                               min="0"
                               step="0.01"
+                              required
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium mb-2 dark:text-gray-300">Expiry Date *</label>
+                            <input
+                              type="date"
+                              value={item.expiryDate}
+                              onChange={(e) => updateOrderItem(index, 'expiryDate', e.target.value)}
+                              className="input-field"
                               required
                             />
                           </div>

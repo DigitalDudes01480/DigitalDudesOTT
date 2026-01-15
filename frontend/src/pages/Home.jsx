@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Zap, CreditCard, Headphones, ArrowRight, Users, Target, Award, Heart, ChevronDown } from 'lucide-react';
+import { ShieldCheck, Zap, CreditCard, Headphones, ArrowRight, Users, Target, Award, Heart, ChevronDown, Eye, EyeOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { faqAPI, productAPI, tutorialAPI, orderAPI } from '../utils/api';
 import ProductCard from '../components/ProductCard';
@@ -18,6 +18,8 @@ const Home = () => {
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState('');
   const [lookupResult, setLookupResult] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPin, setShowPin] = useState(false);
   const isApp = isAndroidWebView();
 
   const getYouTubeEmbedUrl = (value) => {
@@ -507,9 +509,22 @@ const Home = () => {
                         </div>
                         <div className="flex items-center justify-between gap-4">
                           <p className="text-sm text-gray-600 dark:text-gray-400">Password</p>
-                          <p className="text-sm font-mono dark:text-white">
-                            {lookupResult.order.deliveryDetails.credentials?.password ? '********' : 'N/A'}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-mono dark:text-white">
+                              {lookupResult.order.deliveryDetails.credentials?.password 
+                                ? (showPassword ? lookupResult.order.deliveryDetails.credentials.password : '********')
+                                : 'N/A'}
+                            </p>
+                            {lookupResult.order.deliveryDetails.credentials?.password && (
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                              >
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center justify-between gap-4">
                           <p className="text-sm text-gray-600 dark:text-gray-400">Profile</p>
@@ -519,9 +534,22 @@ const Home = () => {
                         </div>
                         <div className="flex items-center justify-between gap-4">
                           <p className="text-sm text-gray-600 dark:text-gray-400">Profile PIN</p>
-                          <p className="text-sm font-mono dark:text-white">
-                            {lookupResult.order.deliveryDetails.credentials?.profilePin ? '****' : 'N/A'}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-mono dark:text-white">
+                              {lookupResult.order.deliveryDetails.credentials?.profilePin 
+                                ? (showPin ? lookupResult.order.deliveryDetails.credentials.profilePin : '****')
+                                : 'N/A'}
+                            </p>
+                            {lookupResult.order.deliveryDetails.credentials?.profilePin && (
+                              <button
+                                type="button"
+                                onClick={() => setShowPin(!showPin)}
+                                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                              >
+                                {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <div className="pt-2">
                           <p className="text-sm text-gray-600 dark:text-gray-400">Instructions</p>

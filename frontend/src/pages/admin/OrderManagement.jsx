@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Eye, Truck, X, Image as ImageIcon, Pencil, Trash2 } from 'lucide-react';
+import { Search, Eye, Truck, X, Image as ImageIcon, Pencil, Trash2, EyeOff } from 'lucide-react';
 import { orderAPI } from '../../utils/api';
 import { formatCurrency, formatDate, getStatusColor } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -18,6 +18,7 @@ const OrderManagement = () => {
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showEditCredentialsModal, setShowEditCredentialsModal] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [deliveryForm, setDeliveryForm] = useState({
     email: '',
@@ -26,6 +27,8 @@ const OrderManagement = () => {
     profilePin: '',
     additionalNote: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPin, setShowPin] = useState(false);
 
   const pageSize = 10;
 
@@ -134,7 +137,24 @@ const OrderManagement = () => {
       profilePin: order.deliveryDetails?.credentials?.profilePin || '',
       additionalNote: order.deliveryDetails?.credentials?.additionalNote || ''
     });
-    setShowDeliveryModal(true);
+    setShowPassword(false);
+    setShowPin(false);
+    setShowEditCredentialsModal(true);
+  };
+
+  const handleSubmitCredentials = async (e) => {
+    e.preventDefault();
+    try {
+      await orderAPI.updateCredentials(selectedOrder._id, {
+        credentials: deliveryForm
+      });
+      toast.success('Credentials updated successfully');
+      setShowEditCredentialsModal(false);
+      fetchOrders();
+    } catch (error) {
+      console.error('Error updating credentials:', error);
+      toast.error(error.response?.data?.message || 'Failed to update credentials');
+    }
   };
 
   const handleEditOrder = (order) => {
@@ -376,6 +396,20 @@ const OrderManagement = () => {
             setShowDeliveryModal(false);
             fetchOrders();
           }}
+        />
+      )}
+
+      {showEditCredentialsModal && selectedOrder && (
+        <EditCredentialsModal
+          order={selectedOrder}
+          deliveryForm={deliveryForm}
+          setDeliveryForm={setDeliveryForm}
+          onClose={() => setShowEditCredentialsModal(false)}
+          onSubmit={handleSubmitCredentials}
+          showPassword={showPassword}
+          setShowPassword={setShowPassword}
+          showPin={showPin}
+          setShowPin={setShowPin}
         />
       )}
 
@@ -854,6 +888,103 @@ const EditOrderModal = ({ order, onClose, onSuccess }) => {
             <div className="flex space-x-4 pt-4">
               <button type="submit" disabled={saving} className="btn-primary flex-1">
                 {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+              <button type="button" onClick={onClose} className="btn-secondary flex-1">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const EditCredentialsModal = ({ order, deliveryForm, setDeliveryForm, onClose, onSubmit, showPassword, setShowPassword, showPin, setShowPin }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold dark:text-white">Edit Credentials</h2>
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <form onSubmit={onSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Email</label>
+              <input
+                type="email"
+                value={deliveryForm.email}
+                onChange={(e) => setDeliveryForm(prev => ({ ...prev, email: e.target.value }))}
+                className="input-field"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={deliveryForm.password}
+                  onChange={(e) => setDeliveryForm(prev => ({ ...prev, password: e.target.value }))}
+                  className="input-field pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Profile</label>
+              <input
+                type="text"
+                value={deliveryForm.profile}
+                onChange={(e) => setDeliveryForm(prev => ({ ...prev, profile: e.target.value }))}
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Profile PIN</label>
+              <div className="relative">
+                <input
+                  type={showPin ? 'text' : 'password'}
+                  value={deliveryForm.profilePin}
+                  onChange={(e) => setDeliveryForm(prev => ({ ...prev, profilePin: e.target.value }))}
+                  className="input-field pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPin(!showPin)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Additional Note</label>
+              <textarea
+                value={deliveryForm.additionalNote}
+                onChange={(e) => setDeliveryForm(prev => ({ ...prev, additionalNote: e.target.value }))}
+                className="input-field"
+                rows="3"
+              />
+            </div>
+
+            <div className="flex space-x-4 pt-4">
+              <button type="submit" className="btn-primary flex-1">
+                Update Credentials
               </button>
               <button type="button" onClick={onClose} className="btn-secondary flex-1">
                 Cancel

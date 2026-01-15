@@ -899,3 +899,60 @@ export const getOrderByCustomerCode = async (req, res) => {
     });
   }
 };
+
+export const updateOrderCredentials = async (req, res) => {
+  try {
+    const { credentials } = req.body;
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    // Update order delivery credentials
+    if (!order.deliveryDetails) {
+      order.deliveryDetails = {};
+    }
+    
+    order.deliveryDetails.credentials = {
+      email: credentials?.email || '',
+      password: credentials?.password || '',
+      profile: credentials?.profile || '',
+      profilePin: credentials?.profilePin || '',
+      additionalNote: credentials?.additionalNote || ''
+    };
+
+    await order.save();
+
+    // Update all subscriptions for this order
+    await Subscription.updateMany(
+      { order: order._id },
+      {
+        $set: {
+          email: credentials?.email || '',
+          password: credentials?.password || '',
+          profile: credentials?.profile || '',
+          profilePin: credentials?.profilePin || ''
+        }
+      }
+    );
+
+    const updatedOrder = await Order.findById(order._id)
+      .populate('user', 'name email phone')
+      .populate('orderItems.product');
+
+    res.status(200).json({
+      success: true,
+      message: 'Credentials updated successfully',
+      order: updatedOrder
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
