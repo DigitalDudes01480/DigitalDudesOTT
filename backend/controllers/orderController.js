@@ -402,6 +402,11 @@ export const deliverOrder = async (req, res) => {
   try {
     const { credentials, credentialType, activationKey, instructions, startDate } = req.body;
 
+    console.log('=== DELIVER ORDER DEBUG ===');
+    console.log('Received credentialType:', credentialType);
+    console.log('Received credentials:', credentials);
+    console.log('Full request body:', req.body);
+
     const order = await Order.findById(req.params.id)
       .populate('user', 'name email')
       .populate('orderItems.product');
@@ -424,12 +429,16 @@ export const deliverOrder = async (req, res) => {
       instructions,
       deliveredAt: order.deliveryDetails?.deliveredAt || new Date()
     };
+
+    console.log('Order deliveryDetails before save:', JSON.stringify(order.deliveryDetails, null, 2));
     
     if (!isAlreadyDelivered) {
       order.orderStatus = 'delivered';
     }
 
     await order.save();
+    
+    console.log('Order deliveryDetails after save:', JSON.stringify(order.deliveryDetails, null, 2));
 
     // Update existing subscriptions with new credentials if already delivered
     if (isAlreadyDelivered) {
