@@ -3,11 +3,9 @@ import { Search, Eye, Truck, X, Image as ImageIcon } from 'lucide-react';
 import { orderAPI } from '../../utils/api';
 import { formatCurrency, formatDate, getStatusColor } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { useAuthStore } from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 
 const OrderManagement = () => {
-  const { user } = useAuthStore();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,42 +31,19 @@ const OrderManagement = () => {
     try {
       setError(null);
       const params = statusFilter ? { status: statusFilter } : {};
-      console.log('Fetching website orders with params:', params);
-      console.log('API URL:', 'https://backend-tau-blush-82.vercel.app/api/orders/all');
-      
-      // Check authentication
-      const token = localStorage.getItem('token');
-      console.log('Token exists:', !!token);
-      console.log('Token length:', token?.length || 0);
-      if (token) {
-        console.log('Token first 20 chars:', token.substring(0, 20) + '...');
-      }
-      
-      // Check user role
-      console.log('Current user:', user);
-      console.log('User role:', user?.role);
-      console.log('Is admin?', user?.role === 'admin');
       
       const response = await orderAPI.getAll(params);
-      console.log('Orders API response:', response.data);
-      
-      if (!response.data) {
-        throw new Error('No data received from API');
-      }
       
       const allOrders = response.data.orders || [];
-      console.log('Total orders received:', allOrders.length);
       
       // Filter only website orders (orders without orderSource or with orderSource = 'website')
       const websiteOrders = allOrders.filter(order => {
         // Handle cases where orderSource might not exist yet
         const orderSource = order.orderSource || 'website'; // Default to website for backward compatibility
         const isWebsite = orderSource === 'website';
-        console.log(`Order ${order._id}: orderSource=${orderSource}, isWebsite=${isWebsite}`);
         return isWebsite;
       });
       
-      console.log('Website orders after filtering:', websiteOrders.length);
       setOrders(websiteOrders);
     } catch (error) {
       console.error('Error fetching website orders:', error);
@@ -572,7 +547,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
   );
 };
 
-const DeliveryModal = ({ order, onClose, onSuccess }) => {
+export const DeliveryModal = ({ order, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     credentials: { email: '', password: '', profile: '', profilePin: '' },
     instructions: '',

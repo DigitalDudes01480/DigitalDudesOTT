@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Hardcoded production API URL to ensure it works in Capacitor app
-const API_URL = 'https://backend-tau-blush-82.vercel.app/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://digitaldudesott-production.up.railway.app/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -9,7 +9,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 30000, // 30 seconds timeout
-  validateStatus: (status) => status < 500, // Don't throw on 4xx errors
+  validateStatus: (status) => status >= 200 && status < 300,
 });
 
 api.interceptors.request.use(

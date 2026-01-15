@@ -4,12 +4,10 @@ import { orderAPI } from '../../utils/api';
 import { formatCurrency, formatDate, getStatusColor } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import LocalOrderModal from './LocalOrderModal';
-import DeliveryModal from './OrderManagement';
-import { useAuthStore } from '../../store/useAuthStore';
+import { DeliveryModal } from './OrderManagement';
 import toast from 'react-hot-toast';
 
 const LocalOrders = () => {
-  const { user } = useAuthStore();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,44 +29,21 @@ const LocalOrders = () => {
       setError(null);
       const params = {};
       if (statusFilter) params.status = statusFilter;
-      if (sourceFilter) params.source = sourceFilter;
-      
-      console.log('Fetching local orders with params:', params);
-      console.log('API URL:', 'https://backend-tau-blush-82.vercel.app/api/orders/all');
-      
-      // Check authentication
-      const token = localStorage.getItem('token');
-      console.log('Token exists:', !!token);
-      console.log('Token length:', token?.length || 0);
-      if (token) {
-        console.log('Token first 20 chars:', token.substring(0, 20) + '...');
-      }
-      
-      // Check user role
-      console.log('Current user:', user);
-      console.log('User role:', user?.role);
-      console.log('Is admin?', user?.role === 'admin');
       
       const response = await orderAPI.getAll(params);
-      console.log('Orders API response:', response.data);
-      
-      if (!response.data) {
-        throw new Error('No data received from API');
-      }
       
       const allOrders = response.data.orders || [];
-      console.log('Total orders received:', allOrders.length);
       
       // Filter only local orders (not from website)
-      const localOrders = allOrders.filter(order => {
-        // Handle cases where orderSource might not exist yet
-        const orderSource = order.orderSource || 'website'; // Default to website for backward compatibility
-        const isLocal = orderSource !== 'website';
-        console.log(`Order ${order._id}: orderSource=${orderSource}, isLocal=${isLocal}`);
-        return isLocal;
+      let localOrders = allOrders.filter((order) => {
+        const orderSource = order.orderSource || 'website';
+        return orderSource !== 'website';
       });
-      
-      console.log('Local orders after filtering:', localOrders.length);
+
+      if (sourceFilter) {
+        localOrders = localOrders.filter((order) => (order.orderSource || 'other') === sourceFilter);
+      }
+
       setOrders(localOrders);
     } catch (error) {
       console.error('Error fetching local orders:', error);
