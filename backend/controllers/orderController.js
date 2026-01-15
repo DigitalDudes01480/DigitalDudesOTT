@@ -571,23 +571,28 @@ export const deliverOrder = async (req, res) => {
         const isSharedProfile = profileType?.accountType === 'shared';
         const isPrivateProfile = profileType?.accountType === 'private';
         
+        const updateFields = {
+          'credentials.email': credentials?.email || '',
+          'credentials.password': credentialType === 'password' && credentials?.password ? credentials.password : undefined,
+          'credentials.loginPin': credentialType === 'loginPin' && credentials?.loginPin ? credentials.loginPin : undefined,
+          'credentials.credentialType': credentialType || 'password',
+          'credentials.profile': credentials?.profile || '',
+          'credentials.profilePin': credentials?.profilePin || '',
+          'credentials.additionalNote': credentials?.additionalNote || '',
+          'credentials.isSharedProfile': isSharedProfile,
+          'credentials.isPrivateProfile': isPrivateProfile,
+          'credentials.accessCode': isSharedProfile ? null : undefined,
+          activationKey: undefined
+        };
+
+        // Add expiryDate if provided
+        if (expiryDate) {
+          updateFields.expiryDate = new Date(expiryDate);
+        }
+
         await Subscription.updateOne(
           { _id: subscription._id },
-          {
-            $set: {
-              'credentials.email': credentials?.email || '',
-              'credentials.password': credentialType === 'password' && credentials?.password ? credentials.password : undefined,
-              'credentials.loginPin': credentialType === 'loginPin' && credentials?.loginPin ? credentials.loginPin : undefined,
-              'credentials.credentialType': credentialType || 'password',
-              'credentials.profile': credentials?.profile || '',
-              'credentials.profilePin': credentials?.profilePin || '',
-              'credentials.additionalNote': credentials?.additionalNote || '',
-              'credentials.isSharedProfile': isSharedProfile,
-              'credentials.isPrivateProfile': isPrivateProfile,
-              'credentials.accessCode': isSharedProfile ? null : undefined,
-              activationKey: undefined
-            }
-          }
+          { $set: updateFields }
         );
       }
 
