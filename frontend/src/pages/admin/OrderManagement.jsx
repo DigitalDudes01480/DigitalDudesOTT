@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -28,12 +29,15 @@ const OrderManagement = () => {
 
   const fetchOrders = async () => {
     try {
+      setError(null);
       const params = statusFilter ? { status: statusFilter } : {};
       const response = await orderAPI.getAll(params);
-      setOrders(response.data.orders);
+      setOrders(response.data.orders || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast.error('Failed to fetch orders');
+      setError(error.message || 'Failed to fetch orders');
+      setOrders([]); // Ensure orders is always an array
     } finally {
       setLoading(false);
     }
@@ -112,11 +116,28 @@ const OrderManagement = () => {
     setShowDeliveryModal(true);
   };
 
-  const filteredOrders = orders.filter(order =>
+  const filteredOrders = (orders || []).filter(order =>
     order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.user?.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <p className="text-red-600 dark:text-red-400 mb-4">Error loading orders</p>
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{error}</p>
+          <button 
+            onClick={fetchOrders}
+            className="btn-primary"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -261,6 +282,13 @@ const OrderManagement = () => {
               ))}
             </tbody>
           </table>
+          {filteredOrders.length === 0 && !loading && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 dark:text-gray-400">
+                {searchTerm ? 'No orders found matching your search.' : 'No orders found.'}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
