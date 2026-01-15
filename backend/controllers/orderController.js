@@ -501,7 +501,7 @@ export const updateOrderStatus = async (req, res) => {
 
 export const deliverOrder = async (req, res) => {
   try {
-    const { credentials, instructions, startDate, credentialType } = req.body;
+    const { credentials, instructions, startDate, expiryDate, credentialType } = req.body;
 
     const order = await Order.findById(req.params.id)
       .populate('user', 'name email')
@@ -616,18 +616,24 @@ export const deliverOrder = async (req, res) => {
     if (!isAlreadyDelivered) {
       for (const item of order.orderItems) {
       const subscriptionStartDate = startDate ? new Date(startDate) : new Date();
-      let expiryDate = new Date(subscriptionStartDate);
+      let subscriptionExpiryDate;
 
-      const durationValue = Number(item?.duration?.value || 0);
-      const durationUnit = String(item?.duration?.unit || 'month');
-
-      if (durationUnit === 'days') {
-        expiryDate = addDays(expiryDate, durationValue);
-      } else if (durationUnit === 'year') {
-        expiryDate = addDays(expiryDate, durationValue * 365);
+      // Use expiryDate from request if provided, otherwise calculate from duration
+      if (expiryDate) {
+        subscriptionExpiryDate = new Date(expiryDate);
       } else {
-        // Treat month/months as 30 days so fractional months (e.g. 1.5) work as expected.
-        expiryDate = addDays(expiryDate, durationValue * 30);
+        subscriptionExpiryDate = new Date(subscriptionStartDate);
+        const durationValue = Number(item?.duration?.value || 0);
+        const durationUnit = String(item?.duration?.unit || 'month');
+
+        if (durationUnit === 'days') {
+          subscriptionExpiryDate = addDays(subscriptionExpiryDate, durationValue);
+        } else if (durationUnit === 'year') {
+          subscriptionExpiryDate = addDays(subscriptionExpiryDate, durationValue * 365);
+        } else {
+          // Treat month/months as 30 days so fractional months (e.g. 1.5) work as expected.
+          subscriptionExpiryDate = addDays(subscriptionExpiryDate, durationValue * 30);
+        }
       }
 
       // Check if this is a shared or private profile type
@@ -641,7 +647,7 @@ export const deliverOrder = async (req, res) => {
         product: item.product._id,
         ottType: item.ottType,
         startDate: subscriptionStartDate,
-        expiryDate,
+        expiryDate: subscriptionExpiryDate,
         duration: item.duration,
         status: 'active',
         credentials: {

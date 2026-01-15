@@ -653,7 +653,8 @@ export const DeliveryModal = ({ order, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     credentials: { email: '', password: '', profile: '', profilePin: '' },
     instructions: '',
-    startDate: new Date().toISOString().split('T')[0]
+    startDate: new Date().toISOString().split('T')[0],
+    expiryDate: ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -672,7 +673,8 @@ export const DeliveryModal = ({ order, onClose, onSuccess }) => {
         instructions: order.deliveryDetails.instructions || '',
         startDate: order.deliveryDetails.deliveredAt 
           ? new Date(order.deliveryDetails.deliveredAt).toISOString().split('T')[0]
-          : new Date().toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0],
+        expiryDate: ''
       });
     }
   }, [order]);
@@ -774,17 +776,30 @@ export const DeliveryModal = ({ order, onClose, onSuccess }) => {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2 dark:text-gray-300">
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                className="input-field"
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  className="input-field"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+                  Expiry Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.expiryDate}
+                  onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+                  className="input-field"
+                />
+              </div>
             </div>
 
             <div className="flex space-x-4 pt-4">
