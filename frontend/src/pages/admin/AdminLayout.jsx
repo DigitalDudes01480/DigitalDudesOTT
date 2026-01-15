@@ -1,13 +1,34 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingBag, Users, CreditCard, Truck, LogOut, Menu, X, MessageCircle, FolderTree, HelpCircle, Video, Tag } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, CreditCard, Truck, LogOut, Menu, X, MessageCircle, FolderTree, HelpCircle, Video, Tag, Key } from 'lucide-react';
 import { useState } from 'react';
 import useAuthStore from '../../store/useAuthStore';
+import { useEffect } from 'react';
+import toast from 'react-hot-toast';
+import { accountAPI } from '../../utils/api';
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+
+  useEffect(() => {
+    const notifyExpiringAccounts = async () => {
+      try {
+        const res = await accountAPI.getExpiringSoon(3);
+        const count = res.data?.count || res.data?.accounts?.length || 0;
+        if (count > 0) {
+          toast.error(`${count} account(s) are expiring soon. Please check Accounts.`);
+        }
+      } catch (error) {
+        // ignore
+      }
+    };
+
+    if (user?.role === 'admin') {
+      notifyExpiringAccounts();
+    }
+  }, [user?.role]);
 
   const handleLogout = () => {
     logout();
@@ -21,6 +42,7 @@ const AdminLayout = () => {
     { path: '/admin/orders', icon: ShoppingBag, label: 'Orders' },
     { path: '/admin/local-orders', icon: MessageCircle, label: 'Local Orders' },
     { path: '/admin/subscriptions', icon: Truck, label: 'Subscriptions' },
+    { path: '/admin/accounts', icon: Key, label: 'Accounts' },
     { path: '/admin/transactions', icon: CreditCard, label: 'Transactions' },
     { path: '/admin/customers', icon: Users, label: 'Customers' },
     { path: '/admin/coupons', icon: Tag, label: 'Coupons' },

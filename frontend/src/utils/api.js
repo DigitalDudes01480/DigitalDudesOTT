@@ -165,6 +165,16 @@ export const analyticsAPI = {
   getCouponAnalytics: (period = '30') => api.get(`/analytics/coupons?period=${period}`)
 };
 
+export const accountAPI = {
+  getAll: (params) => api.get('/accounts', { params }),
+  getById: (id) => api.get(`/accounts/${id}`),
+  create: (data) => api.post('/accounts', data),
+  update: (id, data) => api.put(`/accounts/${id}`, data),
+  delete: (id) => api.delete(`/accounts/${id}`),
+  renew: (id, data) => api.put(`/accounts/${id}/renew`, data),
+  getExpiringSoon: (days = 7) => api.get(`/accounts/expiring-soon?days=${days}`)
+};
+
 export const adminAPI = {
   getDashboard: () => api.get('/admin/dashboard'),
   getCustomers: (params) => api.get('/admin/customers', { params }),
