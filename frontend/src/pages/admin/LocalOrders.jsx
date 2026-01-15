@@ -5,9 +5,11 @@ import { formatCurrency, formatDate, getStatusColor } from '../../utils/formatte
 import LoadingSpinner from '../../components/LoadingSpinner';
 import LocalOrderModal from './LocalOrderModal';
 import DeliveryModal from './OrderManagement';
+import { useAuthStore } from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
 const LocalOrders = () => {
+  const { user } = useAuthStore();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,6 +35,19 @@ const LocalOrders = () => {
       
       console.log('Fetching local orders with params:', params);
       console.log('API URL:', 'https://backend-tau-blush-82.vercel.app/api/orders/all');
+      
+      // Check authentication
+      const token = localStorage.getItem('token');
+      console.log('Token exists:', !!token);
+      console.log('Token length:', token?.length || 0);
+      if (token) {
+        console.log('Token first 20 chars:', token.substring(0, 20) + '...');
+      }
+      
+      // Check user role
+      console.log('Current user:', user);
+      console.log('User role:', user?.role);
+      console.log('Is admin?', user?.role === 'admin');
       
       const response = await orderAPI.getAll(params);
       console.log('Orders API response:', response.data);
