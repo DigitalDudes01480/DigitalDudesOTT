@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { sendEmail, emailTemplates } from '../utils/emailService.js';
 import { sendPasswordResetEmail } from '../utils/emailService.js';
 import passport from '../config/passport.js';
-import { generateToken } from '../utils/jwt.js';
+import generateToken from '../utils/generateToken.js';
 
 export const register = async (req, res) => {
   try {
