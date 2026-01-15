@@ -19,6 +19,7 @@ const AdminLayout = () => {
     { path: '/admin/products', icon: Package, label: 'Products' },
     { path: '/admin/categories', icon: FolderTree, label: 'Categories' },
     { path: '/admin/orders', icon: ShoppingBag, label: 'Orders' },
+    { path: '/admin/local-orders', icon: MessageCircle, label: 'Local Orders' },
     { path: '/admin/subscriptions', icon: Truck, label: 'Subscriptions' },
     { path: '/admin/transactions', icon: CreditCard, label: 'Transactions' },
     { path: '/admin/customers', icon: Users, label: 'Customers' },

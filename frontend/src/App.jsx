@@ -36,6 +36,7 @@ import FAQManagement from './pages/admin/FAQManagement';
 import TutorialManagement from './pages/admin/TutorialManagement';
 import CouponManagement from './pages/admin/CouponManagement';
 import SignInCodeRequests from './pages/admin/SignInCodeRequests';
+import LocalOrders from './pages/admin/LocalOrders';
 
 function App() {
   const isApp = isAndroidWebView();
@@ -54,6 +55,7 @@ function App() {
           <Route path="products" element={<ProductManagement />} />
           <Route path="categories" element={<CategoryManagement />} />
           <Route path="orders" element={<OrderManagement />} />
+          <Route path="local-orders" element={<LocalOrders />} />
           <Route path="subscriptions" element={<SubscriptionManagement />} />
           <Route path="transactions" element={<TransactionManagement />} />
           <Route path="customers" element={<CustomerManagement />} />
