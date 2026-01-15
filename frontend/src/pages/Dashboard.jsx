@@ -148,11 +148,7 @@ const SubscriptionsTab = ({ subscriptions }) => {
 
   return (
     <div className="space-y-3 md:space-y-4">
-      {subscriptions.map((subscription) => {
-        console.log('Subscription credentials:', subscription.credentials);
-        console.log('Has loginPin:', !!subscription.credentials?.loginPin);
-        console.log('Credential type:', subscription.credentials?.credentialType);
-        return (
+      {subscriptions.map((subscription) => (
         <div key={subscription._id} className="border dark:border-gray-700 rounded-lg p-3 md:p-6 hover:shadow-md transition bg-white dark:bg-gray-800">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex-1">
@@ -194,14 +190,12 @@ const SubscriptionsTab = ({ subscriptions }) => {
                   </div>
                   {subscription.credentials.credentialType === 'loginPin' || subscription.credentials.loginPin ? (
                     <>
-                      {subscription.credentials.loginPin && (
-                        <div className="bg-white dark:bg-gray-800 p-2 rounded">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Login PIN</p>
-                          <p className="text-sm font-mono font-semibold dark:text-white break-all">
-                            {subscription.credentials.loginPin}
-                          </p>
-                        </div>
-                      )}
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Login PIN</p>
+                        <p className="text-sm font-mono font-semibold dark:text-white break-all">
+                          {subscription.credentials.loginPin || '(Empty - Request sign-in code below)'}
+                        </p>
+                      </div>
                       {(() => {
                         const latestRequest = subscription.signInCodeRequests?.slice(-1)[0];
                         const hasCode = latestRequest?.status === 'sent' && latestRequest?.code;
@@ -272,8 +266,7 @@ const SubscriptionsTab = ({ subscriptions }) => {
             )}
           </div>
         </div>
-        );
-      })}
+      ))}
     </div>
   );
 };
