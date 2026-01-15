@@ -293,8 +293,8 @@ export const requestSignInCode = async (req, res) => {
       });
     }
 
-    // Check if credential type is loginPin
-    if (subscription.credentials?.credentialType !== 'loginPin') {
+    // Check if subscription has loginPin (for backward compatibility, check both credentialType and loginPin existence)
+    if (subscription.credentials?.credentialType !== 'loginPin' && !subscription.credentials?.loginPin) {
       return res.status(400).json({
         success: false,
         message: 'Sign-in code requests are only available for Login PIN credentials'
