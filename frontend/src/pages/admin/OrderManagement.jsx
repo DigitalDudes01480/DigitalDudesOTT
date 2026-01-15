@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Search, Eye, Truck, X, Image as ImageIcon } from 'lucide-react';
+import { Search, Eye, Truck, X, Image as ImageIcon, Plus } from 'lucide-react';
 import { orderAPI } from '../../utils/api';
 import { formatCurrency, formatDate, getStatusColor } from '../../utils/formatters';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import LocalOrderModal from './LocalOrderModal';
 import toast from 'react-hot-toast';
 
 const OrderManagement = () => {
@@ -15,6 +16,7 @@ const OrderManagement = () => {
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showLocalOrderModal, setShowLocalOrderModal] = useState(false);
   const [deliveryForm, setDeliveryForm] = useState({
     email: '',
     password: '',
@@ -149,9 +151,18 @@ const OrderManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold dark:text-white">Order Management</h1>
-        <p className="text-gray-600 dark:text-gray-400">Manage and deliver customer orders</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold dark:text-white">Order Management</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage and deliver customer orders</p>
+        </div>
+        <button
+          onClick={() => setShowLocalOrderModal(true)}
+          className="btn-primary flex items-center space-x-2"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Create Local Order</span>
+        </button>
       </div>
 
       <div className="card">
@@ -187,6 +198,7 @@ const OrderManagement = () => {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Order ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Customer</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Source</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Items</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Amount</th>
@@ -202,9 +214,22 @@ const OrderManagement = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <p className="font-medium dark:text-white">{order.user?.name}</p>
-                      <p className="text-sm text-gray-500">{order.user?.email}</p>
+                      <p className="font-medium dark:text-white">
+                        {order.user?.name || order.customerInfo?.name || 'N/A'}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {order.user?.email || order.customerInfo?.email || 'N/A'}
+                      </p>
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      order.orderSource === 'website' 
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                        : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                    }`}>
+                      {order.orderSource === 'website' ? 'Website' : order.orderSource || 'Other'}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-300">
                     {formatDate(order.createdAt)}
@@ -422,6 +447,16 @@ const OrderManagement = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {showLocalOrderModal && (
+        <LocalOrderModal
+          onClose={() => setShowLocalOrderModal(false)}
+          onSuccess={() => {
+            setShowLocalOrderModal(false);
+            fetchOrders();
+          }}
+        />
       )}
     </div>
   );

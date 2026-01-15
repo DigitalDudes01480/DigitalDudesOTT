@@ -6,7 +6,8 @@ import {
   getAllOrders,
   updateOrderStatus,
   deliverOrder,
-  updatePaymentStatus
+  updatePaymentStatus,
+  createLocalOrder
 } from '../controllers/orderController.js';
 import { protect, authorize } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
@@ -20,5 +21,6 @@ router.get('/:id', protect, getOrderById);
 router.put('/:id/status', protect, authorize('admin'), updateOrderStatus);
 router.put('/:id/deliver', protect, authorize('admin'), deliverOrder);
 router.put('/:id/payment', protect, authorize('admin'), updatePaymentStatus);
+router.post('/local', protect, authorize('admin'), createLocalOrder);
 
 export default router;

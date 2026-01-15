@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 // Hardcoded production API URL to ensure it works in Capacitor app
-// Updated to use Railway backend instead of Vercel
-const API_URL = 'https://digitaldudesott-production.up.railway.app/api';
+const API_URL = 'https://backend-tau-blush-82.vercel.app/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -89,6 +88,7 @@ export const orderAPI = {
   updateStatus: (id, data) => api.put(`/orders/${id}/status`, data),
   deliver: (id, data) => api.put(`/orders/${id}/deliver`, data),
   updatePayment: (id, data) => api.put(`/orders/${id}/payment`, data),
+  createLocal: (data) => api.post('/orders/local', data),
 };
 
 export const subscriptionAPI = {

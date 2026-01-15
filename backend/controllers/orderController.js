@@ -625,3 +625,104 @@ export const updatePaymentStatus = async (req, res) => {
     });
   }
 };
+
+// Create local order (for Facebook, Messenger, WhatsApp, etc.)
+export const createLocalOrder = async (req, res) => {
+  try {
+    const {
+      customerInfo,
+      orderItems,
+      totalAmount,
+      orderSource,
+      localOrderDetails,
+      adminNotes,
+      couponCode,
+      couponDiscount,
+      originalAmount
+    } = req.body;
+
+    // Validate required fields
+    if (!customerInfo?.name || !customerInfo?.email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Customer name and email are required'
+      });
+    }
+
+    if (!orderItems || orderItems.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'At least one order item is required'
+      });
+    }
+
+    if (!totalAmount || totalAmount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Total amount must be greater than 0'
+      });
+    }
+
+    // Create the local order
+    const order = await Order.create({
+      user: null, // Local orders don't have a user account
+      orderItems,
+      totalAmount,
+      couponCode,
+      couponDiscount: couponDiscount || 0,
+      originalAmount: originalAmount || totalAmount,
+      orderStatus: 'confirmed',
+      paymentStatus: 'completed',
+      paymentMethod: localOrderDetails?.paymentMethod || 'other',
+      orderSource: orderSource || 'other',
+      customerInfo,
+      localOrderDetails,
+      adminNotes,
+      customerNotes: localOrderDetails?.notes || ''
+    });
+
+    // Populate product information for response
+    const populatedOrder = await Order.findById(order._id).populate('orderItems.product');
+
+    // Send confirmation email if customer email is provided
+    if (customerInfo.email) {
+      try {
+        await sendEmail({
+          email: customerInfo.email,
+          subject: 'Order Confirmation - Digital Dudes',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #4F46E5;">Order Confirmation</h2>
+              <p>Dear ${customerInfo.name},</p>
+              <p>Thank you for your order! We've received your order and it's being processed.</p>
+              <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3>Order Details:</h3>
+                <p><strong>Order ID:</strong> ${order._id}</p>
+                <p><strong>Total Amount:</strong> NPR ${totalAmount}</p>
+                <p><strong>Payment Method:</strong> ${localOrderDetails?.paymentMethod || 'Other'}</p>
+                <p><strong>Order Source:</strong> ${orderSource || 'Other'}</p>
+              </div>
+              <p>We will deliver your subscription credentials shortly.</p>
+              <p>Best regards,<br>Digital Dudes Team</p>
+            </div>
+          `
+        });
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError);
+        // Don't fail the order if email fails
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Local order created successfully',
+      order: populatedOrder
+    });
+  } catch (error) {
+    console.error('Create local order error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

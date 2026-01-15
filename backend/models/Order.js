@@ -98,6 +98,40 @@ const orderSchema = new mongoose.Schema({
     data: String,
     contentType: String,
     filename: String
+  },
+  orderSource: {
+    type: String,
+    enum: ['website', 'facebook', 'messenger', 'whatsapp', 'instagram', 'phone', 'in-person', 'other'],
+    default: 'website'
+  },
+  customerInfo: {
+    name: {
+      type: String,
+      required: function() { return this.orderSource !== 'website'; }
+    },
+    email: {
+      type: String,
+      required: function() { return this.orderSource !== 'website'; }
+    },
+    phone: {
+      type: String,
+      required: false
+    },
+    address: {
+      type: String,
+      required: false
+    }
+  },
+  localOrderDetails: {
+    platform: String,
+    contactPerson: String,
+    notes: String,
+    paymentMethod: {
+      type: String,
+      enum: ['cash', 'bank-transfer', 'esewa', 'khalti', 'phonepay', 'other'],
+      required: function() { return this.orderSource !== 'website'; }
+    },
+    paymentReference: String
   }
 }, {
   timestamps: true
