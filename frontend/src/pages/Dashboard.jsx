@@ -188,48 +188,7 @@ const SubscriptionsTab = ({ subscriptions }) => {
                       {subscription.credentials.email || 'Not provided'}
                     </p>
                   </div>
-                  {subscription.credentials.credentialType === 'loginPin' || subscription.credentials.loginPin ? (
-                    <>
-                      <div className="bg-white dark:bg-gray-800 p-2 rounded">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Login PIN</p>
-                        <p className="text-sm font-mono font-semibold dark:text-white break-all">
-                          {subscription.credentials.loginPin || '(Empty - Request sign-in code below)'}
-                        </p>
-                      </div>
-                      {(() => {
-                        const latestRequest = subscription.signInCodeRequests?.slice(-1)[0];
-                        const hasCode = latestRequest?.status === 'sent' && latestRequest?.code;
-                        
-                        return (
-                          <>
-                            {hasCode && (
-                              <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded border-2 border-green-500">
-                                <p className="text-xs font-semibold text-green-700 dark:text-green-300 mb-1">🔐 Sign-In Code</p>
-                                <p className="text-2xl font-mono font-bold text-green-700 dark:text-green-300 text-center tracking-wider">
-                                  {latestRequest.code}
-                                </p>
-                              </div>
-                            )}
-                            <button
-                              onClick={async () => {
-                                try {
-                                  await subscriptionAPI.requestSignInCode(subscription._id);
-                                  toast.success('Sign-in code request submitted! Admin will send the code shortly.');
-                                  setTimeout(() => window.location.reload(), 1500);
-                                } catch (error) {
-                                  toast.error(error.response?.data?.message || 'Failed to request sign-in code');
-                                }
-                              }}
-                              className="w-full btn-secondary flex items-center justify-center space-x-2 text-sm"
-                            >
-                              <Key className="w-4 h-4" />
-                              <span>{hasCode ? 'Request New Sign-In Code' : 'Request Sign-In Code'}</span>
-                            </button>
-                          </>
-                        );
-                      })()}
-                    </>
-                  ) : subscription.credentials.password ? (
+                  {subscription.credentials.password ? (
                     <div className="bg-white dark:bg-gray-800 p-2 rounded">
                       <p className="text-xs text-gray-500 dark:text-gray-400">Password</p>
                       <p className="text-sm font-mono font-semibold dark:text-white break-all">

@@ -400,12 +400,7 @@ export const updateOrderStatus = async (req, res) => {
 
 export const deliverOrder = async (req, res) => {
   try {
-    const { credentials, credentialType, activationKey, instructions, startDate } = req.body;
-
-    console.log('=== DELIVER ORDER DEBUG (VERSION 2.0) ===');
-    console.log('Received credentialType:', credentialType);
-    console.log('Received credentials:', credentials);
-    console.log('Full request body:', req.body);
+    const { credentials, activationKey, instructions, startDate } = req.body;
 
     const order = await Order.findById(req.params.id)
       .populate('user', 'name email')
@@ -420,13 +415,11 @@ export const deliverOrder = async (req, res) => {
 
     const isAlreadyDelivered = order.orderStatus === 'delivered';
 
-    // Create deliveryDetails object with credentialType
+    // Create deliveryDetails object with password credentials only
     const deliveryDetails = {
       credentials: {
         email: credentials?.email || '',
-        password: credentialType === 'password' ? (credentials?.password || '') : '',
-        loginPin: credentialType === 'loginPin' ? (credentials?.loginPin || '') : '',
-        credentialType: credentialType || 'password',
+        password: credentials?.password || '',
         profile: credentials?.profile || '',
         profilePin: credentials?.profilePin || '',
         additionalNote: credentials?.additionalNote || ''
@@ -436,47 +429,15 @@ export const deliverOrder = async (req, res) => {
       deliveredAt: order.deliveryDetails?.deliveredAt || new Date()
     };
 
-    console.log('DeliveryDetails to save:', JSON.stringify(deliveryDetails, null, 2));
-
-    // Use direct MongoDB update with $set to ensure credentialType is saved
-    const updateQuery = {
-      $set: {
-        'deliveryDetails.credentials.email': credentials?.email || '',
-        'deliveryDetails.credentials.password': credentialType === 'password' ? (credentials?.password || '') : '',
-        'deliveryDetails.credentials.loginPin': credentialType === 'loginPin' ? (credentials?.loginPin || '') : '',
-        'deliveryDetails.credentials.credentialType': credentialType || 'password',
-        'deliveryDetails.credentials.profile': credentials?.profile || '',
-        'deliveryDetails.credentials.profilePin': credentials?.profilePin || '',
-        'deliveryDetails.credentials.additionalNote': credentials?.additionalNote || '',
-        'deliveryDetails.activationKey': activationKey || '',
-        'deliveryDetails.instructions': instructions || '',
-        'deliveryDetails.deliveredAt': order.deliveryDetails?.deliveredAt || new Date()
-      }
-    };
-    
-    if (!isAlreadyDelivered) {
-      updateQuery.$set.orderStatus = 'delivered';
-    }
-
-    console.log('MongoDB update query:', JSON.stringify(updateQuery, null, 2));
-
+    // Update order with delivery details
     const updatedOrder = await Order.findByIdAndUpdate(
       order._id,
-      updateQuery,
+      { 
+        deliveryDetails: deliveryDetails,
+        orderStatus: isAlreadyDelivered ? order.orderStatus : 'delivered'
+      },
       { new: true, upsert: false }
     );
-
-    console.log('Updated order deliveryDetails:', JSON.stringify(updatedOrder.deliveryDetails, null, 2));
-    
-    // Verify the credentialType is actually in the saved data
-    const savedCredentialType = updatedOrder.deliveryDetails?.credentials?.credentialType;
-    console.log('SAVED CREDENTIAL TYPE:', savedCredentialType);
-    console.log('CREDENTIAL TYPE TYPE:', typeof savedCredentialType);
-    console.log('CREDENTIAL TYPE VALUE:', JSON.stringify(savedCredentialType));
-    
-    // Also fetch fresh from database to double-check
-    const freshOrder = await Order.findById(order._id);
-    console.log('Fresh fetch credentialType:', freshOrder.deliveryDetails?.credentials?.credentialType);
 
     // Update existing subscriptions with new credentials if already delivered
     if (isAlreadyDelivered) {
