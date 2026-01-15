@@ -402,7 +402,7 @@ export const deliverOrder = async (req, res) => {
   try {
     const { credentials, credentialType, activationKey, instructions, startDate } = req.body;
 
-    console.log('=== DELIVER ORDER DEBUG ===');
+    console.log('=== DELIVER ORDER DEBUG (VERSION 2.0) ===');
     console.log('Received credentialType:', credentialType);
     console.log('Received credentials:', credentials);
     console.log('Full request body:', req.body);
@@ -438,13 +438,31 @@ export const deliverOrder = async (req, res) => {
 
     console.log('DeliveryDetails to save:', JSON.stringify(deliveryDetails, null, 2));
 
-    // Use direct database update to ensure credentialType is saved
+    // Use direct MongoDB update with $set to ensure credentialType is saved
+    const updateQuery = {
+      $set: {
+        'deliveryDetails.credentials.email': credentials?.email || '',
+        'deliveryDetails.credentials.password': credentialType === 'password' ? (credentials?.password || '') : '',
+        'deliveryDetails.credentials.loginPin': credentialType === 'loginPin' ? (credentials?.loginPin || '') : '',
+        'deliveryDetails.credentials.credentialType': credentialType || 'password',
+        'deliveryDetails.credentials.profile': credentials?.profile || '',
+        'deliveryDetails.credentials.profilePin': credentials?.profilePin || '',
+        'deliveryDetails.credentials.additionalNote': credentials?.additionalNote || '',
+        'deliveryDetails.activationKey': activationKey || '',
+        'deliveryDetails.instructions': instructions || '',
+        'deliveryDetails.deliveredAt': order.deliveryDetails?.deliveredAt || new Date()
+      }
+    };
+    
+    if (!isAlreadyDelivered) {
+      updateQuery.$set.orderStatus = 'delivered';
+    }
+
+    console.log('MongoDB update query:', JSON.stringify(updateQuery, null, 2));
+
     const updatedOrder = await Order.findByIdAndUpdate(
       order._id,
-      { 
-        deliveryDetails: deliveryDetails,
-        orderStatus: isAlreadyDelivered ? order.orderStatus : 'delivered'
-      },
+      updateQuery,
       { new: true, upsert: false }
     );
 
