@@ -449,6 +449,16 @@ export const deliverOrder = async (req, res) => {
     );
 
     console.log('Updated order deliveryDetails:', JSON.stringify(updatedOrder.deliveryDetails, null, 2));
+    
+    // Verify the credentialType is actually in the saved data
+    const savedCredentialType = updatedOrder.deliveryDetails?.credentials?.credentialType;
+    console.log('SAVED CREDENTIAL TYPE:', savedCredentialType);
+    console.log('CREDENTIAL TYPE TYPE:', typeof savedCredentialType);
+    console.log('CREDENTIAL TYPE VALUE:', JSON.stringify(savedCredentialType));
+    
+    // Also fetch fresh from database to double-check
+    const freshOrder = await Order.findById(order._id);
+    console.log('Fresh fetch credentialType:', freshOrder.deliveryDetails?.credentials?.credentialType);
 
     // Update existing subscriptions with new credentials if already delivered
     if (isAlreadyDelivered) {
