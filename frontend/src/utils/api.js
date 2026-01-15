@@ -1,7 +1,12 @@
 import axios from 'axios';
 
 // Hardcoded production API URL to ensure it works in Capacitor app
-const API_URL = import.meta.env.VITE_API_URL || 'https://digitaldudesott-production.up.railway.app/api';
+const ENV_API_URL = import.meta.env.VITE_API_URL;
+const FALLBACK_API_URL = 'https://digitaldudesott-production.up.railway.app/api';
+const API_URL =
+  !ENV_API_URL || ENV_API_URL.includes('backend-tau-blush-82.vercel.app')
+    ? FALLBACK_API_URL
+    : ENV_API_URL;
 
 const api = axios.create({
   baseURL: API_URL,
