@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, Tag } from 'lucide-react';
 import useCartStore from '../store/useCartStore';
 import useAuthStore from '../store/useAuthStore';
 import { formatCurrency } from '../utils/formatters';
+import { couponAPI } from '../utils/api';
 import toast from 'react-hot-toast';
 
 const Cart = () => {
@@ -11,8 +12,13 @@ const Cart = () => {
   const { isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
   const [emailInputs, setEmailInputs] = useState({});
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   const total = getTotal();
+  const discount = appliedCoupon ? appliedCoupon.discount : 0;
+  const finalTotal = total - discount;
 
   const handleEmailChange = (itemId, email) => {
     setEmailInputs({ ...emailInputs, [itemId]: email });
@@ -27,11 +33,49 @@ const Cart = () => {
     }
   };
 
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error('Please enter a coupon code');
+      return;
+    }
+
+    if (!isAuthenticated) {
+      toast.error('Please login to apply coupon');
+      return;
+    }
+
+    setApplyingCoupon(true);
+    try {
+      const productIds = items.map(item => item._id);
+      const response = await couponAPI.validateCoupon({
+        code: couponCode,
+        orderAmount: total,
+        products: productIds
+      });
+
+      if (response.data.success) {
+        setAppliedCoupon(response.data.coupon);
+        toast.success(`Coupon applied! You saved ${formatCurrency(response.data.coupon.discount)}`);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Invalid coupon code');
+      setAppliedCoupon(null);
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    toast.success('Coupon removed');
+  };
+
   const handleCheckout = () => {
     if (!isAuthenticated) {
       navigate('/login?redirect=/checkout');
     } else {
-      navigate('/checkout');
+      navigate('/checkout', { state: { appliedCoupon } });
     }
   };
 
@@ -173,19 +217,48 @@ const Cart = () => {
 
               {/* Coupon Code Input */}
               <div className="mb-4 sm:mb-6">
-                <label className="block text-sm font-semibold mb-2 dark:text-white">
+                <label className="block text-sm font-semibold mb-2 dark:text-white flex items-center gap-2">
+                  <Tag className="w-4 h-4" />
                   Have a Coupon Code?
                 </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Enter coupon code"
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                  />
-                  <button className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg transition-colors">
-                    Apply
-                  </button>
-                </div>
+                {appliedCoupon ? (
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-bold text-green-700 dark:text-green-300">
+                          {appliedCoupon.code}
+                        </p>
+                        <p className="text-xs text-green-600 dark:text-green-400">
+                          {appliedCoupon.description}
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleRemoveCoupon}
+                        className="text-red-600 hover:text-red-700 text-xs font-semibold"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="Enter coupon code"
+                      className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      disabled={applyingCoupon}
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={applyingCoupon}
+                      className="px-4 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white text-sm font-semibold rounded-lg transition-colors"
+                    >
+                      {applyingCoupon ? 'Applying...' : 'Apply'}
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
@@ -193,6 +266,12 @@ const Cart = () => {
                   <span>Subtotal ({items.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
                   <span>{formatCurrency(total)}</span>
                 </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-sm sm:text-base text-green-600 dark:text-green-400 font-semibold">
+                    <span>Discount ({appliedCoupon.code})</span>
+                    <span>-{formatCurrency(discount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm sm:text-base text-gray-600 dark:text-gray-400">
                   <span>Tax</span>
                   <span>{formatCurrency(0)}</span>
@@ -200,8 +279,13 @@ const Cart = () => {
                 <div className="border-t dark:border-gray-700 pt-2 sm:pt-3">
                   <div className="flex justify-between text-lg sm:text-xl font-bold dark:text-white">
                     <span>Total</span>
-                    <span className="text-primary-600">{formatCurrency(total)}</span>
+                    <span className="text-primary-600">{formatCurrency(finalTotal)}</span>
                   </div>
+                  {appliedCoupon && (
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-1 text-right">
+                      You saved {formatCurrency(discount)}!
+                    </p>
+                  )}
                 </div>
               </div>
 
