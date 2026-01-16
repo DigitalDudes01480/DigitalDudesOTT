@@ -3,37 +3,10 @@ import { Filter, Search, X, TrendingUp, Sparkles, Grid3x3, LayoutGrid } from 'lu
 import { productAPI, categoryAPI } from '../utils/api';
 import ProductCard from '../components/ProductCard';
 import LoadingSpinner from '../components/LoadingSpinner';
-import ShopBanner from '../components/ShopBanner';
 
 const Shop = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [banners] = useState([
-    {
-      image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800',
-      title: '🎉 Special Offer!',
-      description: 'Get up to 50% off on premium subscriptions',
-      badge: 'LIMITED TIME',
-      buttonText: 'Shop Now',
-      link: '#products'
-    },
-    {
-      image: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=800',
-      title: '🎬 New Arrivals',
-      description: 'Check out our latest OTT platform subscriptions',
-      badge: 'NEW',
-      buttonText: 'Explore',
-      link: '#products'
-    },
-    {
-      image: 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=800',
-      title: '💎 Premium Plans',
-      description: 'Upgrade to premium and enjoy exclusive benefits',
-      badge: 'PREMIUM',
-      buttonText: 'Learn More',
-      link: '#products'
-    }
-  ]);
   const [filters, setFilters] = useState({
     category: '',
     ottType: '',
@@ -136,8 +109,8 @@ const Shop = () => {
   const uncategorizedProducts = filteredProducts.filter(p => !p.category);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 py-4 sm:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50/30 via-white to-secondary-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 py-6 sm:py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Enhanced Header */}
         <div className="mb-6 sm:mb-10 text-center sm:text-left relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 via-secondary-500/5 to-primary-500/5 blur-3xl"></div>
@@ -156,16 +129,8 @@ const Shop = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
-          {/* Banner Section - Instagram Story Style */}
-          <div className="lg:col-span-1 order-first lg:order-last">
-            <div className="sticky top-20">
-              <ShopBanner banners={banners} />
-            </div>
-          </div>
-
-          {/* Filters Section */}
-          <div className="lg:col-span-1 order-2 lg:order-first">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-8">
+          <div className="lg:col-span-1">
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="lg:hidden w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 mb-3 flex items-center justify-center"
@@ -173,8 +138,8 @@ const Shop = () => {
               <Filter className="w-4 h-4 mr-2" />
               {showFilters ? 'Hide Filters' : 'Show Filters'}
             </button>
-            <div className={`card p-6 sm:p-8 sticky top-20 border-2 border-primary-200 dark:border-primary-800/50 shadow-xl hover:shadow-2xl transition-all duration-300 backdrop-blur-sm bg-white/80 dark:bg-gray-900/80 ${showFilters ? 'block animate-slide-down' : 'hidden lg:block'}`}>
-              <div className="flex items-center justify-between mb-8 pb-6 border-b-2 border-gradient-to-r from-primary-500 to-secondary-500">
+            <div className={`card p-5 sm:p-7 sticky top-20 border border-primary-200/60 dark:border-primary-800/30 shadow-lg hover:shadow-xl transition-all duration-300 bg-white dark:bg-gray-900 rounded-2xl ${showFilters ? 'block animate-slide-down' : 'hidden lg:block'}`}>
+              <div className="flex items-center justify-between mb-6 pb-5 border-b border-gray-200 dark:border-gray-700">
                 <h2 className="text-lg sm:text-2xl font-black dark:text-white flex items-center">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-500 via-primary-600 to-secondary-600 rounded-xl flex items-center justify-center mr-3 shadow-lg transform hover:scale-110 transition-transform">
                     <Filter className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -296,8 +261,7 @@ const Shop = () => {
             </div>
           </div>
 
-          {/* Products Section */}
-          <div className="lg:col-span-3 order-3 lg:order-2">
+          <div className="lg:col-span-3">
             {/* Results Header with View Toggle */}
             {!loading && filteredProducts.length > 0 && (
               <div className="mb-6 flex items-center justify-between bg-gradient-to-r from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 p-4 rounded-xl border border-primary-200 dark:border-primary-800 shadow-md">
