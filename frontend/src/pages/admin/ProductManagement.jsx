@@ -412,28 +412,17 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium mb-2 dark:text-gray-300">OTT Platform</label>
-              <select
+              <input
+                type="text"
                 value={formData.ottType}
                 onChange={(e) => handleOttPlatformChange(e.target.value)}
+                placeholder="Enter OTT platform name (e.g., Netflix, Prime Video, Disney+)"
                 className="input-field"
                 required
-              >
-                <option value="">Select OTT Platform</option>
-                <option value="Netflix">Netflix</option>
-                <option value="Prime Video">Prime Video</option>
-                <option value="Disney+">Disney+</option>
-                <option value="Spotify">Spotify</option>
-                <option value="YouTube Premium">YouTube Premium</option>
-                <option value="HBO Max">HBO Max</option>
-                <option value="Apple TV+">Apple TV+</option>
-                <option value="Hulu">Hulu</option>
-                <option value="Paramount+">Paramount+</option>
-                <option value="Apple Music">Apple Music</option>
-                <option value="Zee5">Zee5</option>
-                <option value="SonyLIV">SonyLIV</option>
-                <option value="Voot">Voot</option>
-                <option value="Other">Other</option>
-              </select>
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Enter the name of the streaming platform or service
+              </p>
             </div>
 
             <div>
