@@ -171,6 +171,23 @@ const Cart = () => {
             <div className="card p-4 sm:p-6 sticky top-20">
               <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6 dark:text-white">Order Summary</h2>
 
+              {/* Coupon Code Input */}
+              <div className="mb-4 sm:mb-6">
+                <label className="block text-sm font-semibold mb-2 dark:text-white">
+                  Have a Coupon Code?
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Enter coupon code"
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  />
+                  <button className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg transition-colors">
+                    Apply
+                  </button>
+                </div>
+              </div>
+
               <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
                 <div className="flex justify-between text-sm sm:text-base text-gray-600 dark:text-gray-400">
                   <span>Subtotal ({items.reduce((sum, item) => sum + item.quantity, 0)} items)</span>

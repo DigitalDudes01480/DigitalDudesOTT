@@ -303,102 +303,20 @@ const CheckoutForm = () => {
       <div className="card p-4 sm:p-6">
         <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6 dark:text-white">Order Summary</h2>
         
-        <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+        <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
           {items.map((item) => (
-            <div key={item._id} className="flex items-center gap-3 sm:gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              {item.image && (
-                <img 
-                  src={item.image} 
-                  alt={item.name}
-                  className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg shadow-md"
-                />
-              )}
-              <div className="flex-1">
-                <h3 className="font-semibold text-sm sm:text-base dark:text-white">{item.name}</h3>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  {item.ottType} • Qty: {item.quantity}
-                </p>
-                {item.selectedProfile?.name && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Profile: {item.selectedProfile.name}
-                  </p>
-                )}
-              </div>
-              <span className="font-bold text-sm sm:text-base dark:text-white">
+            <div key={item._id} className="flex justify-between text-sm">
+              <span className="dark:text-gray-300">
+                {item.name} x {item.quantity}
+              </span>
+              <span className="font-medium dark:text-white">
                 {formatCurrency(item.price * item.quantity)}
               </span>
             </div>
           ))}
         </div>
-        
-        {/* Coupon Code Section */}
-        <div className="mb-4 sm:mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
-          <label className="block text-sm font-medium mb-2 dark:text-white">Have a Coupon Code?</label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-              placeholder="Enter coupon code"
-              className="input-field flex-1"
-              disabled={appliedCoupon || couponLoading}
-            />
-            <button
-              type="button"
-              onClick={async () => {
-                if (!couponCode.trim()) {
-                  toast.error('Please enter a coupon code');
-                  return;
-                }
-                setCouponLoading(true);
-                try {
-                  // Add coupon validation API call here if needed
-                  toast.success('Coupon applied successfully!');
-                  setAppliedCoupon({ code: couponCode });
-                  setDiscount(subtotal * 0.1); // Example: 10% discount
-                } catch (error) {
-                  toast.error('Invalid coupon code');
-                } finally {
-                  setCouponLoading(false);
-                }
-              }}
-              disabled={appliedCoupon || couponLoading || !couponCode.trim()}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              {couponLoading ? 'Applying...' : appliedCoupon ? '✓ Applied' : 'Apply'}
-            </button>
-          </div>
-          {appliedCoupon && (
-            <div className="mt-2 flex items-center justify-between text-sm">
-              <span className="text-green-700 dark:text-green-400 font-medium">✓ Coupon "{appliedCoupon.code}" applied</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setAppliedCoupon(null);
-                  setDiscount(0);
-                  setCouponCode('');
-                }}
-                className="text-red-600 hover:text-red-700 font-medium"
-              >
-                Remove
-              </button>
-            </div>
-          )}
-        </div>
 
         <div className="border-t dark:border-gray-700 pt-4">
-          <div className="space-y-2 mb-4">
-            <div className="flex justify-between text-sm dark:text-gray-300">
-              <span>Subtotal</span>
-              <span>{formatCurrency(subtotal)}</span>
-            </div>
-            {discount > 0 && (
-              <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
-                <span>Discount</span>
-                <span>-{formatCurrency(discount)}</span>
-              </div>
-            )}
-          </div>
           <div className="flex justify-between text-xl font-bold dark:text-white mb-6">
             <span>Total</span>
             <span className="text-primary-600">{formatCurrency(total)}</span>

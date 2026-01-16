@@ -416,12 +416,12 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
                 type="text"
                 value={formData.ottType}
                 onChange={(e) => handleOttPlatformChange(e.target.value)}
-                placeholder="Enter OTT platform name (e.g., Netflix, Prime Video, Disney+)"
                 className="input-field"
+                placeholder="Enter OTT Platform (e.g., Netflix, Prime Video, Disney+)"
                 required
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Enter the name of the streaming platform or service
+                Examples: Netflix, Prime Video, Disney+, Spotify, YouTube Premium, HBO Max, Apple TV+, Zee5, SonyLIV, Voot
               </p>
             </div>
 
