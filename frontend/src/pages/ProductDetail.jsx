@@ -229,10 +229,14 @@ const ProductDetail = () => {
                     <div className="text-left">
                       <p className="font-bold dark:text-white text-xs sm:text-base leading-tight">{profile.name}</p>
                       <div className="flex items-center gap-1.5 mt-1 text-[10px] sm:text-sm text-gray-600 dark:text-gray-400">
-                        <Monitor className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        <span>{profile.screenCount} Screen{profile.screenCount > 1 ? 's' : ''}</span>
-                        <span>•</span>
-                        <span>{profile.quality}</span>
+                        {profile.screenCount > 0 && (
+                          <>
+                            <Monitor className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <span>{profile.screenCount} Screen{profile.screenCount > 1 ? 's' : ''}</span>
+                            {profile.quality && <span>•</span>}
+                          </>
+                        )}
+                        {profile.quality && <span>{profile.quality}</span>}
                       </div>
                       {profile.description && (
                         <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{profile.description}</p>

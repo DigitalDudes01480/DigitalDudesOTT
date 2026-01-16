@@ -543,17 +543,13 @@ const ProductModal = ({ product, onClose, onSuccess }) => {
 
                     <div>
                       <label className="block text-sm font-medium mb-2 dark:text-gray-300">Quality</label>
-                      <select
+                      <input
+                        type="text"
                         value={profile.quality}
                         onChange={(e) => updateProfileType(profileIndex, 'quality', e.target.value)}
                         className="input-field"
-                      >
-                        <option value="SD">SD</option>
-                        <option value="HD">HD</option>
-                        <option value="FHD">FHD</option>
-                        <option value="4K">4K</option>
-                        <option value="UHD">UHD</option>
-                      </select>
+                        placeholder="e.g., SD, HD, FHD, 4K, UHD"
+                      />
                     </div>
 
                     <div>

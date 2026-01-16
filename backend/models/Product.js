@@ -35,8 +35,8 @@ const profileTypeSchema = new mongoose.Schema({
   },
   quality: {
     type: String,
-    enum: ['SD', 'HD', 'FHD', '4K', 'UHD'],
-    default: 'HD'
+    default: 'HD',
+    trim: true
   },
   requiresOwnAccount: {
     type: Boolean,
@@ -54,7 +54,7 @@ const productSchema = new mongoose.Schema({
   ottType: {
     type: String,
     required: [true, 'Please specify OTT platform type'],
-    enum: ['Netflix', 'Prime Video', 'Disney+', 'Spotify', 'YouTube Premium', 'HBO Max', 'Apple TV+', 'Hulu', 'Paramount+', 'Other']
+    trim: true
   },
   profileTypes: {
     type: [profileTypeSchema],
