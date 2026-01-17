@@ -232,28 +232,28 @@ const Home = () => {
                 <LoadingSpinner size="lg" />
               </div>
             ) : (
-              <div className="space-y-12 sm:space-y-16">
+              <div className="space-y-8 sm:space-y-12">
                 {categorizedProducts.map((group) => (
                   <div key={group.category._id} className="animate-fade-in">
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
                         {group.category.name}
                       </h2>
                       <Link 
                         to={`/shop?category=${group.category._id}`}
-                        className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium flex items-center gap-2 text-sm sm:text-base"
+                        className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium flex items-center gap-2 text-xs sm:text-sm"
                       >
                         View All
-                        <ArrowRight className="w-4 h-4" />
+                        <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
                       </Link>
                     </div>
                     
                     {/* Horizontal scrollable product row */}
                     <div className="relative">
-                      <div className="overflow-x-auto scrollbar-hide pb-4">
-                        <div className="flex gap-4 sm:gap-6">
+                      <div className="overflow-x-auto scrollbar-hide pb-3">
+                        <div className="flex gap-3 sm:gap-4">
                           {group.products.map((product) => (
-                            <div key={product._id} className="flex-shrink-0 w-64 sm:w-72">
+                            <div key={product._id} className="flex-shrink-0 w-48 sm:w-56">
                               <ProductCard product={product} hideProfileTypes hideDetails />
                             </div>
                           ))}
