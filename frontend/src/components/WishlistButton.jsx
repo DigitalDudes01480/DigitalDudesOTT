@@ -22,9 +22,11 @@ const WishlistButton = ({ productId, size = 'md', showText = false }) => {
   const checkWishlistStatus = async () => {
     try {
       const response = await wishlistAPI.checkWishlistStatus(productId);
+      console.log('Wishlist status response:', response);
       setIsInWishlist(response.data.isInWishlist);
     } catch (error) {
       console.error('Error checking wishlist status:', error);
+      console.error('Error response:', error.response);
       setIsInWishlist(false);
     }
   };
@@ -40,17 +42,21 @@ const WishlistButton = ({ productId, size = 'md', showText = false }) => {
 
     setLoading(true);
     try {
+      console.log('Toggling wishlist for product:', productId, 'isInWishlist:', isInWishlist);
       if (isInWishlist) {
-        await wishlistAPI.removeFromWishlist(productId);
+        const response = await wishlistAPI.removeFromWishlist(productId);
+        console.log('Remove from wishlist response:', response);
         setIsInWishlist(false);
         toast.success('Removed from wishlist');
       } else {
-        await wishlistAPI.addToWishlist(productId);
+        const response = await wishlistAPI.addToWishlist(productId);
+        console.log('Add to wishlist response:', response);
         setIsInWishlist(true);
         toast.success('Added to wishlist');
       }
     } catch (error) {
       console.error('Error toggling wishlist:', error);
+      console.error('Error response:', error.response);
       toast.error(error.response?.data?.message || 'Failed to update wishlist');
     } finally {
       setLoading(false);

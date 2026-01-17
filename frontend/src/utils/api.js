@@ -11,7 +11,6 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 30000, // 30 seconds timeout
-  validateStatus: (status) => status >= 200 && status < 300,
 });
 
 api.interceptors.request.use(

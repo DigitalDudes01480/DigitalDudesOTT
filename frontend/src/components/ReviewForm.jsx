@@ -30,10 +30,12 @@ const ReviewForm = ({ productId, onReviewSubmitted }) => {
 
     try {
       setSubmitting(true);
-      await reviewAPI.addReview(productId, {
+      console.log('Submitting review for product:', productId, 'rating:', rating, 'comment:', comment.trim());
+      const response = await reviewAPI.addReview(productId, {
         rating,
         comment: comment.trim()
       });
+      console.log('Review submission response:', response);
 
       // Reset form
       setRating(0);
@@ -44,6 +46,7 @@ const ReviewForm = ({ productId, onReviewSubmitted }) => {
       }
     } catch (error) {
       console.error('Error submitting review:', error);
+      console.error('Error response:', error.response);
       alert(error.response?.data?.message || 'Failed to submit review');
     } finally {
       setSubmitting(false);
