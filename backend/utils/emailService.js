@@ -2,15 +2,35 @@ import nodemailer from 'nodemailer';
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 
 const createSmtpTransporter = () => {
-  return nodemailer.createTransport({
+  console.log('📧 Creating SMTP transporter with config:', {
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    user: process.env.EMAIL_USER,
+    hasPassword: !!process.env.EMAIL_PASSWORD
+  });
+
+  const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: Number(process.env.EMAIL_PORT || 587),
     secure: Number(process.env.EMAIL_PORT) === 465,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD
+    },
+    debug: true, // Enable debug logging
+    logger: true  // Enable logger
+  });
+
+  // Verify connection configuration
+  transporter.verify(function(error, success) {
+    if (error) {
+      console.error('❌ SMTP transporter verification failed:', error);
+    } else {
+      console.log('✅ SMTP transporter is ready to send messages');
     }
   });
+
+  return transporter;
 };
 
 const sesClient = new SESClient({
