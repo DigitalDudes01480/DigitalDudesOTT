@@ -1,0 +1,140 @@
+import User from '../models/User.js';
+import Product from '../models/Product.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { ApiError } from '../utils/ApiError.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+
+// Add product to wishlist
+export const addToWishlist = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const userId = req.user._id;
+
+  // Check if product exists
+  const product = await Product.findById(productId);
+  if (!product) {
+    throw new ApiError(404, 'Product not found');
+  }
+
+  // Find user and add to wishlist
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  // Check if product is already in wishlist
+  if (user.wishlist.includes(productId)) {
+    throw new ApiError(400, 'Product is already in your wishlist');
+  }
+
+  // Add to wishlist
+  user.wishlist.push(productId);
+  await user.save();
+
+  res.status(200).json(
+    new ApiResponse(200, 'Product added to wishlist successfully', {
+      wishlist: user.wishlist,
+      wishlistCount: user.wishlist.length
+    })
+  );
+});
+
+// Remove product from wishlist
+export const removeFromWishlist = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const userId = req.user._id;
+
+  // Find user and remove from wishlist
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  // Check if product is in wishlist
+  if (!user.wishlist.includes(productId)) {
+    throw new ApiError(400, 'Product is not in your wishlist');
+  }
+
+  // Remove from wishlist
+  user.wishlist.pull(productId);
+  await user.save();
+
+  res.status(200).json(
+    new ApiResponse(200, 'Product removed from wishlist successfully', {
+      wishlist: user.wishlist,
+      wishlistCount: user.wishlist.length
+    })
+  );
+});
+
+// Get user's wishlist
+export const getWishlist = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { page = 1, limit = 10 } = req.query;
+
+  // Find user with populated wishlist
+  const user = await User.findById(userId)
+    .populate({
+      path: 'wishlist',
+      select: 'name description image ottType profileTypes status category'
+    });
+
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  // Pagination
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + parseInt(limit);
+  const paginatedWishlist = user.wishlist.slice(startIndex, endIndex);
+
+  res.status(200).json(
+    new ApiResponse(200, 'Wishlist retrieved successfully', {
+      products: paginatedWishlist,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(user.wishlist.length / limit),
+        totalProducts: user.wishlist.length
+      }
+    })
+  );
+});
+
+// Check if product is in user's wishlist
+export const checkWishlistStatus = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const userId = req.user._id;
+
+  const user = await User.findById(userId).select('wishlist');
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  const isInWishlist = user.wishlist.includes(productId);
+
+  res.status(200).json(
+    new ApiResponse(200, 'Wishlist status checked successfully', {
+      isInWishlist,
+      wishlistCount: user.wishlist.length
+    })
+  );
+});
+
+// Clear entire wishlist
+export const clearWishlist = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  user.wishlist = [];
+  await user.save();
+
+  res.status(200).json(
+    new ApiResponse(200, 'Wishlist cleared successfully', {
+      wishlist: [],
+      wishlistCount: 0
+    })
+  );
+});

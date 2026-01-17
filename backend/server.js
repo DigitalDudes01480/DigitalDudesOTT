@@ -28,6 +28,8 @@ import analyticsRoutes from './routes/analyticsRoutes.js';
 import testRoutes from './routes/testRoutes.js';
 import sharedProfileRoutes from './routes/sharedProfile.js';
 import accountRoutes from './routes/accountRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
+import wishlistRoutes from './routes/wishlistRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -200,6 +202,8 @@ app.use('/api/order-assistant', orderAssistantRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/accounts', accountRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/wishlist', wishlistRoutes);
 
 // Health check route
 app.get('/health', (req, res) => {

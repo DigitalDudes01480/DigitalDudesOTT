@@ -196,4 +196,19 @@ export const paymentAPI = {
 };
 
 
+export const reviewAPI = {
+  getProductReviews: (productId, params) => api.get(`/reviews/product/${productId}`, { params }),
+  addReview: (productId, data) => api.post(`/reviews/product/${productId}`, data),
+  updateReview: (productId, reviewId, data) => api.put(`/reviews/product/${productId}/${reviewId}`, data),
+  deleteReview: (productId, reviewId) => api.delete(`/reviews/product/${productId}/${reviewId}`)
+};
+
+export const wishlistAPI = {
+  getWishlist: (params) => api.get('/wishlist', { params }),
+  addToWishlist: (productId) => api.post(`/wishlist/product/${productId}`),
+  removeFromWishlist: (productId) => api.delete(`/wishlist/product/${productId}`),
+  checkWishlistStatus: (productId) => api.get(`/wishlist/check/${productId}`),
+  clearWishlist: () => api.delete('/wishlist/clear')
+};
+
 export default api;
