@@ -5,9 +5,6 @@ import { productAPI } from '../utils/api';
 import { formatCurrency } from '../utils/formatters';
 import useCartStore from '../store/useCartStore';
 import LoadingSpinner from '../components/LoadingSpinner';
-import ProductReviews from '../components/ProductReviews';
-import ReviewForm from '../components/ReviewForm';
-import WishlistButton from '../components/WishlistButton';
 import toast from 'react-hot-toast';
 
 const ProductDetail = () => {
@@ -18,7 +15,6 @@ const ProductDetail = () => {
   const [selectedProfileIndex, setSelectedProfileIndex] = useState(0);
   const [selectedPricingIndex, setSelectedPricingIndex] = useState(0);
   const [customerEmail, setCustomerEmail] = useState('');
-  const [refreshReviews, setRefreshReviews] = useState(0);
   const { addToCart } = useCartStore();
 
   useEffect(() => {
@@ -167,13 +163,10 @@ const ProductDetail = () => {
                 />
               </div>
 
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between">
-                  <h1 className="text-base sm:text-lg font-bold dark:text-white leading-snug">
-                    {product.name}
-                  </h1>
-                  <WishlistButton productId={id} size="md" />
-                </div>
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-lg font-bold dark:text-white leading-snug">
+                  {product.name}
+                </h1>
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
                   {product.description}
                 </p>
@@ -211,12 +204,9 @@ const ProductDetail = () => {
 
           <div>
             <div className="hidden lg:block">
-              <div className="flex items-start justify-between mb-4">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold dark:text-white">
-                  {product.name}
-                </h1>
-                <WishlistButton productId={id} size="lg" />
-              </div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 dark:text-white">
+                {product.name}
+              </h1>
               <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg leading-relaxed">{product.description}</p>
             </div>
 
@@ -388,48 +378,6 @@ const ProductDetail = () => {
               <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-400">
                 Your subscription details will be delivered to your email within minutes of purchase confirmation.
               </p>
-            </div>
-
-            {/* Reviews Section */}
-            <div className="mt-12 space-y-8">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Customer Reviews
-                </h2>
-                <div className="flex items-center space-x-2">
-                  {product.averageRating > 0 && (
-                    <div className="flex items-center space-x-1">
-                      <div className="flex items-center">
-                        {Array.from({ length: 5 }, (_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-5 h-5 ${
-                              i < Math.round(product.averageRating)
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-gray-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {product.averageRating.toFixed(1)} ({product.reviewCount} reviews)
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Review Form */}
-              <ReviewForm 
-                productId={id} 
-                onReviewSubmitted={() => setRefreshReviews(prev => prev + 1)} 
-              />
-
-              {/* Reviews List */}
-              <ProductReviews 
-                productId={id} 
-                onReviewAdded={() => setRefreshReviews(prev => prev + 1)} 
-              />
             </div>
           </div>
         </div>

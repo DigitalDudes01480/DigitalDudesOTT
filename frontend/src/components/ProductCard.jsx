@@ -2,7 +2,6 @@ import { ShoppingCart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatCurrency } from '../utils/formatters';
 import { isAndroidWebView } from '../utils/appMode';
-import WishlistButton from './WishlistButton';
 
 const ProductCard = ({ product, hideProfileTypes = false, hideDetails = false }) => {
   const isApp = isAndroidWebView();
@@ -106,16 +105,13 @@ const ProductCard = ({ product, hideProfileTypes = false, hideDetails = false })
             )}
           </div>
 
-          <div className="flex items-center space-x-2">
-            <WishlistButton productId={product._id} size={isApp ? "sm" : "md"} />
-            <Link
-              to={`/product/${product._id}`}
-              className={`bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 hover:from-primary-700 hover:via-primary-800 hover:to-primary-900 text-white rounded-full transition-all duration-300 flex items-center justify-center shadow-xl hover:shadow-2xl transform hover:scale-125 hover:rotate-12 active:scale-95 group-hover:ring-4 ring-primary-200 dark:ring-primary-800 ${isApp ? 'w-10 h-10' : 'w-11 h-11 md:w-12 md:h-12 lg:w-14 lg:h-14'}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <ShoppingCart className={`${isApp ? 'w-4 h-4' : 'w-5 h-5 md:w-6 md:h-6 lg:w-6 lg:h-6'} group-hover:animate-pulse`} />
-            </Link>
-          </div>
+          <Link
+            to={`/product/${product._id}`}
+            className={`bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 hover:from-primary-700 hover:via-primary-800 hover:to-primary-900 text-white rounded-full transition-all duration-300 flex items-center justify-center shadow-xl hover:shadow-2xl transform hover:scale-125 hover:rotate-12 active:scale-95 group-hover:ring-4 ring-primary-200 dark:ring-primary-800 ${isApp ? 'w-10 h-10' : 'w-11 h-11 md:w-12 md:h-12 lg:w-14 lg:h-14'}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ShoppingCart className={`${isApp ? 'w-4 h-4' : 'w-5 h-5 md:w-6 md:h-6 lg:w-6 lg:h-6'} group-hover:animate-pulse`} />
+          </Link>
         </div>
         </div>
       </div>
