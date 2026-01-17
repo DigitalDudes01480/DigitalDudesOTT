@@ -4,6 +4,8 @@ import { wishlistAPI } from '../utils/api';
 import useAuthStore from '../store/useAuthStore';
 import { toast } from 'react-hot-toast';
 
+// Wishlist button component with heart icon
+
 const WishlistButton = ({ productId, size = 'md', showText = false }) => {
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [loading, setLoading] = useState(false);
