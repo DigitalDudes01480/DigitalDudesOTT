@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Zap, CreditCard, Headphones, ArrowRight, Users, Target, Award, Heart, ChevronDown, Eye, EyeOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { faqAPI, productAPI, tutorialAPI, orderAPI } from '../utils/api';
+import { faqAPI, productAPI, tutorialAPI, orderAPI, categoryAPI } from '../utils/api';
 import ProductCard from '../components/ProductCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { isAndroidWebView } from '../utils/appMode';
 
 const Home = () => {
-  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [categorizedProducts, setCategorizedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [faqs, setFaqs] = useState([]);
   const [openFaqId, setOpenFaqId] = useState(null);
@@ -45,10 +45,32 @@ const Home = () => {
   };
 
   useEffect(() => {
-    const fetchFeaturedProducts = async () => {
+    const fetchCategorizedProducts = async () => {
       try {
-        const response = await productAPI.getAll({ status: 'active' });
-        setFeaturedProducts(response.data.products.slice(0, 6));
+        const [productsRes, categoriesRes] = await Promise.all([
+          productAPI.getAll({ status: 'active' }),
+          categoryAPI.getAll()
+        ]);
+        
+        const products = productsRes.data.products;
+        const categories = categoriesRes.data.categories;
+        
+        // Group products by category
+        const grouped = categories.map(category => ({
+          category: category,
+          products: products.filter(p => p.category?._id === category._id || p.category === category._id)
+        })).filter(group => group.products.length > 0);
+        
+        // Add uncategorized products if any
+        const uncategorized = products.filter(p => !p.category);
+        if (uncategorized.length > 0) {
+          grouped.push({
+            category: { name: 'Other Subscriptions', _id: 'uncategorized' },
+            products: uncategorized
+          });
+        }
+        
+        setCategorizedProducts(grouped);
       } catch (error) {
         console.error('Error fetching products:', error);
       } finally {
@@ -56,7 +78,7 @@ const Home = () => {
       }
     };
 
-    fetchFeaturedProducts();
+    fetchCategorizedProducts();
   }, []);
 
   useEffect(() => {
@@ -205,40 +227,48 @@ const Home = () => {
       <div className="flex flex-col">
         <section className="py-12 sm:py-16 md:py-20 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-10 sm:mb-16">
-              {!isApp && (
-                <div className="inline-block mb-4 px-4 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs sm:text-sm font-semibold">
-                  🔥 Hot Deals
-                </div>
-              )}
-              {!isApp && (
-                <>
-                  <h2 className="text-xl sm:text-4xl md:text-5xl font-extrabold mb-3 sm:mb-4 bg-gradient-to-r from-primary-600 to-secondary-600 text-transparent bg-clip-text">
-                    Featured Subscriptions
-                  </h2>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-lg max-w-2xl mx-auto">
-                    Discover our handpicked selection of premium streaming services at incredible prices
-                  </p>
-                </>
-              )}
-            </div>
-
             {loading ? (
               <div className="py-12">
                 <LoadingSpinner size="lg" />
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
-                {featuredProducts.map((product) => (
-                  <ProductCard key={product._id} product={product} hideProfileTypes hideDetails />
+              <div className="space-y-12 sm:space-y-16">
+                {categorizedProducts.map((group) => (
+                  <div key={group.category._id} className="animate-fade-in">
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+                        {group.category.name}
+                      </h2>
+                      <Link 
+                        to={`/shop?category=${group.category._id}`}
+                        className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium flex items-center gap-2 text-sm sm:text-base"
+                      >
+                        View All
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+                    
+                    {/* Horizontal scrollable product row */}
+                    <div className="relative">
+                      <div className="overflow-x-auto scrollbar-hide pb-4">
+                        <div className="flex gap-4 sm:gap-6">
+                          {group.products.map((product) => (
+                            <div key={product._id} className="flex-shrink-0 w-64 sm:w-72">
+                              <ProductCard product={product} hideProfileTypes hideDetails />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
 
-            <div className="text-center mt-10 sm:mt-12">
-              <Link to="/shop" className="btn-primary inline-flex items-center px-5 py-2.5 text-sm">
-                View All Products
-                <ArrowRight className="ml-2 w-4 h-4" />
+            <div className="text-center mt-12 sm:mt-16">
+              <Link to="/shop" className="btn-primary inline-flex items-center px-6 py-3 text-sm sm:text-base">
+                Browse All Products
+                <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
               </Link>
             </div>
           </div>
