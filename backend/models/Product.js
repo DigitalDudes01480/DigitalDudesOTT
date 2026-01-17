@@ -19,6 +19,25 @@ const pricingOptionSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
+const reviewSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  rating: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 5
+  },
+  comment: {
+    type: String,
+    required: true,
+    trim: true
+  }
+}, { timestamps: true });
+
 const profileTypeSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -95,6 +114,17 @@ const productSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
     default: null
+  },
+  reviews: [reviewSchema],
+  averageRating: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 5
+  },
+  reviewCount: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true

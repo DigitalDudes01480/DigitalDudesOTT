@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AppBottomBar from './components/AppBottomBar';
 import UpdateAppBanner from './components/UpdateAppBanner';
 import MobileBottomNav from './components/MobileBottomNav';
+import Snowfall from './components/Snowfall';
 import { isAndroidWebView } from './utils/appMode';
 
 import Home from './pages/Home';
@@ -44,6 +45,7 @@ function App() {
 
   return (
     <Router>
+      <Snowfall />
       <Toaster position="top-right" />
       <UpdateAppBanner />
       <Routes>

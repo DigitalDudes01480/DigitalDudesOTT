@@ -115,6 +115,58 @@ const Home = () => {
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDE0YzMuMzEgMCA2IDIuNjkgNiA2cy0yLjY5IDYtNiA2LTYtMi42OS02LTYgMi42OS02IDYtNk0yNCA0NGMzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA2LTYiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-20"></div>
         <div className="absolute top-20 right-10 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 left-10 w-96 h-96 bg-secondary-500/20 rounded-full blur-3xl"></div>
+        
+        {/* Winter Decorations */}
+        {/* Snowman - Left Side */}
+        <div className="absolute left-4 sm:left-10 bottom-10 sm:bottom-16 animate-bounce" style={{ animationDuration: '3s' }}>
+          <div className="text-4xl sm:text-6xl md:text-7xl filter drop-shadow-lg">⛄</div>
+        </div>
+        
+        {/* Snowman - Right Side */}
+        <div className="absolute right-4 sm:right-10 bottom-10 sm:bottom-16 animate-bounce" style={{ animationDuration: '3.5s', animationDelay: '0.5s' }}>
+          <div className="text-4xl sm:text-6xl md:text-7xl filter drop-shadow-lg">☃️</div>
+        </div>
+        
+        {/* Christmas Trees */}
+        <div className="absolute left-20 sm:left-32 bottom-8 sm:bottom-12 animate-pulse" style={{ animationDuration: '4s' }}>
+          <div className="text-3xl sm:text-5xl md:text-6xl filter drop-shadow-lg">🎄</div>
+        </div>
+        <div className="absolute right-20 sm:right-32 bottom-8 sm:bottom-12 animate-pulse" style={{ animationDuration: '4.5s', animationDelay: '1s' }}>
+          <div className="text-3xl sm:text-5xl md:text-6xl filter drop-shadow-lg">🎄</div>
+        </div>
+        
+        {/* Floating Snowflakes */}
+        <div className="absolute top-10 left-1/4 animate-bounce" style={{ animationDuration: '2s' }}>
+          <div className="text-2xl sm:text-4xl filter drop-shadow-lg opacity-80">❄️</div>
+        </div>
+        <div className="absolute top-20 right-1/4 animate-bounce" style={{ animationDuration: '2.5s', animationDelay: '0.3s' }}>
+          <div className="text-2xl sm:text-4xl filter drop-shadow-lg opacity-80">❄️</div>
+        </div>
+        <div className="absolute top-16 left-1/3 animate-bounce" style={{ animationDuration: '3s', animationDelay: '0.7s' }}>
+          <div className="text-xl sm:text-3xl filter drop-shadow-lg opacity-70">❄️</div>
+        </div>
+        <div className="absolute top-24 right-1/3 animate-bounce" style={{ animationDuration: '2.8s', animationDelay: '1s' }}>
+          <div className="text-xl sm:text-3xl filter drop-shadow-lg opacity-70">❄️</div>
+        </div>
+        
+        {/* Gift Boxes */}
+        <div className="hidden md:block absolute left-40 bottom-6 animate-pulse" style={{ animationDuration: '3s' }}>
+          <div className="text-3xl filter drop-shadow-lg">🎁</div>
+        </div>
+        <div className="hidden md:block absolute right-40 bottom-6 animate-pulse" style={{ animationDuration: '3.2s', animationDelay: '0.5s' }}>
+          <div className="text-3xl filter drop-shadow-lg">🎁</div>
+        </div>
+        
+        {/* Stars */}
+        <div className="absolute top-8 left-1/2 animate-pulse" style={{ animationDuration: '2s' }}>
+          <div className="text-2xl sm:text-3xl filter drop-shadow-lg">⭐</div>
+        </div>
+        <div className="hidden sm:block absolute top-12 left-20 animate-pulse" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }}>
+          <div className="text-xl filter drop-shadow-lg">✨</div>
+        </div>
+        <div className="hidden sm:block absolute top-12 right-20 animate-pulse" style={{ animationDuration: '2.3s', animationDelay: '0.8s' }}>
+          <div className="text-xl filter drop-shadow-lg">✨</div>
+        </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center">
             <div className="inline-block mb-3 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full text-xs sm:text-sm font-semibold animate-fade-in">
@@ -151,7 +203,7 @@ const Home = () => {
       </section>
 
       <div className="flex flex-col">
-        <section className="order-1 md:order-2 py-12 sm:py-16 md:py-20 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
+        <section className="py-12 sm:py-16 md:py-20 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-10 sm:mb-16">
               {!isApp && (
@@ -192,7 +244,7 @@ const Home = () => {
           </div>
         </section>
 
-        <section className="order-2 md:order-1 py-10 sm:py-16 md:py-20 bg-white dark:bg-gray-900">
+        <section className="py-10 sm:py-16 md:py-20 bg-white dark:bg-gray-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8 sm:mb-12">
               <div className="inline-block mb-3 px-4 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs sm:text-sm font-semibold">

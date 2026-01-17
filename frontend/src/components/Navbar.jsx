@@ -5,6 +5,7 @@ import useAuthStore from '../store/useAuthStore';
 import useCartStore from '../store/useCartStore';
 import { subscriptionAPI, orderAPI, ticketAPI } from '../utils/api';
 import Logo from './Logo';
+import ThemeToggle from './ThemeToggle';
 import './NavbarAnimations.css';
 
 const Navbar = () => {
@@ -184,6 +185,7 @@ const Navbar = () => {
           </div>
 
           <div className="hidden lg:flex items-center space-x-3">
+            <ThemeToggle />
             {isAuthenticated ? (
               <>
                 {user?.role === 'admin' && (
@@ -367,6 +369,7 @@ const Navbar = () => {
           </div>
 
           <div className="md:hidden flex items-center space-x-2">
+            <ThemeToggle />
             {isAuthenticated && user?.role === 'customer' && (
               <>
                 <Link
