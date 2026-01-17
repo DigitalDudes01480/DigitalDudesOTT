@@ -1,5 +1,5 @@
 import express from 'express';
-import { verifyJWT } from '../middlewares/auth.middleware.js';
+import { protect } from '../middleware/auth.js';
 import { 
   addToWishlist, 
   removeFromWishlist, 
@@ -11,7 +11,7 @@ import {
 const router = express.Router();
 
 // All wishlist routes require authentication
-router.use(verifyJWT);
+router.use(protect);
 
 // Get user's wishlist
 router.get('/', getWishlist);

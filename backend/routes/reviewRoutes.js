@@ -1,5 +1,5 @@
 import express from 'express';
-import { verifyJWT } from '../middlewares/auth.middleware.js';
+import { protect } from '../middleware/auth.js';
 import { addReview, getProductReviews, updateReview, deleteReview } from '../controllers/reviewController.js';
 
 const router = express.Router();
@@ -8,8 +8,8 @@ const router = express.Router();
 router.get('/product/:productId', getProductReviews);
 
 // Protected routes - require authentication
-router.post('/product/:productId', verifyJWT, addReview);
-router.put('/product/:productId/:reviewId', verifyJWT, updateReview);
-router.delete('/product/:productId/:reviewId', verifyJWT, deleteReview);
+router.post('/product/:productId', protect, addReview);
+router.put('/product/:productId/:reviewId', protect, updateReview);
+router.delete('/product/:productId/:reviewId', protect, deleteReview);
 
 export default router;
