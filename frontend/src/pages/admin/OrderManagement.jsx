@@ -173,12 +173,16 @@ const OrderManagement = () => {
     if (!confirmed) return;
 
     try {
-      await orderAPI.deleteAdmin(orderId);
+      console.log('Deleting order:', orderId);
+      const response = await orderAPI.deleteAdmin(orderId);
+      console.log('Delete response:', response);
       toast.success('Order deleted successfully');
-      fetchOrders();
+      await fetchOrders();
     } catch (error) {
       console.error('Error deleting order:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete order');
+      console.error('Error response:', error.response);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to delete order';
+      toast.error(errorMessage);
     }
   };
 

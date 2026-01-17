@@ -334,27 +334,41 @@ export const updateOrderAdmin = async (req, res) => {
 
 export const deleteOrderAdmin = async (req, res) => {
   try {
+    console.log('🗑️ Deleting order:', req.params.id);
+    
     const order = await Order.findById(req.params.id);
 
     if (!order) {
+      console.log('❌ Order not found:', req.params.id);
       return res.status(404).json({
         success: false,
         message: 'Order not found'
       });
     }
 
-    await Subscription.deleteMany({ order: order._id });
-    await Transaction.deleteMany({ order: order._id });
+    console.log('📦 Order found, deleting related data...');
+    
+    // Delete related subscriptions
+    const deletedSubs = await Subscription.deleteMany({ order: order._id });
+    console.log(`✅ Deleted ${deletedSubs.deletedCount} subscriptions`);
+    
+    // Delete related transactions
+    const deletedTxns = await Transaction.deleteMany({ order: order._id });
+    console.log(`✅ Deleted ${deletedTxns.deletedCount} transactions`);
+    
+    // Delete the order
     await Order.deleteOne({ _id: order._id });
+    console.log('✅ Order deleted successfully');
 
     res.status(200).json({
       success: true,
       message: 'Order deleted successfully'
     });
   } catch (error) {
+    console.error('❌ Error deleting order:', error);
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message || 'Failed to delete order'
     });
   }
 };
