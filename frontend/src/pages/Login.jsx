@@ -16,7 +16,7 @@ const Login = () => {
   });
 
   const getOAuthBaseUrl = () => {
-    const origin = 'https://backend-tau-blush-82-omega.vercel.app';
+    const origin = 'https://backend-tau-blush-82.vercel.app';
     return `${origin}/api`;
   };
 
