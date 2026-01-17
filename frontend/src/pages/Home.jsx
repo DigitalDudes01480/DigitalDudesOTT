@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Zap, CreditCard, Headphones, ArrowRight, Users, Target, Award, Heart, ChevronDown, Eye, EyeOff, Grid } from 'lucide-react';
+import { ShieldCheck, Zap, CreditCard, Headphones, ArrowRight, Users, Target, Award, Heart, ChevronDown, Eye, EyeOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { faqAPI, productAPI, tutorialAPI, orderAPI, categoryAPI } from '../utils/api';
+import { faqAPI, productAPI, tutorialAPI, orderAPI } from '../utils/api';
 import ProductCard from '../components/ProductCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { isAndroidWebView } from '../utils/appMode';
@@ -9,7 +9,6 @@ import { isAndroidWebView } from '../utils/appMode';
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState([]);
   const [faqs, setFaqs] = useState([]);
   const [openFaqId, setOpenFaqId] = useState(null);
   const [tutorials, setTutorials] = useState([]);
@@ -58,19 +57,6 @@ const Home = () => {
     };
 
     fetchFeaturedProducts();
-  }, []);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await categoryAPI.getAll();
-        setCategories(res.data.categories || []);
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      }
-    };
-
-    fetchCategories();
   }, []);
 
   useEffect(() => {
@@ -163,51 +149,6 @@ const Home = () => {
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-12 sm:h-20 bg-gradient-to-t from-gray-50 dark:from-gray-900 to-transparent"></div>
       </section>
-
-      {/* Categories Section */}
-      {categories.length > 0 && (
-        <section className="py-12 sm:py-16 bg-white dark:bg-gray-900">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-8 sm:mb-12">
-              <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-secondary-100 dark:bg-secondary-900/30 text-secondary-600 dark:text-secondary-400 rounded-full text-xs sm:text-sm font-semibold">
-                <Grid className="w-4 h-4" />
-                Browse by Category
-              </div>
-              <h2 className="text-2xl sm:text-4xl font-extrabold mb-3 bg-gradient-to-r from-secondary-600 to-primary-600 text-transparent bg-clip-text">
-                Explore Categories
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-lg max-w-2xl mx-auto">
-                Find the perfect subscription for your entertainment needs
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 sm:gap-6">
-              {categories.map((category) => (
-                <Link
-                  key={category._id}
-                  to={`/shop?category=${category._id}`}
-                  className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-primary-100 dark:border-primary-800/30"
-                >
-                  <div className="text-center">
-                    <div className="text-4xl sm:text-5xl mb-3 transform group-hover:scale-110 transition-transform duration-300">
-                      {category.icon}
-                    </div>
-                    <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white mb-1">
-                      {category.name}
-                    </h3>
-                    {category.description && (
-                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
-                        {category.description}
-                      </p>
-                    )}
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary-500/0 to-secondary-500/0 group-hover:from-primary-500/10 group-hover:to-secondary-500/10 transition-all duration-300"></div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       <div className="flex flex-col">
         <section className="order-1 md:order-2 py-12 sm:py-16 md:py-20 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
