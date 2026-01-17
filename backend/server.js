@@ -26,6 +26,7 @@ import orderAssistantRoutes from './routes/orderAssistantRoutes.js';
 import couponRoutes from './routes/couponRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import testRoutes from './routes/testRoutes.js';
+import emailTestRoutes from './routes/emailTestRoutes.js';
 import sharedProfileRoutes from './routes/sharedProfile.js';
 import accountRoutes from './routes/accountRoutes.js';
 
@@ -213,6 +214,9 @@ app.get('/health', (req, res) => {
 
 // Test routes
 app.use('/api/test', testRoutes);
+
+// Email test routes
+app.use('/api/email-test', emailTestRoutes);
 
 // Shared profile routes
 app.use('/api/shared-profile', sharedProfileRoutes);
