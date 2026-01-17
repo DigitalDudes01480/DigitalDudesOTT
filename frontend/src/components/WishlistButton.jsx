@@ -12,6 +12,8 @@ const WishlistButton = ({ productId, size = 'md', showText = false }) => {
   useEffect(() => {
     if (isAuthenticated) {
       checkWishlistStatus();
+    } else {
+      setIsInWishlist(false);
     }
   }, [productId, isAuthenticated]);
 
@@ -21,6 +23,7 @@ const WishlistButton = ({ productId, size = 'md', showText = false }) => {
       setIsInWishlist(response.data.isInWishlist);
     } catch (error) {
       console.error('Error checking wishlist status:', error);
+      setIsInWishlist(false);
     }
   };
 

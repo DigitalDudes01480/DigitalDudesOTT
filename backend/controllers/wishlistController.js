@@ -145,13 +145,29 @@ export const getWishlist = async (req, res) => {
 export const checkWishlistStatus = async (req, res) => {
   try {
     const { productId } = req.params;
-    const userId = req.user._id;
+    
+    // If user is not authenticated, return false
+    if (!req.user) {
+      return res.status(200).json({
+        success: true,
+        message: 'Wishlist status checked successfully',
+        data: {
+          isInWishlist: false,
+          wishlistCount: 0
+        }
+      });
+    }
 
+    const userId = req.user._id;
     const user = await User.findById(userId).select('wishlist');
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
+      return res.status(200).json({
+        success: true,
+        message: 'Wishlist status checked successfully',
+        data: {
+          isInWishlist: false,
+          wishlistCount: 0
+        }
       });
     }
 
