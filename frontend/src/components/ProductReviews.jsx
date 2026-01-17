@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Star, ThumbsUp, ThumbsDown, Edit, Trash2, User } from 'lucide-react';
 import { reviewAPI } from '../utils/api';
-import { useAuthStore } from '../store/useAuthStore';
+import useAuthStore from '../store/useAuthStore';
 import LoadingSpinner from './LoadingSpinner';
 
 const ProductReviews = ({ productId, onReviewAdded }) => {

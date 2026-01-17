@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
 import { wishlistAPI } from '../utils/api';
-import { useAuthStore } from '../store/useAuthStore';
+import useAuthStore from '../store/useAuthStore';
 import { toast } from 'react-hot-toast';
 
 const WishlistButton = ({ productId, size = 'md', showText = false }) => {

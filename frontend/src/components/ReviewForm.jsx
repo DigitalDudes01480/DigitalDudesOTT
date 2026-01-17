@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Star, Send } from 'lucide-react';
 import { reviewAPI } from '../utils/api';
-import { useAuthStore } from '../store/useAuthStore';
+import useAuthStore from '../store/useAuthStore';
 
 const ReviewForm = ({ productId, onReviewSubmitted }) => {
   const [rating, setRating] = useState(0);
