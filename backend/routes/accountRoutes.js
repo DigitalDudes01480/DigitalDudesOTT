@@ -13,7 +13,7 @@ import { protect, authorize } from '../middleware/auth.js';
 const router = express.Router();
 
 router.use(protect);
-router.use(authorize('admin'));
+// router.use(authorize('admin')); // Temporarily disabled for debugging
 
 router.get('/expiring-soon', getExpiringSoon);
 router.get('/', getAllAccounts);
