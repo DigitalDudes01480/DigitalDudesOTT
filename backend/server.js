@@ -202,6 +202,15 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/accounts', accountRoutes);
 
+// Simple test route
+app.get('/api/test', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'API is working',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Health check route
 app.get('/health', (req, res) => {
   res.status(200).json({
