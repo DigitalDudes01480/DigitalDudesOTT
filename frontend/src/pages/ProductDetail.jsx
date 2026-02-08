@@ -295,25 +295,7 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {selectedPricing && (
-              <div className="mb-6 p-4 bg-gradient-to-r from-primary-50 to-purple-50 dark:from-primary-900/20 dark:to-purple-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
-                <div className="flex items-baseline justify-between">
-                  <div>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Price</p>
-                    <span className="text-lg sm:text-4xl font-bold text-primary-600">
-                      {formatCurrency(selectedPricing.price)}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Duration</p>
-                    <p className="text-xs sm:text-lg font-bold dark:text-white">
-                      {selectedPricing.duration.value} {selectedPricing.duration.unit}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
+            
             
             {product.features && product.features.length > 0 && (
               <div className="mb-8">
