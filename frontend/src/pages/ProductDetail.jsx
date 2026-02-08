@@ -314,14 +314,7 @@ const ProductDetail = () => {
               </div>
             )}
 
-            <div className="hidden lg:block card hover:shadow-2xl transition-all duration-300 mb-6">
-              <div className="flex items-center justify-between mb-6">
-                <span className="text-sm font-bold text-primary-600 dark:text-primary-400 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-800/30 px-4 py-2 rounded-xl shadow-md">
-                  {product.ottType}
-                </span>
-              </div>
-            </div>
-
+            
             {product.features && product.features.length > 0 && (
               <div className="mb-8">
                 <h2 className="text-xl font-bold mb-4 dark:text-white">Features</h2>
