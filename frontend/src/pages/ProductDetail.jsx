@@ -170,15 +170,6 @@ const ProductDetail = () => {
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
                   {product.description}
                 </p>
-                <div className="mt-2 flex items-center gap-2">
-                  <span className={`text-[10px] font-bold px-2 py-1 rounded-lg shadow-sm ${
-                    product.status === 'active'
-                      ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                      : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                  }`}>
-                    {product.status === 'active' ? '✓ Available' : '✗ Unavailable'}
-                  </span>
-                </div>
               </div>
             </div>
           </div>
@@ -265,17 +256,17 @@ const ProductDetail = () => {
                       key={index}
                       type="button"
                       onClick={() => setSelectedPricingIndex(index)}
-                      className={`p-3 sm:p-5 rounded-xl border-2 transition-all duration-300 text-left transform ${
+                      className={`p-2 sm:p-3 lg:p-2 rounded-xl border-2 transition-all duration-300 text-left transform ${
                         selectedPricingIndex === index
                           ? 'border-primary-500 bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 shadow-lg scale-105'
                           : 'border-gray-200 dark:border-gray-700 hover:border-primary-300 hover:shadow-md hover:scale-102'
                       }`}
                     >
                       <div className="text-center">
-                        <p className="font-bold text-xs sm:text-sm dark:text-white">
+                        <p className="font-bold text-sm sm:text-xs lg:text-base dark:text-white">
                           {option.duration.value} {option.duration.unit}
                         </p>
-                        <p className="text-[10px] sm:text-xs text-primary-600 font-semibold mt-1">
+                        <p className="text-xs sm:text-[10px] lg:text-sm text-primary-600 font-semibold mt-1">
                           {formatCurrency(option.price)}
                         </p>
                       </div>
@@ -327,13 +318,6 @@ const ProductDetail = () => {
               <div className="flex items-center justify-between mb-6">
                 <span className="text-sm font-bold text-primary-600 dark:text-primary-400 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-800/30 px-4 py-2 rounded-xl shadow-md">
                   {product.ottType}
-                </span>
-                <span className={`text-sm font-bold px-4 py-2 rounded-xl shadow-md ${
-                  product.status === 'active' 
-                    ? 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 dark:from-green-900/30 dark:to-green-800/30 dark:text-green-400' 
-                    : 'bg-gradient-to-r from-red-50 to-red-100 text-red-700 dark:from-red-900/30 dark:to-red-800/30 dark:text-red-400'
-                }`}>
-                  {product.status === 'active' ? '✓ Available' : '✗ Unavailable'}
                 </span>
               </div>
             </div>
