@@ -191,6 +191,38 @@ const ProductDetail = () => {
                 {product.ottType}
               </div>
             </div>
+
+            {selectedProfile && (
+              <div className="mb-6 mt-6">
+                <h3 className="text-sm sm:text-lg font-bold mb-3 sm:mb-4 dark:text-white flex items-center">
+                  <Monitor className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-primary-600" />
+                  Select Duration
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-4">
+                  {selectedProfile.pricingOptions?.map((option, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => setSelectedPricingIndex(index)}
+                      className={`p-2 sm:p-3 lg:p-2 rounded-xl border-2 transition-all duration-300 text-left transform ${
+                        selectedPricingIndex === index
+                          ? 'border-primary-500 bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 shadow-lg scale-105'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-primary-300 hover:shadow-md hover:scale-102'
+                      }`}
+                    >
+                      <div className="text-center">
+                        <p className="font-bold text-sm sm:text-xs lg:text-base dark:text-white">
+                          {option.duration.value} {option.duration.unit}
+                        </p>
+                        <p className="text-xs sm:text-[10px] lg:text-sm text-primary-600 font-semibold mt-1">
+                          {formatCurrency(option.price)}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
@@ -243,38 +275,6 @@ const ProductDetail = () => {
                 ))}
               </div>
             </div>
-
-            {selectedProfile && (
-              <div className="mb-6">
-                <h3 className="text-sm sm:text-lg font-bold mb-3 sm:mb-4 dark:text-white flex items-center">
-                  <Monitor className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-primary-600" />
-                  Select Duration
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-4">
-                  {selectedProfile.pricingOptions?.map((option, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => setSelectedPricingIndex(index)}
-                      className={`p-2 sm:p-3 lg:p-2 rounded-xl border-2 transition-all duration-300 text-left transform ${
-                        selectedPricingIndex === index
-                          ? 'border-primary-500 bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 shadow-lg scale-105'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-primary-300 hover:shadow-md hover:scale-102'
-                      }`}
-                    >
-                      <div className="text-center">
-                        <p className="font-bold text-sm sm:text-xs lg:text-base dark:text-white">
-                          {option.duration.value} {option.duration.unit}
-                        </p>
-                        <p className="text-xs sm:text-[10px] lg:text-sm text-primary-600 font-semibold mt-1">
-                          {formatCurrency(option.price)}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {selectedProfile?.requiresOwnAccount && (
               <div className="mb-6 p-3 sm:p-5 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 border border-blue-200 dark:border-blue-800 rounded-xl">
